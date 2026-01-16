@@ -6,7 +6,7 @@ import string
 from websockets.exceptions import ConnectionClosedOK,  WebSocketException
 
 from maxapi.utils import get_random_string
-from maxapi.utils import try_to_find_in_dict_and_return
+from maxapi.utils import get_dict_value_by_path
 from maxapi.api import MaxClient
 from maxapi.types import Chat, Opcode
 from maxapi.exceptions import LoggingError, LoggingTimeoutError
@@ -131,7 +131,7 @@ class MaxApi:
                     async with asyncio.timeout(expires_at - time.time()):
                         while not self.client_is_login:
                             response = await self.max_client.send_and_receive(opcode=Opcode.TRACK_LOGIN.value, payload={"trackId": self._track_id})
-                            if try_to_find_in_dict_and_return('payload status loginAvailable', response) == True:
+                            if get_dict_value_by_path('payload status loginAvailable', response) == True:
                                 self.__logger.info('Login Successful')
                                 self.client_is_login = True
                                 break

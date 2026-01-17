@@ -1,4 +1,4 @@
-from maxapi.utils import try_to_find_in_dict_and_return, NotFoundFlag
+from maxapi.utils import get_dict_value_by_path, NotFoundFlag
 from maxapi.types import Message
 from maxapi.api import MaxClient
 
@@ -11,9 +11,9 @@ class Chat:
         self.participants: dict = json_chat['participants']
         self.status: str = json_chat['status']
         self.type: str = json_chat['type']
-        self.restrictions: str = try_to_find_in_dict_and_return('restrictions', json_chat)
-        self.has_bots: str = try_to_find_in_dict_and_return('hasBots', json_chat)
-        self.options: str = try_to_find_in_dict_and_return('options', json_chat)
+        self.restrictions: str = get_dict_value_by_path('restrictions', json_chat)
+        self.has_bots: str = get_dict_value_by_path('hasBots', json_chat)
+        self.options: str = get_dict_value_by_path('options', json_chat)
         self.last_message: Message = Message(json_chat['lastMessage'])
         if self.type == 'CHAT':
             self.access: str = json_chat['access']

@@ -3,7 +3,7 @@ import logging
 from typing import cast, AsyncGenerator, Any, TYPE_CHECKING, TypeVar
 
 from .Router import Router
-from .event import UpdateMaxEventObserver, UNHANDLED, Update, UNKNOWN_UPDATE, skip, MaxObject
+from .event import UpdateMaxEventObserver, UNHANDLED, Update, UNKNOWN_UPDATE, skip, MaxObject, ResolvedUpdate
 
 from ..models import BaseMaxObject, DataDict, MapperUpdateTranslator
 from ..protocol import Response
@@ -42,6 +42,7 @@ class Dispatcher(Router):
             data.update(
                 {
                     type(resolved_update): resolved_update,
+                    ResolvedUpdate: resolved_update,
                 }
             )
             result = await self.notify(resolved_update, data)

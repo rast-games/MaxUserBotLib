@@ -24,3 +24,5 @@ MaxObject: TypeAlias = 'BaseMaxObject | Response'
 
 
 Update = TypeVar('Update', bound=MaxObject)
+
+ResolvedUpdate = TypeVar('ResolvedUpdate', bound=MaxObject)

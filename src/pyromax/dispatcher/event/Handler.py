@@ -10,7 +10,7 @@ from ..ObserverPattern import Observer
 from ...utils import inspect_and_form
 from ...filters.magic import MagicFilter
 
-from .UpdateType import Update, UNHANDLED
+from .UpdateType import Update, UNHANDLED, ResolvedUpdate
 
 
 from magic_filter.magic import MagicFilter as OriginalMagicFilter
@@ -42,23 +42,23 @@ class FilterObject:
                 )
 
 
-    async def _magic_resolve(self, update: Update, *args: Any) -> Any:
+    async def _magic_resolve(self, update: ResolvedUpdate, *args: Any) -> Any:
         self.magic: MagicFilter
         return self.magic.resolve(update)
 
 
-    async def _resolve(self, update: Update, data: dict[Any, Any]) -> bool | dict[str, Any]:
+    async def _resolve(self, update: ResolvedUpdate, data: dict[Any, Any]) -> bool | dict[str, Any]:
         assert not isinstance(self.filter, MagicFilter)
         return await self.filter(update, data)
 
 
-    async def __call__(self, update: Update, data: dict[Any, Any], *args: Any, **kwargs: Any) -> Any:
+    async def __call__(self, update: ResolvedUpdate, data: dict[Any, Any], *args: Any, **kwargs: Any) -> Any:
         return await self.resolve(update, data)
 
 
-class Handler(Observer, Generic[Update]):
+class Handler(Observer, Generic[ResolvedUpdate]):
     """Wrap a callable handler with filters and a pattern."""
-    def __init__(self, function: Callable[..., Any], filters: list[FilterObject], pattern: Callable[[Update], Any] | None = None):
+    def __init__(self, function: Callable[..., Any], filters: list[FilterObject], pattern: Callable[[ResolvedUpdate], Any] | None = None):
         """Create a handler wrapper.
 
         Parameters
@@ -76,7 +76,7 @@ class Handler(Observer, Generic[Update]):
         self.function = function
 
 
-    async def _propagate_update(self, update: Update, data: dict[Any, Any]) -> bool:
+    async def _propagate_update(self, update: ResolvedUpdate, data: dict[Any, Any]) -> bool:
         if self.pattern is None and not self.filters:
             return True
         for f in self.filters:
@@ -90,11 +90,11 @@ class Handler(Observer, Generic[Update]):
         return True
 
 
-    async def check(self, update: Update, data: dict[Any, Any]) -> bool:
+    async def check(self, update: ResolvedUpdate, data: dict[Any, Any]) -> bool:
         return await self._propagate_update(update, data)
 
 
-    async def update(self, update: Update, data: dict[Any, Any] | None = None) -> Any:
+    async def update(self, update: ResolvedUpdate, data: dict[Any, Any] | None = None) -> Any:
         if data is None:
             raise ValueError('data cannot be None')
         check = await self._propagate_update(update, data)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Awaitable, Iterable, Coroutine
-from typing import Any, TYPE_CHECKING, Generic, Union, Optional, Literal
+from typing import Any, TYPE_CHECKING, Generic, Union, Optional, Literal, TypeVar, Mapping
 from dataclasses import dataclass
 import logging
 
@@ -10,19 +10,22 @@ from ..ObserverPattern import Observer
 from ...utils import inspect_and_form
 from ...filters.magic import MagicFilter
 
-from .UpdateType import Update, UNHANDLED, ResolvedUpdate
+from .UpdateType import Update, UNHANDLED, ResolvedUpdate, MaxObject
 
 
 from magic_filter.magic import MagicFilter as OriginalMagicFilter
 
 if TYPE_CHECKING:
     from ...filters import Filter
+    from ...models import DataDict
     from ...models import BaseMaxObject
 
 
+f = TypeVar('f', bound=Filter | Callable[[MaxObject, Mapping[Any, Any]], Any])
+
 @dataclass
-class FilterObject:
-    filter: Filter
+class FilterObject(Generic[f]):
+    filter: f
     magic: Optional[OriginalMagicFilter | MagicFilter] = None
 
     def __post_init__(self):

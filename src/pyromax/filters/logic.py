@@ -23,7 +23,7 @@ class _LogicFilter(Filter, ABC):
 
 
 class _InvertFilter(_LogicFilter):
-    def __init__(self, target: FilterObject) -> None:
+    def __init__(self, target: FilterObject[Filter]) -> None:
         super().__init__()
         self._SKIP_CHECK_PREPARATIONS = target.filter._SKIP_CHECK_PREPARATIONS
         self.target = target

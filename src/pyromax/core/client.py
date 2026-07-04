@@ -158,6 +158,7 @@ class MaxApi(AsyncInitializerMixin):
         self.protocol = protocol
         self.mapper = mapper
         self.token = token
+        self.password = password
         self.id: int | None = None
         self.phone: str | None = None
         self.names: Any | list[dict[str, Any]] | None = None

@@ -33,16 +33,17 @@ class Dispatcher(Router):
             type_of_update=MaxObject
         )
 
-        async def notify_wrapper(update: Update, data: DataDict) -> Any:
+        async def notify_wrapper(resolved_update: ResolvedUpdate, data: DataDict) -> Any:
             # try:
-            mapper_update_translator = data.pop(MapperUpdateTranslator)
+            # mapper_update_translator = data.pop(MapperUpdateTranslator)
             # except KeyError:
             #     skip()
-            resolved_update = mapper_update_translator(update)
+            # resolved_update = mapper_update_translator(update)
+            # resolved_update = data.get(ResolvedUpdate)
             data.update(
                 {
                     type(resolved_update): resolved_update,
-                    ResolvedUpdate: resolved_update,
+                    # ResolvedUpdate: resolved_update,
                 }
             )
             result = await self.notify(resolved_update, data)
@@ -79,16 +80,19 @@ class Dispatcher(Router):
 
             self.__logger.debug('Received update: %s', update)
 
+            resolved_update = update_translator(update)
+
             data: dict[type | TypeVar, Any] = {
                 type(max_api): max_api,
-                Update: update
+                Update: update,
+                ResolvedUpdate: resolved_update,
             }
 
-            data.update(
-                {
-                    MapperUpdateTranslator: update_translator
-                }
-            )
+            # data.update(
+            #     {
+            #         MapperUpdateTranslator: update_translator
+            #     }
+            # )
             data.update(max_api.workflow_data)
 
             update_observer = self.update

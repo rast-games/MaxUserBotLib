@@ -23,6 +23,6 @@ UNKNOWN_UPDATE = UnknownUpdateType()
 MaxObject: TypeAlias = 'BaseMaxObject | Response'
 
 
-Update = TypeVar('Update', bound=MaxObject)
+Update = TypeVar('Update', bound='Response')
 
 ResolvedUpdate = TypeVar('ResolvedUpdate', bound=MaxObject)

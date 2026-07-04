@@ -3,11 +3,12 @@ from __future__ import annotations
 import types
 from typing import TYPE_CHECKING, Any
 
-from .StandardMaxEventObserver import StandardMaxEventObserver, Update
+from .StandardMaxEventObserver import StandardMaxEventObserver
 from ...models import BaseMaxObject
 
 if TYPE_CHECKING:
     from ..Router import Router
+    from .UpdateType import Update
 
 class UpdateMaxEventObserver(StandardMaxEventObserver):
 

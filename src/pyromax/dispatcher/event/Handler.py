@@ -11,12 +11,13 @@ from ...utils import inspect_and_form
 from ...filters.magic import MagicFilter
 
 from .UpdateType import Update, UNHANDLED, ResolvedUpdate, MaxObject
+from ...filters import Filter
 
 
 from magic_filter.magic import MagicFilter as OriginalMagicFilter
 
+
 if TYPE_CHECKING:
-    from ...filters import Filter
     from ...models import DataDict
     from ...models import BaseMaxObject
 

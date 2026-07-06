@@ -27,7 +27,13 @@ class Router(Subject):
         events: a dict with all event observers(listeners)
 
     """
-    def __init__(self, handlers_can_skip_yourself_when_return_unhandled: bool = False) -> None:
+    def __init__(
+            self,
+            *,
+            name: str | None = None,
+    ) -> None:
+        self.name = name or hex(id(self))
+
         self.sub_routers: list[Router] = []
         self._parent_router: None | Router = None
 

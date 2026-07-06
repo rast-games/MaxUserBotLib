@@ -4,11 +4,16 @@ from typing import cast, AsyncGenerator, Any, TYPE_CHECKING, TypeVar
 
 from .Router import Router
 from .event import UpdateMaxEventObserver, UNHANDLED, Update, UNKNOWN_UPDATE, skip, MaxObject, ResolvedUpdate
+from ..fsm.storage.memory import MemoryStorage, DisabledEventIsolation
+from ..fsm.middleware import FSMContextMiddleware
+from ..fsm.storage.base import BaseEventIsolation, BaseStorage
+from ..fsm.strategy import FSMStrategy
+
 
 from ..models import BaseMaxObject, DataDict, MapperUpdateTranslator
 from ..protocol import Response
 from .middlewares.error import ErrorsMiddleware
-
+from .middlewares.user_context import UserContextMiddleware
 
 if TYPE_CHECKING:
     from ..core.client import MaxApi
@@ -24,8 +29,19 @@ class Dispatcher(Router):
     Dispatcher extends Router and is intended to be the root object
     that receives updates from MaxApi and dispatches them to handlers.
     """
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(
+            self,
+            *,
+            storage: BaseStorage | None = None,
+            fsm_strategy: FSMStrategy = FSMStrategy.USER_IN_CHAT,
+            events_isolation: BaseEventIsolation | None = None,
+            disable_fsm: bool = False,
+            name: str | None = None,
+            **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            name=name
+        )
 
         self.update = UpdateMaxEventObserver(
             router=self,
@@ -34,16 +50,9 @@ class Dispatcher(Router):
         )
 
         async def notify_wrapper(resolved_update: ResolvedUpdate, data: DataDict) -> Any:
-            # try:
-            # mapper_update_translator = data.pop(MapperUpdateTranslator)
-            # except KeyError:
-            #     skip()
-            # resolved_update = mapper_update_translator(update)
-            # resolved_update = data.get(ResolvedUpdate)
             data.update(
                 {
                     type(resolved_update): resolved_update,
-                    # ResolvedUpdate: resolved_update,
                 }
             )
             result = await self.notify(resolved_update, data)
@@ -56,6 +65,19 @@ class Dispatcher(Router):
         self.update.outer_middleware(
             ErrorsMiddleware(self)
         )
+
+        self.update.outer_middleware(
+            UserContextMiddleware()
+        )
+
+        self.fsm = FSMContextMiddleware(
+            storage=storage or MemoryStorage(),
+            strategy=fsm_strategy,
+            events_isolation=events_isolation or DisabledEventIsolation(),
+        )
+
+        if not disable_fsm:
+            self.update.outer_middleware(self.fsm)
 
         self.__logger = logging.getLogger('MaxDispatcher')
 
@@ -75,38 +97,36 @@ class Dispatcher(Router):
         }
 
         update_translator, updates = max_api.listen_updates(context=context)
-        # async for update in cast(AsyncGenerator[Response | BaseMaxObject, None], max_api.listen_updates(context=context)):
-        async for update in updates:
+        try:
+            async for update in updates:
 
-            self.__logger.debug('Received update: %s', update)
+                self.__logger.debug('Received update: %s', update)
 
-            resolved_update = update_translator(update)
+                resolved_update = update_translator(update)
 
-            data: dict[type | TypeVar, Any] = {
-                type(max_api): max_api,
-                Update: update,
-                ResolvedUpdate: resolved_update,
-            }
+                data: dict[type | TypeVar, Any] = {
+                    type(max_api): max_api,
+                    Update: update,
+                    ResolvedUpdate: resolved_update,
+                }
 
-            # data.update(
-            #     {
-            #         MapperUpdateTranslator: update_translator
-            #     }
-            # )
-            data.update(max_api.workflow_data)
+                data.update(max_api.workflow_data)
 
-            update_observer = self.update
+                update_observer = self.update
 
-            data[DataDict] = data
+                data[DataDict] = data
 
-            response = await update_observer.wrap_outer_middleware(
-                update_observer.update,
-                update,
-                data=data
-            )
+                response = await update_observer.wrap_outer_middleware(
+                    update_observer.update,
+                    update,
+                    data=data
+                )
 
-            handled = response is not UNHANDLED and response is not UNKNOWN_UPDATE
+                handled = response is not UNHANDLED and response is not UNKNOWN_UPDATE
 
-            self.__logger.debug(f'update %s was{"" if handled is not UNHANDLED else "n`t"} handled: %s', update, handled)
+                self.__logger.debug(f'update %s was{"" if handled is not UNHANDLED else "n`t"} handled: %s', update, handled)
+        finally:
+            await self.fsm.close()
+
 
 

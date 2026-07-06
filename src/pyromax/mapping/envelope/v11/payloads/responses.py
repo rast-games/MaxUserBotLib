@@ -128,7 +128,7 @@ class PushUpdateResponse(CamelCaseModel):
 
 class EmojiReactionUpdateResponse(CamelCaseModel):
     chat_id: int
-    message_id: str
+    message_id: str | int
     reaction_info: ReactionInfoMappingModel
 
 

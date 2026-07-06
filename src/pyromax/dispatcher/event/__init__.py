@@ -5,7 +5,7 @@ from .MessageEventObservers import MessageEventObserver, ReplyToMessageEventObse
 from .EmojiReactionObservers import *
 from .UpdateMaxEventObserver import UpdateMaxEventObserver
 from .Handler import Handler
-from .UpdateType import Update, MaxObject, UNHANDLED, UNKNOWN_UPDATE
+from .UpdateType import Update, MaxObject, UNHANDLED, UNKNOWN_UPDATE, ResolvedUpdate
 from .base import skip, SkipHandler
 
 
@@ -13,6 +13,7 @@ __all__ = [
     'skip',
     'SkipHandler',
     'Update',
+    'ResolvedUpdate',
     'UNHANDLED',
     'UNKNOWN_UPDATE',
     'UpdateMaxEventObserver',

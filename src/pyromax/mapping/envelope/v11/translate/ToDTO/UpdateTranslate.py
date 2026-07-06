@@ -109,7 +109,7 @@ class EmojiReactionModel(TranslateModel):
 
         data = {
             'chat_id': self.payload.chat_id,
-            'message_id': self.payload.message_id,
+            'message_id': str(self.payload.message_id),
             'counters': self.payload.reaction_info.counters,
             'total_count': self.payload.reaction_info.total_count,
             'your_reaction': self.payload.reaction_info.your_reaction,

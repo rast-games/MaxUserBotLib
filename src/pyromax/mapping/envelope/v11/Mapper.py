@@ -4,21 +4,14 @@ from typing import Any, cast, Callable
 from functools import partial
 
 from ....protocol import Response
-from ....protocol.envelope import Envelope
 from ....exceptions import MapperApiError
 from .payloads.responses import ErrorMessageResponse
 from .translate.ToDTO import update_translate
 from ...registry import register_mapper
-from ....dispatcher.event.UpdateType import Update
 
 
 from .mixins import FullMixin
 from ....models import BaseMaxObject
-
-
-# if TYPE_CHECKING:
-#     from ....models import MessageLink
-#     from ....core import MaxApi
 
 
 @register_mapper('EnvelopeV11')

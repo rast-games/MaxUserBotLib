@@ -7,6 +7,7 @@ from .SocketTransportErrors import SocketTransportError, SocketTransportConnecti
 from .MapperErrors import BaseMapperError, RestartMapperError, GetQRError, MapperApiError, AlreadyFailedError, MapperCancelledError, MapperTransportError, MapperConnectError, MapperLifecycleError
 from .RoutingErrors import AlreadyCancelledError, RoutingError
 from .ProtocolErrors import BaseProtocolError, ReceiveProtocolError, SendingProtocolError, ConnectProtocolError
+from .fsm import DataNotDictLikeError
 
 __all__ = [
     'BaseMaxApiException',
@@ -35,4 +36,5 @@ __all__ = [
     'ReceiveProtocolError',
     'SendingProtocolError',
     'ConnectProtocolError',
+    'DataNotDictLikeError',
 ]

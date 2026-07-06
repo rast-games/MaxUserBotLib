@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Awaitable
 from ..utils import inspect_and_form
 if TYPE_CHECKING:
     from ..models import BaseMaxObject
-    from ..dispatcher.event import Update
+    from ..dispatcher.event import Update, ResolvedUpdate
 
 
 class Filter(ABC):
@@ -32,7 +32,7 @@ class Filter(ABC):
     #     __call__: Callable[Update, Awaitable[bool | dict[str, Any]]]
     # else:  # pragma: no cover
 
-    async def __call__(self, update: Update, data: dict[Any, Any], *args: Any, **kwargs: Any) -> bool | dict[str, Any]:
+    async def __call__(self, update: ResolvedUpdate, data: dict[Any, Any], *args: Any, **kwargs: Any) -> bool | dict[str, Any]:
         if self._SKIP_CHECK_PREPARATIONS:
             return await self._check(update, data, *args, **kwargs)
 
@@ -66,7 +66,7 @@ class Filter(ABC):
 
 
     @property
-    def callback(self) -> Callable[..., Awaitable[bool | dict[str, Any]]]:
+    def callback(self, *args: Any, **kwargs: Any) -> Callable[..., Awaitable[bool | dict[str, Any]]]:
         return self._check
 
 

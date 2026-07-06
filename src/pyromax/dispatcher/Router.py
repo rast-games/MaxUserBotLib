@@ -9,7 +9,9 @@ from .event import (
     RemovedMessageEventObserver,
     EmojiReactionAddObserver,
     EmojiReactionRemoveObserver,
-    Update, UNHANDLED, UNKNOWN_UPDATE, StandardMaxEventObserver, UpdateMaxEventObserver
+    Update, UNHANDLED, UNKNOWN_UPDATE, StandardMaxEventObserver, UpdateMaxEventObserver,
+    ResolvedUpdate,
+    MaxObject
 )
 from ..models import EmojiReaction, Message, ErrorEvent, BaseMaxObject, DataDict
 from ..protocol.bases import Response
@@ -25,7 +27,13 @@ class Router(Subject):
         events: a dict with all event observers(listeners)
 
     """
-    def __init__(self, handlers_can_skip_yourself_when_return_unhandled: bool = False) -> None:
+    def __init__(
+            self,
+            *,
+            name: str | None = None,
+    ) -> None:
+        self.name = name or hex(id(self))
+
         self.sub_routers: list[Router] = []
         self._parent_router: None | Router = None
 
@@ -139,7 +147,7 @@ class Router(Subject):
         router.parent_router = self
         return router
 
-    async def notify(self, update: Update, data: dict[Any, Any] | None = None, event_types: list[str] | None = None) -> Any:
+    async def notify(self, update: MaxObject, data: dict[Any, Any] | None = None, event_types: list[str] | None = None) -> Any:
         """Propagate an update through handlers and child routers.
 
            Parameters

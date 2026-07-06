@@ -6,12 +6,14 @@ from typing import Any
 
 from typing_extensions import TYPE_CHECKING
 
-from ..models import BaseMaxObject
+from ..models import BaseMaxObject, DataDict
 from .base import Filter
+from ..dispatcher.event.UpdateType import Update
 
 if TYPE_CHECKING:
     from ..dispatcher.event.Handler import FilterObject
     from .magic import MagicFilter
+    from ..dispatcher.event import Update, ResolvedUpdate
 
 
 
@@ -21,15 +23,10 @@ class _LogicFilter(Filter, ABC):
 
 
 class _InvertFilter(_LogicFilter):
-    def __init__(self, target: FilterObject) -> None:
+    def __init__(self, target: FilterObject[Filter]) -> None:
         super().__init__()
         self._SKIP_CHECK_PREPARATIONS = target.filter._SKIP_CHECK_PREPARATIONS
         self.target = target
-
-
-    @property
-    def callback(self) -> Callable[..., Awaitable[bool | dict[str, Any]]]:
-        return self.target.filter.callback
 
 
     @property
@@ -37,8 +34,8 @@ class _InvertFilter(_LogicFilter):
         return self.target.filter.work_with
 
 
-    async def _check(self, *args: Any, **kwargs: Any) -> bool:
-        return not await self.target(*args, **kwargs)
+    async def _check(self, update: ResolvedUpdate, data: DataDict) -> bool:
+        return not await self.target(update, data)
 
 
     def __repr__(self) -> str:
@@ -63,10 +60,10 @@ class _AndFilter(_LogicFilter):
         return tuple(t)
 
 
-    async def _check(self, *args: Any, **kwargs: Any) -> bool | dict[Any, Any]:
+    async def _check(self, update: ResolvedUpdate, data: DataDict) -> bool | dict[Any, Any]:
         final_result = {}
         for target in self.targets:
-            result = await target(*args, **kwargs)
+            result = await target(update, data)
             if not result:
                 return False
             if isinstance(result, dict):
@@ -95,9 +92,9 @@ class _OrFilter(_LogicFilter):
         return tuple(t)
 
 
-    async def _check(self, *args: Any, **kwargs: Any) -> bool | dict[str, Any]:
+    async def _check(self, update: ResolvedUpdate, data: DataDict) -> bool | dict[str, Any]:
         for target in self.targets:
-            result = await target(*args, **kwargs)
+            result = await target(update, data)
             if not result:
                 continue
             if isinstance(result, dict):

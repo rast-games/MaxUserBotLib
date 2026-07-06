@@ -1,32 +1,38 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Awaitable, Iterable, Coroutine
-from typing import Any, TYPE_CHECKING, Generic, Union, Optional, Literal
+from collections.abc import Callable
+from typing import Any, TYPE_CHECKING, Generic, Optional, TypeVar, Mapping
 from dataclasses import dataclass
 import logging
+import inspect
 
 
 from ..ObserverPattern import Observer
 from ...utils import inspect_and_form
 from ...filters.magic import MagicFilter
 
-from .UpdateType import Update, UNHANDLED
+from .UpdateType import UNHANDLED, ResolvedUpdate, MaxObject
+from ...filters import Filter
 
 
 from magic_filter.magic import MagicFilter as OriginalMagicFilter
 
+
 if TYPE_CHECKING:
-    from ...filters import Filter
+    from ...models import DataDict
     from ...models import BaseMaxObject
 
 
+f = TypeVar('f', bound=Filter | Callable[[MaxObject, Mapping[Any, Any]], Any])
+
 @dataclass
-class FilterObject:
-    filter: Filter
+class FilterObject(Generic[f]):
+    filter: f
     magic: Optional[OriginalMagicFilter | MagicFilter] = None
 
     def __post_init__(self):
         self.resolve = self._resolve
+        self.awaitable = inspect.isawaitable(self.filter) or inspect.iscoroutinefunction(self.filter)
         if isinstance(self.filter, OriginalMagicFilter):
             self.magic = self.filter
             self.resolve = self._magic_resolve
@@ -40,25 +46,29 @@ class FilterObject:
                     "to `from pyromax import F` to silence this warning.",
                     stacklevel=6
                 )
+        if isinstance(self.filter, Filter):
+            self.awaitable = True
 
 
-    async def _magic_resolve(self, update: Update, *args: Any) -> Any:
+    async def _magic_resolve(self, update: ResolvedUpdate, *args: Any) -> Any:
         self.magic: MagicFilter
         return self.magic.resolve(update)
 
 
-    async def _resolve(self, update: Update, data: dict[Any, Any]) -> bool | dict[str, Any]:
+    async def _resolve(self, update: ResolvedUpdate, data: dict[Any, Any]) -> bool | dict[str, Any]:
         assert not isinstance(self.filter, MagicFilter)
-        return await self.filter(update, data)
+        if self.awaitable:
+            return await self.filter(update, data)
+        return self.filter(update, data)
 
 
-    async def __call__(self, update: Update, data: dict[Any, Any], *args: Any, **kwargs: Any) -> Any:
+    async def __call__(self, update: ResolvedUpdate, data: dict[Any, Any], *args: Any, **kwargs: Any) -> Any:
         return await self.resolve(update, data)
 
 
-class Handler(Observer, Generic[Update]):
+class Handler(Observer, Generic[ResolvedUpdate]):
     """Wrap a callable handler with filters and a pattern."""
-    def __init__(self, function: Callable[..., Any], filters: list[FilterObject], pattern: Callable[[Update], Any] | None = None):
+    def __init__(self, function: Callable[..., Any], filters: list[FilterObject], pattern: Callable[[ResolvedUpdate], Any] | None = None):
         """Create a handler wrapper.
 
         Parameters
@@ -76,7 +86,7 @@ class Handler(Observer, Generic[Update]):
         self.function = function
 
 
-    async def _propagate_update(self, update: Update, data: dict[Any, Any]) -> bool:
+    async def _propagate_update(self, update: ResolvedUpdate, data: dict[Any, Any]) -> bool:
         if self.pattern is None and not self.filters:
             return True
         for f in self.filters:
@@ -90,11 +100,11 @@ class Handler(Observer, Generic[Update]):
         return True
 
 
-    async def check(self, update: Update, data: dict[Any, Any]) -> bool:
+    async def check(self, update: ResolvedUpdate, data: dict[Any, Any]) -> bool:
         return await self._propagate_update(update, data)
 
 
-    async def update(self, update: Update, data: dict[Any, Any] | None = None) -> Any:
+    async def update(self, update: ResolvedUpdate, data: dict[Any, Any] | None = None) -> Any:
         if data is None:
             raise ValueError('data cannot be None')
         check = await self._propagate_update(update, data)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, TYPE_CHECKING, Generic, Optional, TypeVar, Mapping
+from typing import Any, TYPE_CHECKING, Generic, Optional, TypeVar, Mapping, cast
 from dataclasses import dataclass
 import logging
 import inspect
@@ -59,7 +59,7 @@ class FilterObject(Generic[f]):
         assert not isinstance(self.filter, MagicFilter)
         if self.awaitable:
             return await self.filter(update, data)
-        return self.filter(update, data)
+        return cast(bool | dict[str, Any], self.filter(update, data))
 
 
     async def __call__(self, update: ResolvedUpdate, data: dict[Any, Any], *args: Any, **kwargs: Any) -> Any:

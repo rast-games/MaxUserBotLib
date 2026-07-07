@@ -69,8 +69,8 @@ class FSMContextMiddleware(BaseMiddleware):
     def resolve_context(
             self,
             max_api: MaxApi,
-            chat_id: int,
-            user_id: int,
+            chat_id: int | None = None,
+            user_id: int | None = None,
             destiny: str = DEFAULT_DESTINY,
     ) -> FSMContext | None:
         if chat_id is None:
@@ -100,12 +100,15 @@ class FSMContextMiddleware(BaseMiddleware):
             user_id: int,
             destiny: str = DEFAULT_DESTINY,
     ) -> FSMContext:
+        max_api_id = max_api.id
+        if max_api_id is None:
+            max_api_id = 0
         return FSMContext(
             storage=self.storage,
             key=StorageKey(
                 user_id=user_id,
                 chat_id=chat_id,
-                max_api_id=max_api.id,
+                max_api_id=max_api_id,
                 destiny=destiny,
             )
         )

@@ -1,18 +1,22 @@
 from abc import ABC, abstractmethod
+from typing import cast, TypeVar, Generic, Any
 
 from ...payloads.shared import CamelCaseModel
-from ......models import (Contact, BaseMaxObject)
-from ...payloads.models import (ContactMappingModel,)
+from ......models import (Contact, Message, MessageLink, BaseMaxObject)
+from ...payloads.models import (ContactMappingModel, MessageMappingModel, MessageLinkMappingModel)
 
-class BaseTranslateMappingModel(ABC):
+
+TranslateObj = TypeVar('TranslateObj', bound=CamelCaseModel)
+
+class BaseTranslateMappingModel(ABC, Generic[TranslateObj]):
     @staticmethod
     @abstractmethod
-    def translate(mapping_model: CamelCaseModel) -> BaseMaxObject: pass
+    def translate(mapping_model: TranslateObj) -> BaseMaxObject: pass
 
 
-class TranslateContact(BaseTranslateMappingModel):
+class TranslateContact(BaseTranslateMappingModel[ContactMappingModel]):
     @staticmethod
-    def translate(contact: ContactMappingModel) -> Contact: # type: ignore[override]
+    def translate(contact: ContactMappingModel) -> Contact:
         return Contact(
             id=contact.id,
             name=contact.names[0].name if contact.names else '',
@@ -29,8 +33,73 @@ class TranslateContact(BaseTranslateMappingModel):
             registration_time=contact.registration_time,
         )
 
-TRANSLATE_MAPPING_MODELS: dict[type[CamelCaseModel], type[BaseTranslateMappingModel]] = {
+class TranslateMessage(BaseTranslateMappingModel[MessageMappingModel]):
+    @staticmethod
+    def translate(message: MessageMappingModel) -> Message:
+        def translate_message(msg: MessageMappingModel) -> Message:
+            msg_id = msg.id
+            # if message.id is None:
+            #     msg_id = 0
+            # else:
+            #     msg_id = int(msg_id) if type(msg_id) is str and msg_id.isdigit() or type(msg_id) is int else 0
+
+            msg_link = msg.link
+
+            if type(msg_id) is str:
+                msg_id = int(msg_id) if msg_id.isdigit() else 0
+            elif msg_id is None:
+                msg_id = -1
+            else:
+                msg_id = msg_id
+
+            if msg.chat_id is None:
+                chat_id = -1
+            else:
+                chat_id = msg.chat_id
+
+            if msg.time is None:
+                msg_time = -1
+            else:
+                msg_time = msg.time
+            if msg_link is not None and msg_link.message is not None:
+                return Message(
+                    message_id=cast(int, msg_id),
+                    type=msg.type,
+                    chat_id=chat_id,
+                    cid=msg.cid,
+                    time=msg_time,
+                    text=msg.text,
+                    status=msg.status,
+                    elements=msg.elements,
+                    sender_id=msg.sender,
+                    attaches=msg.attaches,
+                    link=MessageLink(
+                        message=translate_message(msg=msg_link.message),
+                        message_id=msg_link.message_id,
+                        type=msg_link.type
+                    )
+                )
+
+            return Message(
+                message_id=cast(int, msg_id),
+                type=msg.type,
+                chat_id=chat_id,
+                cid=msg.cid,
+                time=msg_time,
+                text=msg.text,
+                status=msg.status,
+                elements=msg.elements,
+                sender_id=msg.sender,
+                attaches=msg.attaches,
+            )
+        return translate_message(
+            msg=message
+        )
+
+
+TRANSLATE_MAPPING_MODELS: dict[type[CamelCaseModel], type[BaseTranslateMappingModel[Any]]] = {
     ContactMappingModel: TranslateContact,
+    MessageMappingModel: TranslateMessage
 }
 
 

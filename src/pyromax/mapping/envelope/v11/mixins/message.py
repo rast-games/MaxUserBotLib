@@ -1,7 +1,7 @@
 from __future__ import annotations
 import logging
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from collections.abc import Callable, Coroutine
 import time
 import asyncio
@@ -13,6 +13,8 @@ from .....utils import clean_and_map, Backoff
 from ..methods.immutable import SendMessageMethod
 from .....exceptions import SendMessageFileError, SendMessageNotFoundError, SendMessageError, BackoffError
 from ..payloads.responses import SendMessageResponse
+from ..translate.ToDTO import translate_models
+from .....models import Message
 
 from .MixinProtocol import MixinProtocol
 
@@ -27,7 +29,7 @@ class MessageMixin(MixinProtocol):
             attaches: Sequence[BaseFileMappingModel] | None = None,
             link: MessageLink | None = None,
             **kwargs: Any
-    ) -> MessageMappingModel | None:
+    ) -> Message | None:
         """
 
         Raises
@@ -116,9 +118,15 @@ class MessageMixin(MixinProtocol):
                     recv_attach = response_parsed.message.attaches[i]
                     for attr, value in recv_attach.__dict__.items():
                         setattr(attach, attr, value)
-            return response_parsed.message
+            mapped_message = response_parsed.message
+            translated_message = cast(Message, translate_models(mapped_message))
+            return translated_message
+
 
         except (asyncio.CancelledError, self.protocol.transport.BASE_EXCEPTION_FOR_TRANSPORT) as e:
             self._logger.error('Error sending message: %s', e)
             return None
+            # raise SendMessageError(
+            #     'Transport error while sending message or bot was cancelled'
+            # )
 

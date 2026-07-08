@@ -16,7 +16,7 @@ class SendMessageMethod(BaseMaxApiMethod[Message]):
             text: str | None = None,
             attaches: list[BaseFileAttachment] | None = None,
             **kwargs: Any
-    ) -> Any:
+    ) -> Message | None:
         if not attaches:
             attaches = []
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import asyncio
 import logging
-from typing import Any, TYPE_CHECKING, AsyncGenerator
+from typing import Any, TYPE_CHECKING, AsyncGenerator, cast
 from collections.abc import Sequence, Callable
 
 from ..mixins import AsyncInitializerMixin
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from ..dispatcher.event import Update, MaxObject
     from ..protocol import Response
     from ..methods import BaseMaxApiMethod
-    from ..models import BaseFileAttachment, MessageLink
+    from ..models import BaseFileAttachment, MessageLink, Message
 
 from .context import *
 
@@ -206,7 +206,7 @@ class MaxApi(AsyncInitializerMixin):
             text: str = '',
             attaches: list[BaseFileAttachment] | None = None,
             link: MessageLink | None = None,
-    ) -> Any:
+    ) -> Message | None:
         """Send a message to a chat.
 
                 Parameters
@@ -230,13 +230,17 @@ class MaxApi(AsyncInitializerMixin):
                 SendMessageError
                     If message sending fails.
                 """
+        from ..models import Message
         try:
-            return await self(
-                SendMessageMethod,
-                text=text,
-                chat_id=chat_id,
-                attaches=attaches,
-                link=link,
+            return cast(
+                Message | None,
+                await self(
+                    SendMessageMethod,
+                    text=text,
+                    chat_id=chat_id,
+                    attaches=attaches,
+                    link=link,
+                )
             )
         except SendMessageError as e:
             if self.__logger is None:

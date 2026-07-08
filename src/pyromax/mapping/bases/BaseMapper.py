@@ -10,7 +10,7 @@ from ...mixins import AsyncInitializerMixin, AsyncConstructorMeta
 
 
 if TYPE_CHECKING:
-    from ...models import BaseFileAttachment, BaseMaxObject
+    from ...models import BaseFileAttachment, BaseMaxObject, Message
     from ...protocol import Request
     from ...dispatcher.event import Update
     from ...core import MaxApi
@@ -51,7 +51,7 @@ class BaseMapper(AsyncInitializerMixin, Generic[T_protocol, T_file]):
 
 
     @abstractmethod
-    async def send_message(self, chat_id: int, text: str | None = None, attaches: Sequence[Any] | None = None, **kwargs: Any) -> Any | None: pass
+    async def send_message(self, chat_id: int, text: str | None = None, attaches: Sequence[Any] | None = None, **kwargs: Any) -> Message | None: pass
 
 
     @abstractmethod

@@ -1,7 +1,7 @@
 from collections.abc import Sequence, Coroutine, Callable
 from typing import cast, Any
 
-from .....models import BaseMaxObject
+from .....models import Contact
 from .....protocol.envelope import Envelope
 from ..payloads.shared import CamelCaseModel
 from ..payloads.responses import GetContactResponse
@@ -11,7 +11,7 @@ from ..translate.ToDTO import translate_models
 from .MixinProtocol import MixinProtocol
 
 class UserMixin(MixinProtocol):
-    async def get_member_by_id(self, member_id: int | list[int]) -> Sequence[BaseMaxObject | CamelCaseModel]:
+    async def get_member_by_id(self, member_id: int | list[int]) -> Sequence[Contact]:
         contact_ids: list[int]
         if isinstance(member_id, int):
             contact_ids = [member_id]
@@ -33,4 +33,6 @@ class UserMixin(MixinProtocol):
 
         contacts = [translate_models(mapping_contact) for mapping_contact in response.contacts]
 
-        return cast(list[BaseMaxObject], contacts)
+        return [contact for contact in contacts if isinstance(contact, Contact)]
+
+        # return cast(list[BaseMaxObject], contacts)

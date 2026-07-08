@@ -5,7 +5,10 @@ from typing import Any, TYPE_CHECKING, AsyncGenerator, cast
 from collections.abc import Sequence, Callable
 
 from ..mixins import AsyncInitializerMixin
-from ..methods import SendMessageMethod
+from ..methods import (
+    SendMessageMethod,
+    GetMemberByIdMethod
+)
 from ..exceptions import SendMessageError
 
 if TYPE_CHECKING:
@@ -256,5 +259,14 @@ class MaxApi(AsyncInitializerMixin):
         return await self.mapper.download_file(file)
 
 
-    async def get_member_by_id(self, member_id: int) -> Sequence[Contact | Any]:
-        return await self.mapper.get_member_by_id(member_id)
+    async def get_member_by_id(self, member_id: int) -> Sequence[Contact]:
+        from ..models import Contact
+        contacts = cast(
+            Sequence[Contact],
+            await self(
+                GetMemberByIdMethod,
+                member_id=member_id,
+            )
+        )
+        return contacts
+        # return await self.mapper.get_member_by_id(member_id)

@@ -124,7 +124,7 @@ class Dispatcher(Router):
 
                 handled = response is not UNHANDLED and response is not UNKNOWN_UPDATE
 
-                self.__logger.debug(f'update %s was{"" if handled is not UNHANDLED else "n`t"} handled: %s', update, handled)
+                self.__logger.debug(f'update %s was{"" if handled else "n`t"} handled: %s', update, handled)
         finally:
             await self.fsm.close()
 

@@ -60,5 +60,5 @@ class MiddlewareManager(Sequence[MiddlewareType[MaxObject]]):
 
         middleware = handler
         for m in reversed(middlewares):
-            middleware = functools.partial(m, middleware)  # type: ignore[assignment]
+            middleware = functools.partial(m, middleware)
         return middleware

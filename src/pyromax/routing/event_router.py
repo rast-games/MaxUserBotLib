@@ -61,8 +61,7 @@ class EventRouter(Generic[request, response]):
     async def resolve_response(self, resp: response, gen: int) -> bool:
         key = self.this_response_is_expecting(resp, gen)
         if key is not False:
-
-            awaitable = self.__pending.pop(cast(tuple[request, int], key), None)
+            awaitable = self.__pending.pop(cast(tuple[request, int], key), None) # type: ignore[redundant-cast]
 
             if awaitable is None:
                 return False

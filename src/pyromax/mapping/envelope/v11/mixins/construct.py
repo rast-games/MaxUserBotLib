@@ -2,7 +2,7 @@ from __future__ import annotations
 import asyncio
 from asyncio import Task, Lock, Event
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, _ProtocolMeta
 from collections.abc import Callable, Coroutine
 
 from typing import cast, Protocol
@@ -19,9 +19,9 @@ if TYPE_CHECKING:
 
 from .MixinProtocol import MixinProtocol
 
-ProtocolMeta: type = type(Protocol)
+# ProtocolMeta: type = type(Protocol)
 
-class AsyncInitializerMixinProtocol(AsyncConstructorMeta, ProtocolMeta):
+class AsyncInitializerMixinProtocol(AsyncConstructorMeta, _ProtocolMeta):
     pass
 
 class ConstructorMixin(AsyncInitializerMixin, MixinProtocol, metaclass=AsyncInitializerMixinProtocol):

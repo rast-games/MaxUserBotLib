@@ -59,3 +59,11 @@ mongodb = [
 [tool.mypy]
 python_version = "3.11"
 strict = true
+
+
+[[tool.mypy.overrides]]
+module = [
+    "redis.*",
+    "pymongo.*"
+]
+ignore_missing_imports = true

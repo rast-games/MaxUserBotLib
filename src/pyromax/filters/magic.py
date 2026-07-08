@@ -8,7 +8,7 @@ from ..models import BaseMaxObject
 from magic_filter import MagicFilter as _MagicFilter
 
 if TYPE_CHECKING:
-    from .base import Update
+    from ..dispatcher.event import ResolvedUpdate
 
 class AlwaysEqual:
     def __eq__(self, other: Any) -> bool:
@@ -20,7 +20,7 @@ class MagicFilter(_MagicFilter, Filter): #type: ignore[misc]
     @property
     def work_with(self) -> tuple[type[BaseMaxObject]]: return cast(tuple[type[BaseMaxObject]], (AlwaysEqual(),))
 
-    async def _check(self, update: Update, *args: Any, **kwargs: Any) -> bool: return self.resolve(update)
+    async def _check(self, update: ResolvedUpdate, *args: Any, **kwargs: Any) -> Any: return self.resolve(update)
 
 
 F = MagicFilter()

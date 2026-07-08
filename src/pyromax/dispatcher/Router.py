@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from typing import Optional, Any
+from typing import Optional, Any, Literal
 
 from .ObserverPattern import Subject
 from .event import (
@@ -208,7 +208,7 @@ class Router(Subject):
             if response is UNHANDLED:
                 update_type_in_sub_routers = True
 
-            if response is not UNHANDLED and response is not UNKNOWN_UPDATE:
+            if response not in (UNKNOWN_UPDATE, UNHANDLED):
                 return response
         else:
             if update_type_in_sub_routers:

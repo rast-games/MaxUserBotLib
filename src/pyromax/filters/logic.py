@@ -45,7 +45,7 @@ class _InvertFilter(_LogicFilter):
 class _AndFilter(_LogicFilter):
     _SKIP_CHECK_PREPARATIONS = True
 
-    def __init__(self, *targets: FilterObject) -> None:
+    def __init__(self, *targets: FilterObject[Filter]) -> None:
         super().__init__()
         self.targets = targets
 
@@ -77,7 +77,7 @@ class _AndFilter(_LogicFilter):
 class _OrFilter(_LogicFilter):
     _SKIP_CHECK_PREPARATIONS = True
 
-    def __init__(self, *targets: FilterObject) -> None:
+    def __init__(self, *targets: FilterObject[Filter]) -> None:
         super().__init__()
         self.targets = targets
 

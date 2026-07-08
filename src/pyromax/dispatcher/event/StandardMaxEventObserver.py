@@ -52,7 +52,7 @@ class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
         # with dummy callback which never will be used
         async def handler_dummy() -> bool:
             return True
-        self._handler: Handler = Handler(pattern=lambda _: True, filters=[], function=handler_dummy)
+        self._handler: Handler[MaxObject] = Handler(pattern=lambda _: True, filters=[], function=handler_dummy)
 
     def register(self, callback: Callable[..., Awaitable[Any]], *filters: Filter | MagicFilter, pattern: Callable[[ResolvedUpdate], Any] | None = None) -> None:
         """Register a new handler with this observer."""

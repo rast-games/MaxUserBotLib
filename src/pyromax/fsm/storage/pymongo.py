@@ -63,7 +63,7 @@ class PyMongoStorage(BaseStorage):
 
     async def close(self) -> None:
         """Cleanup client resources and disconnect from MongoDB."""
-        return await self._client.close()
+        return cast(None, await self._client.close())
 
     def resolve_state(self, value: StateType) -> str | None:
         if value is None:

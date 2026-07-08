@@ -30,7 +30,7 @@ class FilterObject(Generic[f]):
     filter: f
     magic: Optional[OriginalMagicFilter | MagicFilter] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.resolve = self._resolve
         self.awaitable = inspect.isawaitable(self.filter) or inspect.iscoroutinefunction(self.filter)
         if isinstance(self.filter, OriginalMagicFilter):
@@ -50,7 +50,7 @@ class FilterObject(Generic[f]):
             self.awaitable = True
 
 
-    async def _magic_resolve(self, update: ResolvedUpdate, *args: Any) -> Any:
+    async def _magic_resolve(self, update: ResolvedUpdate, data: dict[Any, Any]) -> Any:
         self.magic: MagicFilter
         return self.magic.resolve(update)
 
@@ -68,7 +68,7 @@ class FilterObject(Generic[f]):
 
 class Handler(Observer, Generic[ResolvedUpdate]):
     """Wrap a callable handler with filters and a pattern."""
-    def __init__(self, function: Callable[..., Any], filters: list[FilterObject], pattern: Callable[[ResolvedUpdate], Any] | None = None):
+    def __init__(self, function: Callable[..., Any], filters: list[FilterObject[Any]], pattern: Callable[[ResolvedUpdate], Any] | None = None):
         """Create a handler wrapper.
 
         Parameters

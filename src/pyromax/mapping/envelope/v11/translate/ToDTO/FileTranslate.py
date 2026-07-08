@@ -112,7 +112,7 @@ class PhotoMapping(BaseFileMapping[Optional[dict[str, bytes]], PhotoMappingModel
             dumped.append(
                 PhotoMappingModel(
                     type='PHOTO',
-                    photo_id=self.photo_ids[i] if i in self.photo_ids else None,
+                    photo_id=self.photo_ids[i] if photo['token'] in self.photo_tokens else None,
                     **photo
                 )
             )

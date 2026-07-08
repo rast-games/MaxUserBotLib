@@ -7,7 +7,8 @@ from collections.abc import Sequence, Callable
 from ..mixins import AsyncInitializerMixin
 from ..methods import (
     SendMessageMethod,
-    GetMemberByIdMethod
+    GetMemberByIdMethod,
+    DownloadFileMethod
 )
 from ..exceptions import SendMessageError
 
@@ -256,7 +257,13 @@ class MaxApi(AsyncInitializerMixin):
             self,
             file: BaseFileAttachment
     ) -> tuple[bytes, dict[str, str]] | tuple[None, None]:
-        return await self.mapper.download_file(file)
+        return cast(
+            tuple[bytes, dict[str, str]] | tuple[None, None],
+            await self(
+                DownloadFileMethod,
+                file=file,
+            )
+        )
 
 
     async def get_member_by_id(self, member_id: int) -> Sequence[Contact]:

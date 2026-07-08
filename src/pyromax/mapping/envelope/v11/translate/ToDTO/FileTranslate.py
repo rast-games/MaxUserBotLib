@@ -302,7 +302,7 @@ MAPPING_MODEL_TO_FILE_MAPPING: dict[type[BaseFileMappingModel], type[BaseFileMap
 
 async def get_file_url(mapper: BaseMapper[BaseMaxProtocol[Any, Any], BaseFileMappingModel], file: BaseFileMappingModel, **kwargs: Any) -> str | None:
     if not file.uploaded:
-        raise DownloadFileError('File has not been uploaded to chat, cannot download it')
+        raise DownloadFileError('File has not been uploaded to chat, cannot download it(Most likely, you uploaded the attachment but did not send a message with it.)')
 
     translate_model = MAPPING_MODEL_TO_FILE_MAPPING[type(file)]
 

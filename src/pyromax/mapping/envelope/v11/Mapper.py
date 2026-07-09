@@ -8,6 +8,7 @@ from ....exceptions import MapperApiError
 from .payloads.responses import ErrorMessageResponse
 from .translate.ToDTO import update_translate
 from ...registry import register_mapper
+from .LifecycleManager import LifecycleManager
 
 
 from .mixins import FullMixin
@@ -34,8 +35,10 @@ class Mapper(FullMixin):
                     if self._lifecycle_manager is None:
                         self._logger.warning('lifecycle manager not available, wait init')
                         await self._lifecycle_manager_inited.wait()
+                        self._lifecycle_manager: LifecycleManager
+                        gen = await self._lifecycle_manager.get_generation()
                     self._logger.error('get_updates failed: %s', e)
-                    self._lifecycle_manager.notify_about_exception( #type: ignore[union-attr]
+                    self._lifecycle_manager.notify_about_exception(
                         e,
                         generation=gen,
                         source='Mapper.listen_updates',

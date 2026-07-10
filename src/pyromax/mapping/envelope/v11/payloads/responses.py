@@ -13,7 +13,7 @@ class TokenAttrsResponse(CamelCaseModel):
 
 class SuccessLoginResponse(CamelCaseModel):
     token_attrs: TokenAttrsResponse
-    profile: ProfileMappingModel
+    profile: ProfileMappingModel | None = None
     TwoFactor: ClassVar[bool] = False
 
 

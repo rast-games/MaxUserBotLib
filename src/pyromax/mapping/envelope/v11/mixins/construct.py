@@ -94,6 +94,7 @@ class ConstructorMixin(AsyncInitializerMixin, MixinProtocol, metaclass=AsyncInit
             user_agent_params: dict[str, Any] | None = None,
             **kwargs: Any
     ) -> None:
+        self.TOKEN_NAME = 'ENVELOPE_MAX_TOKEN_V11' + self.protocol.transport.__class__.__name__ + device_type
         if user_agent_params is None:
             user_agent_params = {
                 'device_type': device_type,

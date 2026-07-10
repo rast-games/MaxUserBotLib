@@ -6,7 +6,7 @@
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![PyPI](https://img.shields.io/pypi/v/pyromax)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Status](https://img.shields.io/badge/status-Alpha-orange)
+![Status](https://img.shields.io/badge/status-Beta-blue)
 
 Pyromax — современный фреймворк, вдохновлённый **aiogram 3.x**, который переносит привычную архитектуру Telegram-ботов в экосистему **MAX Messenger**.
 

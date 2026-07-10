@@ -131,15 +131,16 @@ class AuthMixin(MixinProtocol):
             await self._send_user_agent(
                 user_agent = user_agent,
             )
-            response = await self.send_raw(
-                method=GetMetadataForLoginMethod(),
-                check_errors=True
-            )
-            metadata = MetadataResponse(**response.payload)
+            # response = await self.send_raw(
+            #     method=GetMetadataForLoginMethod(),
+            #     check_errors=True
+            # )
+            # metadata = MetadataResponse(**response.payload)
+
 
             choice: ChoiceLoginVariantResponse = await self._call_build_in_method(
                 method_name='LOGIN',
-                metadata=metadata,
+                # metadata=metadata,
                 url_callback=url_callback,
                 code_getter=code_getter,
                 login_backoff=login_backoff,

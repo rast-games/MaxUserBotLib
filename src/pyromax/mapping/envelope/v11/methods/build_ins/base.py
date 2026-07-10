@@ -10,14 +10,16 @@ from collections.abc import Callable, Coroutine
 import qrcode
 
 
-from ..immutable import TrackLoginMethod
-from ...payloads.responses import TrackLoginResponse
+from ..immutable import TrackLoginMethod, GetMetadataForLoginMethod, StartSMSAuthMethod, VerifySMSCodeMethod
+from ......exceptions import MapperApiError
+from ...payloads.responses import TrackLoginResponse, MetadataResponse, StartSMSAuthResponse, TwoFactorLoginResponse, MetadataResponse
+from ...constants import DEFAULT_BACKOFF_CONFIG
+from ......utils import Backoff
 
 
 if TYPE_CHECKING:
     from ...Mapper import Mapper
-    from ......utils import Backoff
-    from ...payloads.responses import ChoiceLoginVariantResponse, MetadataResponse
+    from ...payloads.responses import ChoiceLoginVariantResponse
 
 
 class BaseBuildInMappingMethod(ABC):
@@ -75,6 +77,20 @@ class LoginBuildInMappingMethod(BaseBuildInMappingMethod):
             if track_data.status.login_available:
                 not_logged = False
 
+
+
+    async def _get_metadata(
+            self,
+            mapper: Mapper,
+    ) -> MetadataResponse:
+        response = await mapper.send_raw(
+            method=GetMetadataForLoginMethod(),
+            check_errors=True
+        )
+        metadata = MetadataResponse(**response.payload)
+
+        return metadata
+
     async def _resolve_qr(
             self,
             mapper: Mapper,
@@ -108,5 +124,89 @@ class LoginBuildInMappingMethod(BaseBuildInMappingMethod):
             polling_interval=metadata.polling_interval,
             track_id=track_id,
         )
+
+
+    @staticmethod
+    async def _resolve_sms_auth(
+            mapper: Mapper,
+            code_getter: Callable[..., Coroutine[Any, Any, int]] | None = None
+    ) -> ChoiceLoginVariantResponse:
+        auth_type = 'START_AUTH'
+        temp_token: str | None = None
+        sms_backoff = Backoff(config=DEFAULT_BACKOFF_CONFIG)
+        while True:
+            try:
+                response = await mapper.send_raw(
+                    method=StartSMSAuthMethod(
+                        phone=mapper.phone,
+                        type=auth_type
+                    ),
+                    check_errors=True
+                )
+                auth_response = StartSMSAuthResponse(**response.payload)
+                temp_token = auth_response.token
+
+                break
+            except MapperApiError as e:
+                error = e.error
+                match error:
+                    case 'verify.code.wrong':
+                        mapper.log(20, 'SMS code wrong, resending...')
+                        auth_type = "RESEND"
+                        continue
+                    case 'error.limit.violate':
+                        mapper.log(20, 'SMS limit violate')
+                        raise e
+                    case 'error.code.attempt.limit':
+                        mapper.log(20, 'SMS code limit reached, over login')
+                        raise e
+                    case 'auth.request.forbidden':
+                        mapper.log(20, 'SMS auth request forbidden for this transport')
+                        raise e
+                    case _:
+                        mapper.log(20, f'Error while login with SMS code: {error}')
+                        raise e
+
+        verify_code: int | str
+        password_challenge_response: TwoFactorLoginResponse | None = None
+        if temp_token is None:
+            raise RuntimeError('temp token not given')
+        while True:
+            try:
+                if code_getter is not None:
+                    verify_code = await code_getter()
+                else:
+                    verify_code = await asyncio.to_thread(input, 'Write a sms code: ')
+                check_response = await mapper.send_raw(
+                    method=VerifySMSCodeMethod(
+                        temp_token=temp_token,
+                        auth_token_type='CHECK_CODE',
+                        verify_code=str(verify_code),
+                    ),
+                    check_errors=True
+                )
+                password_challenge_response = TwoFactorLoginResponse(
+                    **check_response.payload
+                )
+                break
+            except MapperApiError as e:
+                mapper.log(40, f'Error while login with SMS code: {e}')
+                error = e.error
+                match error:
+                    case 'error.limit.violate':
+                        mapper.log(20, 'SMS code limit reached, over login')
+                        raise e
+                    case 'auth.request.forbidden':
+                        mapper.log(20, 'SMS auth request forbidden for this transport')
+                        raise e
+                    case _:
+                        mapper.log(20, f'Error while login with SMS code: {error}')
+                        raise e
+
+        if password_challenge_response is None:
+            raise RuntimeError('Password challenge response not found.')
+
+        choice = ChoiceLoginVariantResponse(payload=password_challenge_response)
+        return choice
 
 

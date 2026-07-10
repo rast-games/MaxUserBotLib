@@ -1,7 +1,9 @@
+from random import randint
+
 from pydantic import Field
 
 from .shared import CamelCaseModel
-from .models import BaseUserAgentMappingModel, MessageMappingModel, WebUserAgentMappingModel, AppUserAgentMappingModel
+from .models import BaseUserAgentMappingModel, MessageMappingModel, WebUserAgentMappingModel, AppUserAgentMappingModel, MobileUserAgentMappingModel
 
 class BaseUserAgentRequest(CamelCaseModel):
     user_agent: BaseUserAgentMappingModel
@@ -11,13 +13,17 @@ class BaseUserAgentRequest(CamelCaseModel):
 class AppUserAgentRequest(BaseUserAgentRequest):
     user_agent: AppUserAgentMappingModel
     device_id: str
-    client_session_id: int
+    client_session_id: int = Field(default_factory=lambda: randint(1, 70))
 
 
 class WebUserAgentRequest(BaseUserAgentRequest):
     user_agent: WebUserAgentMappingModel
     device_id: str
 
+
+class MobileUserAgentRequest(AppUserAgentRequest):
+    user_agent: MobileUserAgentMappingModel
+    mt_instance_id: str = Field(..., alias="mt_instanceid")
 
 class Resolve2FARequest(CamelCaseModel):
     password: str

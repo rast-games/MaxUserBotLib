@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import abstractmethod, ABC
 import random
 from typing import Annotated, Literal, Any, ClassVar, TYPE_CHECKING
+from uuid import uuid4
 
 from pydantic import Field, BeforeValidator, AliasChoices, AliasPath, model_validator
 
@@ -11,14 +12,14 @@ from .....utils import get_random_device_id_numeric, get_random_device_id, get_r
 from .....config import WEB_APP_VERSION, WEB_SCREEN, DEFAULT_WEB_HEADER_USER_AGENT
 
 if TYPE_CHECKING:
-    from .requests import BaseUserAgentRequest, AppUserAgentRequest, WebUserAgentRequest
+    from .requests import BaseUserAgentRequest, AppUserAgentRequest, WebUserAgentRequest, MobileUserAgentRequest
 
 import time
 
 class BaseUserAgentMappingModel(BaseUserAgent, CamelCaseModel, ABC):
     device_type: str
     locale: str = 'ru'
-    device_id: str = get_random_device_id()
+    device_id: str = Field(default_factory=lambda: get_random_device_id())
     timezone: str = 'Europe/Moscow'
     device_locale: str = 'ru'
     os_version: str = 'Windows 10 Version 22H2'
@@ -69,6 +70,28 @@ class AppUserAgentMappingModel(BaseUserAgentMappingModel):
         device_id = self.device_id
         from .requests import AppUserAgentRequest
         return AppUserAgentRequest(device_id=device_id, client_session_id=client_session_id, user_agent=self)
+
+
+class MobileUserAgentMappingModel(AppUserAgentMappingModel):
+    device_type: str = 'ANDROID'
+    os_version: str = 'Android 13'
+    arch: str = 'arm64-v8a'
+    device_name: str = 'Samsung SM-A525F'
+    push_device_type: str = "GCM"
+    app_version: str = '26.14.1'
+    build_number: int = 6686
+    device_id: str = Field(default_factory=lambda: str(uuid4()), exclude=True)
+    mt_instance_id: str = Field(default_factory=lambda: str(uuid4()), exclude=True)
+
+
+    def to_request(self) -> MobileUserAgentRequest:
+        from .requests import MobileUserAgentRequest
+        return MobileUserAgentRequest(
+            device_id=self.device_id,
+            user_agent=self,
+            mt_instanceid=self.mt_instance_id,
+            client_session_id=self.client_session_id
+        )
 
 
 class AuthMappingModel(CamelCaseModel):

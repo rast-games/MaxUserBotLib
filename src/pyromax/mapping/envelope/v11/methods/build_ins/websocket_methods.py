@@ -19,10 +19,19 @@ class WebSocketLoginBuildInMappingMethod(LoginBuildInMappingMethod):
             self,
             mapper: Mapper,
             *args: Any,
-            metadata: MetadataResponse | None = None,
+            # metadata: MetadataResponse | None = None,
             url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None = None,
+            sms_auth: bool = False,
+            code_getter: Callable[..., Coroutine[Any, Any, int]] | None = None,
             **kwargs: Any
     ) -> ChoiceLoginVariantResponse:
+        if sms_auth:
+            return await self._resolve_sms_auth(
+                mapper=mapper,
+                code_getter=code_getter,
+            )
+
+        metadata = await self._get_metadata(mapper)
         if metadata is None:
             raise MapperApiError('Metadata not given for login')
         url = metadata.qr_link

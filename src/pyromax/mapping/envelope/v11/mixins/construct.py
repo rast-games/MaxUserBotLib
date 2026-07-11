@@ -95,17 +95,25 @@ class ConstructorMixin(AsyncInitializerMixin, MixinProtocol, metaclass=AsyncInit
             **kwargs: Any
     ) -> None:
         self.TOKEN_NAME = 'ENVELOPE_MAX_TOKEN_V11' + self.protocol.transport.__class__.__name__ + device_type
+        # empty_user_agent_params = False
         if user_agent_params is None:
+            # empty_user_agent_params = True
             user_agent_params = {
                 'device_type': device_type,
             }
             if device_id is not None:
                 user_agent_params['device_id'] = device_id
 
+
+
+
         if device_type not in self.DEVICE_TYPE_TO_USERAGENT_MODEL:
             raise RuntimeError(f'Unknown device type: {device_type}')
         user_agent_model = self.DEVICE_TYPE_TO_USERAGENT_MODEL[device_type]
-        user_agent = user_agent_model(**user_agent_params)
+        # if not empty_user_agent_params:
+        user_agent = user_agent_model.get_random_user_agent(**user_agent_params)
+        # else:
+        #     user_agent = user_agent_model(**user_agent_params)
         self.user_agent = user_agent
         if token is None:
             from .....utils import read_token

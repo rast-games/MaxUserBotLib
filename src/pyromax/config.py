@@ -64,6 +64,5 @@ WEB_APP_VERSION = "26.5.5"
 WEB_SCREEN = "1080x1920 1.0x"
 
 DEFAULT_WEB_HEADER_USER_AGENT = (
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:86.0) Gecko/20100101 Firefox/86.0"
 )

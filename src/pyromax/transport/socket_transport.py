@@ -35,7 +35,13 @@ class SocketTransport(StreamTransport):
         self.__buffer = bytearray()
         self.__logger = logging.getLogger('SocketTransport')
         await asyncio.to_thread(self.__init__) # type: ignore[misc]
-        self.__reader, self.__writer = await asyncio.open_connection(self.url, self.port, ssl=self._ssl_context)
+        while True:
+            try:
+                self.__reader, self.__writer = await asyncio.open_connection(self.url, self.port, ssl=self._ssl_context)
+                break
+            except ConnectionError as e:
+                self.__logger.error('Connection error: %s', e)
+                await asyncio.sleep(1)
 
 
     def __init__(self) -> None:

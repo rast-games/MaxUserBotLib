@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import abstractmethod, ABC
 import random
-from typing import Annotated, Literal, Any, ClassVar, TYPE_CHECKING
+from typing import Annotated, Literal, Any, ClassVar, TYPE_CHECKING, Self
 from uuid import uuid4
 
 from pydantic import Field, BeforeValidator, AliasChoices, AliasPath, model_validator
@@ -30,6 +30,11 @@ class BaseUserAgentMappingModel(BaseUserAgent, CamelCaseModel, ABC):
     def to_request(self) -> BaseUserAgentRequest: ...
 
 
+    @classmethod
+    @abstractmethod
+    def get_random_user_agent(cls, **kwargs: Any) -> Self: ...
+
+
 class WebUserAgentMappingModel(BaseUserAgentMappingModel):
     device_type: str = 'WEB'
     device_id: str = Field(default=get_random_device_id(), exclude=True)
@@ -42,6 +47,22 @@ class WebUserAgentMappingModel(BaseUserAgentMappingModel):
         device_id = self.device_id
         from .requests import WebUserAgentRequest
         return WebUserAgentRequest(device_id=device_id, user_agent=self)
+
+
+
+    @classmethod
+    def get_random_user_agent(cls, **kwargs: Any) -> WebUserAgentMappingModel:
+        from .....config import LOCALE_TIMEZONES
+        locale, timezone = random.choice(LOCALE_TIMEZONES)
+        args: dict[str, Any] = {
+            'locale': locale,
+            'timezone': timezone,
+        }
+        for key, value in kwargs.items():
+            args[key] = value
+        return cls(
+            **args
+        )
 
 
 class AppUserAgentMappingModel(BaseUserAgentMappingModel):
@@ -72,6 +93,27 @@ class AppUserAgentMappingModel(BaseUserAgentMappingModel):
         return AppUserAgentRequest(device_id=device_id, client_session_id=client_session_id, user_agent=self)
 
 
+    @classmethod
+    def get_random_user_agent(cls, **kwargs: Any) -> AppUserAgentMappingModel:
+        from .....config import APP_VERSIONS, LOCALE_TIMEZONES
+        app_version, build_number = random.choice(APP_VERSIONS)
+        locale, timezone = random.choice(LOCALE_TIMEZONES)
+
+        args: dict[str, Any] = {
+            'build_number': build_number,
+            'app_version': app_version,
+            'locale': locale,
+            'timezone': timezone,
+        }
+
+        for key, value in kwargs.items():
+            args[key] = value
+        return cls(
+            **args
+        )
+
+
+
 class MobileUserAgentMappingModel(AppUserAgentMappingModel):
     device_type: str = 'ANDROID'
     os_version: str = 'Android 13'
@@ -81,7 +123,7 @@ class MobileUserAgentMappingModel(AppUserAgentMappingModel):
     app_version: str = '26.14.1'
     build_number: int = 6686
     device_id: str = Field(default_factory=lambda: str(uuid4()), exclude=True)
-    mt_instance_id: str = Field(default_factory=lambda: str(uuid4()), exclude=True)
+    mt_instance_id: str = Field(default_factory=lambda: str(uuid4()), exclude=True, alias='mt_instanceid', serialization_alias='mt_instanceid')
 
 
     def to_request(self) -> MobileUserAgentRequest:
@@ -91,6 +133,30 @@ class MobileUserAgentMappingModel(AppUserAgentMappingModel):
             user_agent=self,
             mt_instanceid=self.mt_instance_id,
             client_session_id=self.client_session_id
+        )
+
+    @classmethod
+    def get_random_user_agent(cls, **kwargs: Any) -> MobileUserAgentMappingModel:
+        from .....config import ANDROID_DEVICES, APP_VERSIONS, LOCALE_TIMEZONES
+        device_name, os_version, screen, arch = random.choice(ANDROID_DEVICES)
+        app_version, build_number = random.choice(APP_VERSIONS)
+        locale, timezone = random.choice(LOCALE_TIMEZONES)
+
+        args: dict[str, Any] = {
+            'device_name': device_name,
+            'os_version': os_version,
+            'screen': screen,
+            'arch': arch,
+            'build_number': build_number,
+            'app_version': app_version,
+            'locale': locale,
+            'timezone': timezone,
+        }
+        for key, value in kwargs.items():
+            args[key] = value
+
+        return cls(
+            **args
         )
 
 

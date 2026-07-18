@@ -6,7 +6,7 @@ from typing import Any, cast
 from .....protocol.envelope import EnvelopeProtocol, Envelope
 from .....methods import BaseMaxApiMethod
 from ..methods.immutable import BaseMethod
-from .....exceptions import (AlreadyFailedError, AlreadyCancelledError, MapperCancelledError, MapperApiError,
+from .....exceptions import (MapperApiError, AlreadyFailedError, AlreadyCancelledError, MapperCancelledError, MapperApiError,
                              SendingProtocolError, MapperTransportError, MapperConnectError, ConnectProtocolError,
                              MapperNotImplementedMethodError, MapperTransportNotSupportedForMethodError)
 from ..payloads.responses import ErrorMessageResponse
@@ -206,12 +206,14 @@ class TransportMixin(MixinProtocol):
         return await method(cast(Mapper, self),*args, **kwargs)
 
 
-    async def call_method(self, method: type[BaseMaxApiMethod], *args: Any, **kwargs: Any) -> Any:
+    async def call_method(self, method: type[BaseMaxApiMethod[Any]], *args: Any, **kwargs: Any) -> Any:
         from ..Mapper import Mapper
         methods_registry = get_methods_registry(cast(Mapper, self))
         method_with_device_types = methods_registry.get(method)
         if method_with_device_types is None:
             raise MapperNotImplementedMethodError('Method not supported for this mapper')
+        if not self.user_agent:
+            raise MapperApiError('try call method on not initialized mapper(without user agent)')
         bounded_method = method_with_device_types.get(self.user_agent.device_type)
         if bounded_method is None:
             raise MapperTransportNotSupportedForMethodError('Method not supported for this transport')

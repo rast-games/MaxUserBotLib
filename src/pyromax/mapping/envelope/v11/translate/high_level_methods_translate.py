@@ -12,9 +12,9 @@ if TYPE_CHECKING:
 
 
 @lru_cache
-def get_registry(mapper: Mapper) -> dict[type[BaseMaxApiMethod], dict[str, Callable[[...], Awaitable[Any]]]]:
+def get_registry(mapper: Mapper) -> dict[type[BaseMaxApiMethod[Any]], dict[str, Callable[..., Awaitable[Any]]]]:
 
-    high_methods_registry: dict[type[BaseMaxApiMethod], dict[str, Callable[[...], Awaitable[Any]]]] = {
+    high_methods_registry: dict[type[BaseMaxApiMethod[Any]], dict[str, Callable[..., Awaitable[Any]]]] = {
         SendMessageMethod: {
             'WEB': mapper.send_message,
             'ANDROID': mapper.send_message,

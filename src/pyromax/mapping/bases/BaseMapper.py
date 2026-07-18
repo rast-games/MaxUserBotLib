@@ -60,7 +60,7 @@ class BaseMapper(AsyncInitializerMixin, Generic[T_protocol, T_file]):
 
 
     @abstractmethod
-    async def call_method(self, method: type[BaseMaxApiMethod], *args: Any, **kwargs: Any) -> Any:
+    async def call_method(self, method: type[BaseMaxApiMethod[Any]], *args: Any, **kwargs: Any) -> Any:
         """
         Call a high layer method in mapper
 

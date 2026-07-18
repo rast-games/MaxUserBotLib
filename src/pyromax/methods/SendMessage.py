@@ -28,3 +28,11 @@ class SendMessageMethod(BaseMaxApiMethod[Message]):
             attaches=attaches,
             **kwargs
         )
+
+        # return await self._max_api.mapper.call_method(
+        #     type(self),
+        #     chat_id=chat_id,
+        #     text=text,
+        #     attaches=attaches,
+        #     **kwargs,
+        # )

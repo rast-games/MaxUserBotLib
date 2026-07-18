@@ -37,3 +37,15 @@ class MapperConnectError(BaseMapperError):
 
 class MapperLifecycleError(BaseMapperError):
     pass
+
+
+class MapperNotImplementedError(BaseMapperError, NotImplementedError):
+    pass
+
+
+class MapperNotImplementedMethodError(MapperNotImplementedError):
+    pass
+
+
+class MapperTransportNotSupportedForMethodError(MapperNotImplementedError):
+    pass

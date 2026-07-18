@@ -4,7 +4,9 @@ from .AnnotationError import AnnotationError
 from .BackoffError import BackoffError
 from .FileError import FileError, DownloadFileError
 from .SocketTransportErrors import SocketTransportError, SocketTransportConnectionError, SocketTransportSendError
-from .MapperErrors import BaseMapperError, RestartMapperError, GetQRError, MapperApiError, AlreadyFailedError, MapperCancelledError, MapperTransportError, MapperConnectError, MapperLifecycleError
+from .MapperErrors import (BaseMapperError, RestartMapperError, GetQRError, MapperApiError, AlreadyFailedError,
+                           MapperCancelledError, MapperTransportError, MapperConnectError, MapperLifecycleError,
+                           MapperNotImplementedError, MapperNotImplementedMethodError, MapperTransportNotSupportedForMethodError)
 from .RoutingErrors import AlreadyCancelledError, RoutingError
 from .ProtocolErrors import BaseProtocolError, ReceiveProtocolError, SendingProtocolError, ConnectProtocolError
 from .fsm import DataNotDictLikeError
@@ -37,4 +39,7 @@ __all__ = [
     'SendingProtocolError',
     'ConnectProtocolError',
     'DataNotDictLikeError',
+    'MapperNotImplementedError',
+    'MapperNotImplementedMethodError',
+    'MapperTransportNotSupportedForMethodError',
 ]

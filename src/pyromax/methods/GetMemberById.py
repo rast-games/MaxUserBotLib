@@ -14,5 +14,9 @@ class GetMemberByIdMethod(BaseMaxApiMethod[Contact]):
         contacts = await self._max_api.mapper.get_member_by_id(
             member_id=member_id,
         )
+        # contacts = await self._max_api.mapper.call_method(
+        #     type(self),
+        #     member_id=member_id
+        # )
         return contacts
 

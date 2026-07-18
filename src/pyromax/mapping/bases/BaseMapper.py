@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from ...dispatcher.event import Update
     from ...core import MaxApi
     from ...protocol import BaseMaxProtocol
+    from ...methods import BaseMaxApiMethod
 
 
 T_protocol = TypeVar('T_protocol', bound='BaseMaxProtocol[Any, Any]')
@@ -56,3 +57,29 @@ class BaseMapper(AsyncInitializerMixin, Generic[T_protocol, T_file]):
 
     @abstractmethod
     async def get_member_by_id(self, member_id: int) -> Sequence[Contact]: pass
+
+
+    @abstractmethod
+    async def call_method(self, method: type[BaseMaxApiMethod], *args: Any, **kwargs: Any) -> Any:
+        """
+        Call a high layer method in mapper
+
+        Parameters
+        ----------
+        method
+            High layer method to call
+
+
+        Returns
+        -------
+        Any
+            High layer domain model as a rule
+
+
+        Raises
+        ------
+        MapperNotImplementedMethodError
+            if mapper not support this method
+        MapperTransportNotSupportedForMethodError
+            if mapper not support this method for chosen transport
+        """

@@ -13,3 +13,8 @@ class DownloadFileMethod(BaseMaxApiMethod[bytes]):
         return await self._max_api.mapper.download_file(
             file=file
         )
+
+        # return await self._max_api.mapper.call_method(
+        #     type(self),
+        #     file=file
+        # )

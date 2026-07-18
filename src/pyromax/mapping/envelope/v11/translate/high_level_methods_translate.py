@@ -4,7 +4,7 @@ from typing import Any, TYPE_CHECKING
 from collections.abc import Callable, Awaitable
 
 
-from .....methods import BaseMaxApiMethod, SendMessageMethod, GetMemberByIdMethod, DownloadFileMethod
+from .....methods import BaseMaxApiMethod, SendMessageMethod, GetMemberByIdMethod, DownloadFileMethod, UploadFileMethod
 
 if TYPE_CHECKING:
     from ..Mapper import Mapper
@@ -32,6 +32,12 @@ def get_registry(mapper: Mapper) -> dict[type[BaseMaxApiMethod[Any]], dict[str, 
             'IOS': mapper.download_file,
             'DESKTOP': mapper.download_file,
             'ANDROID': mapper.download_file,
+        },
+        UploadFileMethod: {
+            'WEB': mapper.upload_file,
+            'IOS': mapper.upload_file,
+            'DESKTOP': mapper.upload_file,
+            'ANDROID': mapper.upload_file,
         }
     }
 

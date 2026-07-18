@@ -8,7 +8,8 @@ from ..mixins import AsyncInitializerMixin
 from ..methods import (
     SendMessageMethod,
     GetMemberByIdMethod,
-    DownloadFileMethod
+    DownloadFileMethod,
+    UploadFileMethod
 )
 from ..exceptions import SendMessageError
 
@@ -265,6 +266,23 @@ class MaxApi(AsyncInitializerMixin):
             )
         )
 
+
+    async def upload_file(
+            self,
+            data: bytes | None,
+            typeof: type[BaseFileAttachment],
+            **kwargs: Any
+    ) -> list[BaseFileAttachment | Any]:
+        from ..models import BaseFileAttachment
+        return cast(
+            list[BaseFileAttachment | Any],
+            await self(
+                UploadFileMethod,
+                data=data,
+                typeof=typeof,
+                **kwargs,
+            )
+        )
 
     async def get_member_by_id(self, member_id: int) -> Sequence[Contact]:
         from ..models import Contact

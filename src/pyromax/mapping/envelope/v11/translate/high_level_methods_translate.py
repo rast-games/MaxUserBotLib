@@ -5,7 +5,7 @@ from collections.abc import Callable, Awaitable
 
 
 from .....methods import (BaseMaxApiMethod, SendMessageMethod, GetMemberByIdMethod, DownloadFileMethod, UploadFileMethod,
-                          ForwardMessageMethod)
+                          ForwardMessageMethod, GetMessagesMethod)
 
 if TYPE_CHECKING:
     from ..Mapper import Mapper
@@ -26,6 +26,11 @@ def get_registry(mapper: Mapper) -> dict[type[BaseMaxApiMethod[Any]], dict[str, 
             'WEB': mapper.forward_message,
             'ANDROID': mapper.forward_message,
             'DESKTOP': mapper.forward_message
+        },
+        GetMessagesMethod: {
+            'WEB': mapper.get_messages,
+            'DESKTOP': mapper.get_messages,
+            'ANDROID': mapper.get_messages,
         },
         GetMemberByIdMethod: {
             'WEB': mapper.get_member_by_id,

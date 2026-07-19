@@ -46,6 +46,11 @@ class SendMessageRequest(CamelCaseModel):
     message: MessageMappingModel
 
 
+class GetMessagesRequest(CamelCaseModel):
+    chat_id: int
+    message_ids: list[int | str]
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

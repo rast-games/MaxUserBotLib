@@ -1,25 +1,24 @@
 from typing import cast
+from collections.abc import Iterable
 
 from .Base import BaseMaxApiMethod
 from ..models import Message
 
 
-
-class ForwardMessageMethod(BaseMaxApiMethod[Message]):
+class GetMessagesMethod(BaseMaxApiMethod[list[Message]]):
     async def __call__(
             self,
-            message_id: int | str,
-            from_chat_id: int,
-            to_chat_id: int,
-    ) -> Message | None:
+            chat_id: int,
+            message_ids: Iterable[int | str],
+    ) -> list[Message]:
         if not self._max_api:
             raise RuntimeError('ForwardMessage method not bound to MaxApi instance')
+
         return cast(
-            Message | None,
+            list[Message],
             await self._max_api.mapper.call_method(
                 type(self),
-                message_id=message_id,
-                from_chat_id=from_chat_id,
-                to_chat_id=to_chat_id,
+                chat_id=chat_id,
+                message_ids=message_ids,
             )
         )

@@ -2,7 +2,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Any, TYPE_CHECKING, AsyncGenerator, cast
-from collections.abc import Sequence, Callable
+from collections.abc import Sequence, Callable, Iterable
 
 from ..mixins import AsyncInitializerMixin
 from ..methods import (
@@ -10,7 +10,8 @@ from ..methods import (
     GetMemberByIdMethod,
     DownloadFileMethod,
     UploadFileMethod,
-    ForwardMessageMethod
+    ForwardMessageMethod,
+    GetMessagesMethod
 )
 from ..exceptions import SendMessageError
 
@@ -206,6 +207,49 @@ class MaxApi(AsyncInitializerMixin):
         return self.mapper.listen_updates(context=context)
 
 
+    async def download_file(
+            self,
+            file: BaseFileAttachment
+    ) -> tuple[bytes, dict[str, str]] | tuple[None, None]:
+        return cast(
+            tuple[bytes, dict[str, str]] | tuple[None, None],
+            await self(
+                DownloadFileMethod,
+                file=file,
+            )
+        )
+
+
+    async def upload_file(
+            self,
+            data: bytes | None,
+            typeof: type[BaseFileAttachment],
+            **kwargs: Any
+    ) -> list[BaseFileAttachment | Any]:
+        from ..models import BaseFileAttachment
+        return cast(
+            list[BaseFileAttachment | Any],
+            await self(
+                UploadFileMethod,
+                data=data,
+                typeof=typeof,
+                **kwargs,
+            )
+        )
+
+    async def get_member_by_id(self, member_id: int) -> Sequence[Contact]:
+        from ..models import Contact
+        contacts = cast(
+            Sequence[Contact],
+            await self(
+                GetMemberByIdMethod,
+                member_id=member_id,
+            )
+        )
+        return contacts
+        # return await self.mapper.get_member_by_id(member_id)
+
+
     async def send_message(
             self,
             chat_id: int,
@@ -279,47 +323,17 @@ class MaxApi(AsyncInitializerMixin):
             raise e
 
 
-
-    async def download_file(
+    async def get_messages(
             self,
-            file: BaseFileAttachment
-    ) -> tuple[bytes, dict[str, str]] | tuple[None, None]:
+            chat_id: int,
+            message_ids: Iterable[int | str]
+    ) -> list[Message]:
+        from ..models import Message
         return cast(
-            tuple[bytes, dict[str, str]] | tuple[None, None],
+            list[Message],
             await self(
-                DownloadFileMethod,
-                file=file,
+                GetMessagesMethod,
+                chat_id=chat_id,
+                message_ids=message_ids,
             )
         )
-
-
-    async def upload_file(
-            self,
-            data: bytes | None,
-            typeof: type[BaseFileAttachment],
-            **kwargs: Any
-    ) -> list[BaseFileAttachment | Any]:
-        from ..models import BaseFileAttachment
-        return cast(
-            list[BaseFileAttachment | Any],
-            await self(
-                UploadFileMethod,
-                data=data,
-                typeof=typeof,
-                **kwargs,
-            )
-        )
-
-    async def get_member_by_id(self, member_id: int) -> Sequence[Contact]:
-        from ..models import Contact
-        contacts = cast(
-            Sequence[Contact],
-            await self(
-                GetMemberByIdMethod,
-                member_id=member_id,
-            )
-        )
-        return contacts
-        # return await self.mapper.get_member_by_id(member_id)
-
-

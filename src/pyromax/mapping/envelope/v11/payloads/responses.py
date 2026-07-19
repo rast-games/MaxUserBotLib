@@ -56,6 +56,11 @@ class SendMessageResponse(CamelCaseModel):
     message: MessageMappingModel
 
 
+class GetMessagesResponse(CamelCaseModel):
+    chat_id: int
+    messages: list[MessageMappingModel]
+
+
 class ErrorMessageResponse(CamelCaseModel):
     error: str | None = None
     error_message: str | None = Field(default=None, alias='message')

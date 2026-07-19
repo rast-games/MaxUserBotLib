@@ -1,5 +1,5 @@
 from .base import BaseMethod, Envelope, Cmd, Opcode, VERSION
-from ...payloads.requests import SendMessageRequest
+from ...payloads.requests import SendMessageRequest, GetMessagesRequest
 from ...translate.FromDTO import reverse_translate_message
 from ...payloads.models import MessageMappingModel, MessageLinkMappingModel
 
@@ -14,7 +14,7 @@ class SendMessageMethod(BaseMethod):
         request.payload = SendMessageRequest(
             chat_id=self.args['chat_id'],
             message=MessageMappingModel(
-                text=self.args['text'] if self.args['text'] else None,
+                text=self.args.get('text'),
                 cid=self.args['cid'],
                 attaches=self.args['attaches'],
                 elements=self.args['elements'] if self.args['text'] and self.args['elements'] else None,
@@ -29,6 +29,19 @@ class SendMessageMethod(BaseMethod):
         return request
 
 
+class GetMessagesMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.GET_MESSAGES
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = GetMessagesRequest(
+            message_ids=self.args['message_ids'],
+            chat_id=self.args['chat_id'],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
-    'SendMessageMethod'
+    'SendMessageMethod',
+    'GetMessagesMethod'
 ]

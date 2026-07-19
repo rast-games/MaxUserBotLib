@@ -13,6 +13,7 @@ class Opcode(MappingConstants):
     GET_CHAT = 48
     GET_CHAT_MESSAGES_PER_CHUNK = 49
     SEND_MESSAGE = 64
+    GET_MESSAGES = 71
     CREATE_PHOTO = 80
     CREATE_VIDEO = 82
     GET_VIDEO = 83

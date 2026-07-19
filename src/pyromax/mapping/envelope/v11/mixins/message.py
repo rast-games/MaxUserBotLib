@@ -1,6 +1,6 @@
 from __future__ import annotations
 import logging
-from collections.abc import Sequence
+from collections.abc import Sequence, Iterable
 from typing import TYPE_CHECKING, Any, cast
 from collections.abc import Callable, Coroutine
 import time
@@ -10,9 +10,9 @@ from ..payloads.models import BaseFileMappingModel, MessageMappingModel
 from .....protocol.envelope import Envelope, EnvelopeProtocol
 from ..constants import DEFAULT_BACKOFF_CONFIG
 from .....utils import clean_and_map, Backoff
-from ..methods.immutable import SendMessageMethod
+from ..methods.immutable import SendMessageMethod, GetMessagesMethod
 from .....exceptions import SendMessageFileError, SendMessageNotFoundError, SendMessageError, BackoffError
-from ..payloads.responses import SendMessageResponse
+from ..payloads.responses import SendMessageResponse, GetMessagesResponse
 from ..translate.ToDTO import translate_models
 from .....models import Message
 
@@ -152,5 +152,29 @@ class MessageMixin(MixinProtocol):
             chat_id=to_chat_id,
             link=link,
         )
+
+
+    async def get_messages(
+            self,
+            chat_id: int,
+            message_ids: Iterable[str | int],
+    ) -> list[Message]:
+
+        msg_ids = [str(msg_id) for msg_id in message_ids]
+        response = await self.send(
+            method=GetMessagesMethod(
+                chat_id=chat_id,
+                message_ids=msg_ids,
+            )
+        )
+
+        mapped_messages = GetMessagesResponse(
+            **response.payload
+        )
+        for message in mapped_messages.messages:
+            message.chat_id = mapped_messages.chat_id
+        messages = [translate_models(message) for message in mapped_messages.messages]
+
+        return cast(list[Message], messages)
 
 

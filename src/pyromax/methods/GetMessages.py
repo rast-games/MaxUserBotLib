@@ -12,7 +12,7 @@ class GetMessagesMethod(BaseMaxApiMethod[list[Message]]):
             message_ids: Iterable[int | str],
     ) -> list[Message]:
         if not self._max_api:
-            raise RuntimeError('ForwardMessage method not bound to MaxApi instance')
+            raise RuntimeError('GetMessages method not bound to MaxApi instance')
 
         return cast(
             list[Message],

@@ -1,9 +1,11 @@
 from random import randint
+from typing import Any
 
 from pydantic import Field
 
 from .shared import CamelCaseModel
-from .models import BaseUserAgentMappingModel, MessageMappingModel, WebUserAgentMappingModel, AppUserAgentMappingModel, MobileUserAgentMappingModel
+from .models import (BaseUserAgentMappingModel, MessageMappingModel, WebUserAgentMappingModel, AppUserAgentMappingModel,
+                     MobileUserAgentMappingModel, VideoMappingModel, PhotoMappingModel, FileMappingModel, ShareMappingModel)
 
 class BaseUserAgentRequest(CamelCaseModel):
     user_agent: BaseUserAgentMappingModel
@@ -44,6 +46,14 @@ class VerifySMSCodeRequest(CamelCaseModel):
 class SendMessageRequest(CamelCaseModel):
     chat_id: int
     message: MessageMappingModel
+
+
+class EditMessageRequest(CamelCaseModel):
+    chat_id: int
+    message_id: str | int
+    text: str | None = None
+    elements: list[dict[str, Any]] | None = None
+    attachments: list[VideoMappingModel | PhotoMappingModel | FileMappingModel | ShareMappingModel | Any] = []
 
 
 class GetMessagesRequest(CamelCaseModel):

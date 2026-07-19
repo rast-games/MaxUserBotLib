@@ -1,5 +1,5 @@
 from .base import BaseMethod, Envelope, Cmd, Opcode, VERSION
-from ...payloads.requests import SendMessageRequest, GetMessagesRequest
+from ...payloads.requests import SendMessageRequest, GetMessagesRequest, EditMessageRequest
 from ...translate.FromDTO import reverse_translate_message
 from ...payloads.models import MessageMappingModel, MessageLinkMappingModel
 
@@ -16,7 +16,7 @@ class SendMessageMethod(BaseMethod):
             message=MessageMappingModel(
                 text=self.args.get('text'),
                 cid=self.args['cid'],
-                attaches=self.args['attaches'],
+                attaches=self.args['attaches'] if self.args['attaches'] else [],
                 elements=self.args['elements'] if self.args['text'] and self.args['elements'] else None,
                 link=MessageLinkMappingModel(
                     type=main_link.type,
@@ -28,6 +28,20 @@ class SendMessageMethod(BaseMethod):
         ).model_dump(by_alias=True, exclude_none=True)
         return request
 
+
+class EditMessageMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.EDIT_MESSAGE
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = EditMessageRequest(
+            chat_id=self.args['chat_id'],
+            message_id=str(self.args['message_id']),
+            text=self.args.get('text'),
+            elements=self.args['elements'] if self.args['text'] and self.args['elements'] else None,
+            attachments=self.args['attaches'] if self.args['attaches'] else [],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
 
 class GetMessagesMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
@@ -43,5 +57,6 @@ class GetMessagesMethod(BaseMethod):
 
 __all__ = [
     'SendMessageMethod',
+    'EditMessageMethod',
     'GetMessagesMethod'
 ]

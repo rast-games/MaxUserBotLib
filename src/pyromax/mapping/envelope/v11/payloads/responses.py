@@ -56,6 +56,10 @@ class SendMessageResponse(CamelCaseModel):
     message: MessageMappingModel
 
 
+class EditMessageResponse(CamelCaseModel):
+    message: MessageMappingModel
+
+
 class GetMessagesResponse(CamelCaseModel):
     chat_id: int
     messages: list[MessageMappingModel]

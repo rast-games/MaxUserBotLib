@@ -10,9 +10,9 @@ from ..payloads.models import BaseFileMappingModel, MessageMappingModel
 from .....protocol.envelope import Envelope, EnvelopeProtocol
 from ..constants import DEFAULT_BACKOFF_CONFIG
 from .....utils import clean_and_map, Backoff
-from ..methods.immutable import SendMessageMethod, GetMessagesMethod
+from ..methods.immutable import SendMessageMethod, EditMessageMethod, GetMessagesMethod
 from .....exceptions import SendMessageFileError, SendMessageNotFoundError, SendMessageError, BackoffError
-from ..payloads.responses import SendMessageResponse, GetMessagesResponse
+from ..payloads.responses import SendMessageResponse, EditMessageResponse, GetMessagesResponse
 from ..translate.ToDTO import translate_models
 from .....models import Message
 
@@ -29,6 +29,7 @@ class MessageMixin(MixinProtocol):
             text: str | None = None,
             attaches: Sequence[BaseFileMappingModel] | None = None,
             link: MessageLink | None = None,
+            parse_tags: bool = True,
             **kwargs: Any
     ) -> Message | None:
         """
@@ -45,12 +46,19 @@ class MessageMixin(MixinProtocol):
             if hasattr(attach, 'is_attach') and attach.is_attach:
                 attachments.extend(attach.to_payload)
         backoff = Backoff(config=DEFAULT_BACKOFF_CONFIG)
-        text, elements = clean_and_map(
-            text if text else '',
-            [
-                'STRONG', 'EMPHASIZED', 'UNDERLINE', 'STRIKETHROUGH', 'QUOTE', 'LINK'
-            ]
-        )
+        if 'elements' in kwargs:
+            elements = kwargs['elements']
+        else:
+            elements = []
+
+        if parse_tags:
+            text, _elements = clean_and_map(
+                text if text else '',
+                [
+                    'STRONG', 'EMPHASIZED', 'UNDERLINE', 'STRIKETHROUGH', 'QUOTE', 'LINK'
+                ]
+            )
+            elements += _elements
         try:
             response = await self.send(
                 method=SendMessageMethod(
@@ -152,6 +160,60 @@ class MessageMixin(MixinProtocol):
             chat_id=to_chat_id,
             link=link,
         )
+
+
+    async def edit_message(
+            self,
+            chat_id: int,
+            message_id: int,
+            text: str | None = None,
+            attaches: Sequence[BaseFileMappingModel] | None = None,
+            parse_tags: bool = True,
+            **kwargs: Any,
+    ) -> Message:
+        if not attaches:
+            attaches = []
+        if 'elements' in kwargs:
+            elements = kwargs['elements']
+        else:
+            elements = []
+
+        attachments = []
+        for attach in attaches:
+            if hasattr(attach, 'is_attach') and attach.is_attach:
+                attachments.extend(attach.to_payload)
+
+        if parse_tags:
+            text, _elements = clean_and_map(
+                text if text else '',
+                [
+                    'STRONG', 'EMPHASIZED', 'UNDERLINE', 'STRIKETHROUGH', 'QUOTE', 'LINK'
+                ]
+            )
+            elements += _elements
+
+        response = await self.send(
+            method=EditMessageMethod(
+                chat_id=chat_id,
+                message_id=message_id,
+                text=text,
+                elements=elements,
+                attaches=attachments,
+            )
+        )
+
+        mapped_edited_message = EditMessageResponse(
+            **response.payload
+        ).message
+
+        edited_message = cast(
+            Message,
+            translate_models(mapped_edited_message),
+        )
+        edited_message.chat_id = chat_id
+
+        return edited_message
+
 
 
     async def get_messages(

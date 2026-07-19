@@ -9,7 +9,8 @@ from ..methods import (
     SendMessageMethod,
     GetMemberByIdMethod,
     DownloadFileMethod,
-    UploadFileMethod
+    UploadFileMethod,
+    ForwardMessageMethod
 )
 from ..exceptions import SendMessageError
 
@@ -254,6 +255,31 @@ class MaxApi(AsyncInitializerMixin):
             raise e
 
 
+    async def forward_message(
+            self,
+            message_id: int | str,
+            to_chat_id: int,
+            from_chat_id: int,
+    ) -> Message | None:
+        try:
+            from ..models import Message
+            return cast(
+                Message | None,
+                await self(
+                    ForwardMessageMethod,
+                    message_id=message_id,
+                    to_chat_id=to_chat_id,
+                    from_chat_id=from_chat_id
+                ),
+            )
+        except SendMessageError as e:
+            if self.__logger is None:
+                raise AttributeError('logger not initialized in MaxApi instance')
+            self.__logger.warning('Failed to forward message: %s', e)
+            raise e
+
+
+
     async def download_file(
             self,
             file: BaseFileAttachment
@@ -295,3 +321,5 @@ class MaxApi(AsyncInitializerMixin):
         )
         return contacts
         # return await self.mapper.get_member_by_id(member_id)
+
+

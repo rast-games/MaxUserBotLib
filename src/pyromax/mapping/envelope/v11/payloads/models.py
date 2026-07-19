@@ -168,6 +168,19 @@ class AuthMappingModel(CamelCaseModel):
     contacts_sync: int
     presence_sync: int
     drafts_sync: int
+    # user_agent: dict[Any, Any] = {
+    #         'deviceType': 'IOS',
+    #         'locale': 'ru',
+    #         'timezone': 'Asia/Yakutsk',
+    #         'deviceLocale': 'ru',
+    #         'osVersion': '17.5',
+    #         'deviceName': 'iPhone',
+    #         'screen': '411dpi 411dpi 1080x2400',
+    #         'buildNumber': 6678,
+    #         'appVersion': '26.12.0',
+    #         'arch': 'arm64-v8a',
+    #         'pushDeviceType': 'GCM'
+    #     }
 
 
 class PasswordConfig(CamelCaseModel):
@@ -346,6 +359,7 @@ class MessageLinkMappingModel(CamelCaseModel):
     type: str | None = None
     message: MessageMappingModel | None = None
     message_id: int | None = None
+    chat_id: int | None = None
 
 
 StatusType = Literal['EDITED', 'REPLY', 'USER', 'REMOVED']

@@ -21,6 +21,7 @@ class SendMessageMethod(BaseMethod):
                 link=MessageLinkMappingModel(
                     type=main_link.type,
                     message_id=int(main_link.message_id),
+                    chat_id=main_link.chat_id,
                     message=reverse_translate_message(main_link.message),
                 ) if main_link else None,
             ),

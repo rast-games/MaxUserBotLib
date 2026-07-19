@@ -8,7 +8,8 @@ from .Files import BaseFileAttachment
 class MessageLink(BaseMaxObject):
     type: str | None = None
     message: Message | None = None
-    message_id: int | None = None
+    message_id: int | str | None = None
+    chat_id: int | None = None
 
 
 class Message(BaseMaxObject):
@@ -29,7 +30,7 @@ class Message(BaseMaxObject):
             self,
             text: str | None = None,
             attaches: list[BaseFileAttachment] | None = None,
-            link: MessageLink | None= None,
+            link: MessageLink | None = None,
     ) -> Any:
         from ..methods import SendMessageMethod
 

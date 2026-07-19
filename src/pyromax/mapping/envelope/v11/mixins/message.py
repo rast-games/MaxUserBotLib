@@ -18,8 +18,9 @@ from .....models import Message
 
 from .MixinProtocol import MixinProtocol
 
+from .....models import MessageLink
 if TYPE_CHECKING:
-    from .....models import MessageLink
+    pass
 
 class MessageMixin(MixinProtocol):
     async def send_message(
@@ -119,6 +120,7 @@ class MessageMixin(MixinProtocol):
                     for attr, value in recv_attach.__dict__.items():
                         setattr(attach, attr, value)
             mapped_message = response_parsed.message
+            mapped_message.chat_id = response_parsed.chat_id
             translated_message = cast(Message, translate_models(mapped_message))
             return translated_message
 
@@ -129,4 +131,26 @@ class MessageMixin(MixinProtocol):
             # raise SendMessageError(
             #     'Transport error while sending message or bot was cancelled'
             # )
+
+
+    async def forward_message(
+            self,
+            message_id: int | str,
+            to_chat_id: int,
+            from_chat_id: int,
+    ) -> Message | None:
+        if isinstance(message_id, int):
+            msg_id = str(message_id)
+
+        link = MessageLink(
+            type='FORWARD',
+            message_id=message_id,
+            chat_id=from_chat_id,
+        )
+
+        return await self.send_message(
+            chat_id=to_chat_id,
+            link=link,
+        )
+
 

@@ -4,7 +4,8 @@ from typing import Any, TYPE_CHECKING
 from collections.abc import Callable, Awaitable
 
 
-from .....methods import BaseMaxApiMethod, SendMessageMethod, GetMemberByIdMethod, DownloadFileMethod, UploadFileMethod
+from .....methods import (BaseMaxApiMethod, SendMessageMethod, GetMemberByIdMethod, DownloadFileMethod, UploadFileMethod,
+                          ForwardMessageMethod)
 
 if TYPE_CHECKING:
     from ..Mapper import Mapper
@@ -18,27 +19,32 @@ def get_registry(mapper: Mapper) -> dict[type[BaseMaxApiMethod[Any]], dict[str, 
         SendMessageMethod: {
             'WEB': mapper.send_message,
             'ANDROID': mapper.send_message,
-            'IOS': mapper.send_message,
+            # 'IOS': mapper.send_message,
             'DESKTOP': mapper.send_message
+        },
+        ForwardMessageMethod: {
+            'WEB': mapper.forward_message,
+            'ANDROID': mapper.forward_message,
+            'DESKTOP': mapper.forward_message
         },
         GetMemberByIdMethod: {
             'WEB': mapper.get_member_by_id,
-            'IOS': mapper.get_member_by_id,
+            # 'IOS': mapper.get_member_by_id,
             'DESKTOP': mapper.get_member_by_id,
             'ANDROID': mapper.get_member_by_id,
         },
         DownloadFileMethod: {
             'WEB': mapper.download_file,
-            'IOS': mapper.download_file,
+            # 'IOS': mapper.download_file,
             'DESKTOP': mapper.download_file,
             'ANDROID': mapper.download_file,
         },
         UploadFileMethod: {
             'WEB': mapper.upload_file,
-            'IOS': mapper.upload_file,
+            # 'IOS': mapper.upload_file,
             'DESKTOP': mapper.upload_file,
             'ANDROID': mapper.upload_file,
-        }
+        },
     }
 
     return high_methods_registry

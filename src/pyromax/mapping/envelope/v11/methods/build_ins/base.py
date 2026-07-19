@@ -12,14 +12,14 @@ import qrcode
 
 from ..immutable import TrackLoginMethod, GetMetadataForLoginMethod, StartSMSAuthMethod, VerifySMSCodeMethod
 from ......exceptions import MapperApiError
-from ...payloads.responses import TrackLoginResponse, MetadataResponse, StartSMSAuthResponse, TwoFactorLoginResponse, MetadataResponse
+from ...payloads.responses import (TrackLoginResponse, MetadataResponse, StartSMSAuthResponse, TwoFactorLoginResponse,
+                                   MetadataResponse, ChoiceLoginVariantResponse)
 from ...constants import DEFAULT_BACKOFF_CONFIG
 from ......utils import Backoff
 
-
 if TYPE_CHECKING:
     from ...Mapper import Mapper
-    from ...payloads.responses import ChoiceLoginVariantResponse
+
 
 
 class BaseBuildInMappingMethod(ABC):

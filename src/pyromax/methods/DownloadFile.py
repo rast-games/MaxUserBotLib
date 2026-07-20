@@ -1,8 +1,10 @@
+from typing import Union
+
 from .Base import BaseMaxApiMethod
 from ..models import BaseFileAttachment
 
 
-class DownloadFileMethod(BaseMaxApiMethod[bytes]):
+class DownloadFileMethod(BaseMaxApiMethod[Union[tuple[bytes, dict[str, str]], tuple[None, None]]]):
     async def __call__(
             self,
             file: BaseFileAttachment

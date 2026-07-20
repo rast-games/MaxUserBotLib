@@ -1,5 +1,5 @@
 from random import randint
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import Field
 
@@ -60,6 +60,18 @@ class GetMessagesRequest(CamelCaseModel):
     chat_id: int
     message_ids: list[int | str]
 
+
+class GetChatHistoryRequest(CamelCaseModel):
+    chat_id: int
+    forward: int
+    backward: int = 40
+    backward_time: int = 0
+    forward_time: int = 0
+    get_chat: bool = False
+    from_: int = Field(serialization_alias='from')
+    item_type: Literal["DELAYED", "REGULAR"] = 'REGULAR'
+    get_messages: bool = True
+    interactive: bool = False
 
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True

@@ -1,11 +1,11 @@
-from typing import cast
+from typing import cast, Optional
 
 from .Base import BaseMaxApiMethod
 from ..models import Message
 
 
 
-class ForwardMessageMethod(BaseMaxApiMethod[Message]):
+class ForwardMessageMethod(BaseMaxApiMethod[Optional[Message]]):
     async def __call__(
             self,
             message_id: int | str,

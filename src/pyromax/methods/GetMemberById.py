@@ -4,7 +4,7 @@ from .Base import BaseMaxApiMethod
 from ..models.Contact import Contact
 
 
-class GetMemberByIdMethod(BaseMaxApiMethod[Contact]):
+class GetMemberByIdMethod(BaseMaxApiMethod[Sequence[Contact]]):
     async def __call__(
             self,
             member_id: int,

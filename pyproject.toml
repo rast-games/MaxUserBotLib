@@ -43,6 +43,7 @@ dev = [
     "types-qrcode>=8.2.0.20260408",
     "pymdown-extensions>=10.21.2",
     "mike>=2.2.0",
+    "black>=26.5.1",
 ]
 
 [project.optional-dependencies]

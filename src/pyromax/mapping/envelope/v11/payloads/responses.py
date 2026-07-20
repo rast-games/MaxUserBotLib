@@ -60,9 +60,20 @@ class EditMessageResponse(CamelCaseModel):
     message: MessageMappingModel
 
 
-class GetMessagesResponse(CamelCaseModel):
-    chat_id: int
+class GetChatHistoryMessagesResponse(CamelCaseModel):
     messages: list[MessageMappingModel]
+
+
+class GetChatHistoryMessagesIdsResponse(CamelCaseModel):
+    message_ids: list[str]
+
+
+class GetChatHistoryResponse(CamelCaseModel):
+    payload: GetChatHistoryMessagesResponse | GetChatHistoryMessagesIdsResponse
+
+
+class GetMessagesResponse(GetChatHistoryMessagesResponse):
+    chat_id: int
 
 
 class ErrorMessageResponse(CamelCaseModel):

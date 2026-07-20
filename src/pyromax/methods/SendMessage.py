@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from .Base import BaseMaxApiMethod
 from ..models import Message
@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from ..models import BaseFileAttachment
 
 
-class SendMessageMethod(BaseMaxApiMethod[Message]):
+class SendMessageMethod(BaseMaxApiMethod[Optional[Message]]):
     async def __call__(
             self,
             *,

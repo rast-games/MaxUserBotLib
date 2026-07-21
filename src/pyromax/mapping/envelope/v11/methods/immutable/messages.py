@@ -1,9 +1,12 @@
+from typing import cast
+
 from .base import BaseMethod, Envelope, Cmd, Opcode, VERSION
 from ...payloads.requests import (
     SendMessageRequest,
     GetMessagesRequest,
     EditMessageRequest,
     GetChatHistoryRequest,
+    DeleteMessageRequest,
 )
 from ...translate.FromDTO import reverse_translate_message
 from ...payloads.models import MessageMappingModel, MessageLinkMappingModel
@@ -30,7 +33,7 @@ class SendMessageMethod(BaseMethod):
                 link=(
                     MessageLinkMappingModel(
                         type=main_link.type,
-                        message_id=int(main_link.message_id),
+                        message_id=main_link.message_id,
                         chat_id=main_link.chat_id,
                         message=reverse_translate_message(main_link.message),
                     )
@@ -49,7 +52,7 @@ class EditMessageMethod(BaseMethod):
         request.ver = VERSION
         request.payload = EditMessageRequest(
             chat_id=self.args["chat_id"],
-            message_id=str(self.args["message_id"]),
+            message_id=self.args["message_id"],
             text=self.args.get("text"),
             elements=(
                 self.args["elements"]
@@ -93,9 +96,23 @@ class GetChatHistoryMethod(BaseMethod):
         return request
 
 
+class DeleteMessageMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.DELETE_MESSAGE
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = DeleteMessageRequest(
+            chat_id=self.args["chat_id"],
+            message_ids=self.args["message_ids"],
+            for_me=cast(bool, self.args.get("for_me")),
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "SendMessageMethod",
     "EditMessageMethod",
     "GetMessagesMethod",
     "GetChatHistoryMethod",
+    "DeleteMessageMethod",
 ]

@@ -4,8 +4,18 @@ from typing import Any, Literal
 from pydantic import Field
 
 from .shared import CamelCaseModel
-from .models import (BaseUserAgentMappingModel, MessageMappingModel, WebUserAgentMappingModel, AppUserAgentMappingModel,
-                     MobileUserAgentMappingModel, VideoMappingModel, PhotoMappingModel, FileMappingModel, ShareMappingModel)
+from .models import (
+    BaseUserAgentMappingModel,
+    MessageMappingModel,
+    WebUserAgentMappingModel,
+    AppUserAgentMappingModel,
+    MobileUserAgentMappingModel,
+    VideoMappingModel,
+    PhotoMappingModel,
+    FileMappingModel,
+    ShareMappingModel,
+)
+
 
 class BaseUserAgentRequest(CamelCaseModel):
     user_agent: BaseUserAgentMappingModel
@@ -26,6 +36,7 @@ class WebUserAgentRequest(BaseUserAgentRequest):
 class MobileUserAgentRequest(AppUserAgentRequest):
     user_agent: MobileUserAgentMappingModel
     mt_instance_id: str = Field(..., alias="mt_instanceid")
+
 
 class Resolve2FARequest(CamelCaseModel):
     password: str
@@ -53,7 +64,13 @@ class EditMessageRequest(CamelCaseModel):
     message_id: str | int
     text: str | None = None
     elements: list[dict[str, Any]] | None = None
-    attachments: list[VideoMappingModel | PhotoMappingModel | FileMappingModel | ShareMappingModel | Any] = []
+    attachments: list[
+        VideoMappingModel
+        | PhotoMappingModel
+        | FileMappingModel
+        | ShareMappingModel
+        | Any
+    ] = []
 
 
 class GetMessagesRequest(CamelCaseModel):
@@ -68,10 +85,17 @@ class GetChatHistoryRequest(CamelCaseModel):
     backward_time: int = 0
     forward_time: int = 0
     get_chat: bool = False
-    from_: int = Field(serialization_alias='from')
-    item_type: Literal["DELAYED", "REGULAR"] = 'REGULAR'
+    from_: int = Field(serialization_alias="from")
+    item_type: Literal["DELAYED", "REGULAR"] = "REGULAR"
     get_messages: bool = True
     interactive: bool = False
+
+
+class DeleteMessageRequest(CamelCaseModel):
+    chat_id: int
+    message_ids: list[str | int]
+    for_me: bool = False
+
 
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
@@ -83,9 +107,7 @@ class CreateCellForFileRequest(CamelCaseModel):
 
 
 class AnyFileRequest(CamelCaseModel):
-    type: str = Field(
-        serialization_alias='_type'
-    )
+    type: str = Field(serialization_alias="_type")
 
 
 class FileToPayloadRequest(AnyFileRequest):
@@ -100,6 +122,7 @@ class VideoToPayloadRequest(AnyFileRequest):
     video_id: int
     token: str
 
+
 class GetFileLinkRequest(CamelCaseModel):
     chat_id: int
     message_id: int
@@ -108,7 +131,5 @@ class GetFileLinkRequest(CamelCaseModel):
 class GetContactRequest(CamelCaseModel):
     contact_ids: list[int]
 
+
 # --- end Files Requests ---
-
-
-

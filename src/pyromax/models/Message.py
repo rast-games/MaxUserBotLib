@@ -13,46 +13,44 @@ class MessageLink(BaseMaxObject):
 
 
 class Message(BaseMaxObject):
-    message_id: int
+    message_id: int | str
     chat_id: int
     time: int
     type: str | None
     sender_id: int | None = None
-    status: Literal['EDITED', 'REPLY', 'USER', 'REMOVED', 'SHARE', 'OTHER'] = 'USER'
+    status: Literal["EDITED", "REPLY", "USER", "REMOVED", "SHARE", "OTHER"] = "USER"
     text: str | None
     cid: int | None
     attaches: list[Any] | None = None
     elements: list[dict[str, Any]] | None = None
     link: MessageLink | None = None
 
-
     async def answer(
-            self,
-            text: str | None = None,
-            attaches: list[BaseFileAttachment] | None = None,
-            link: MessageLink | None = None,
+        self,
+        text: str | None = None,
+        attaches: list[BaseFileAttachment] | None = None,
+        link: MessageLink | None = None,
     ) -> Any:
         from ..methods import SendMessageMethod
 
         if self._max_api is None:
-            raise RuntimeError('Message Model not linked to MaxApi instance')
+            raise RuntimeError("Message Model not linked to MaxApi instance")
 
         return await self._max_api(
             class_of_method=SendMessageMethod,
             text=text,
             chat_id=self.chat_id,
             attaches=attaches,
-            link=link
+            link=link,
         )
 
-
     async def reply(
-            self,
-            text: str | None = None,
-            attaches: list[BaseFileAttachment] | None = None,
+        self,
+        text: str | None = None,
+        attaches: list[BaseFileAttachment] | None = None,
     ) -> Any:
         link = MessageLink(
-            type='REPLY',
+            type="REPLY",
             message_id=self.message_id,
         )
 

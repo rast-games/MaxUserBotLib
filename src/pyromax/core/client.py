@@ -14,6 +14,7 @@ from ..methods import (
     GetMessagesMethod,
     EditMessageMethod,
     GetChatHistoryMethod,
+    DeleteMessagesMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -330,7 +331,7 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def get_messages(
-        self, chat_id: int, message_ids: Iterable[int | str]
+        self, chat_id: int, message_ids: Iterable[str] | Iterable[int]
     ) -> list[Message]:
         from ..models import Message
 
@@ -405,5 +406,21 @@ class MaxApi(AsyncInitializerMixin):
                 get_chat=get_chat,
                 get_messages=get_messages,
                 interactive=interactive,
+            ),
+        )
+
+    async def delete_messages(
+        self,
+        chat_id: int,
+        message_ids: list[str] | list[int],
+        for_me: bool = False,
+    ) -> None:
+        return cast(
+            None,
+            await self(
+                DeleteMessagesMethod,
+                chat_id=chat_id,
+                message_ids=message_ids,
+                for_me=for_me,
             ),
         )

@@ -1,7 +1,6 @@
 from ..bases.MappingConstants import MappingConstants
 
 
-
 class Opcode(MappingConstants):
     PING = 1
     SEND_USER_AGENT = 6
@@ -13,6 +12,7 @@ class Opcode(MappingConstants):
     GET_CHAT = 48
     GET_CHAT_MESSAGES_PER_CHUNK = 49
     SEND_MESSAGE = 64
+    DELETE_MESSAGE = 66
     EDIT_MESSAGE = 67
     GET_MESSAGES = 71
     CREATE_PHOTO = 80
@@ -26,7 +26,6 @@ class Opcode(MappingConstants):
     METADATA_FOR_LOGIN = 288
     TRACK_LOGIN = 289
     GET_USER_DATA = 291
-
 
 
 class Cmd(MappingConstants):

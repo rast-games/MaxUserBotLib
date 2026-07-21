@@ -15,6 +15,7 @@ from ..methods.immutable import (
     EditMessageMethod,
     GetMessagesMethod,
     GetChatHistoryMethod,
+    DeleteMessageMethod,
 )
 from .....exceptions import (
     SendMessageFileError,
@@ -169,8 +170,15 @@ class MessageMixin(MixinProtocol):
         to_chat_id: int,
         from_chat_id: int,
     ) -> Message | None:
-        if isinstance(message_id, int):
-            msg_id = str(message_id)
+        """
+        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        userbot, should use str type
+
+        Socket use only int, and server raise exception if you try to send message ids use str type
+        """
+
+        # if isinstance(message_id, int):
+        #     msg_id = str(message_id)
 
         link = MessageLink(
             type="FORWARD",
@@ -186,12 +194,19 @@ class MessageMixin(MixinProtocol):
     async def edit_message(
         self,
         chat_id: int,
-        message_id: int,
+        message_id: int | str,
         text: str | None = None,
         attaches: Sequence[BaseFileMappingModel] | None = None,
         parse_tags: bool = True,
         **kwargs: Any,
     ) -> Message:
+        """
+        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        userbot, should use str type
+
+        Socket use only int, and server raise exception if you try to send message ids use str type
+        """
+
         if not attaches:
             attaches = []
         if "elements" in kwargs:
@@ -218,7 +233,7 @@ class MessageMixin(MixinProtocol):
                 text=text,
                 elements=elements,
                 attaches=attachments,
-            )
+            ),
         )
 
         mapped_edited_message = EditMessageResponse(**response.payload).message
@@ -234,14 +249,20 @@ class MessageMixin(MixinProtocol):
     async def get_messages(
         self,
         chat_id: int,
-        message_ids: Iterable[str | int],
+        message_ids: Iterable[str] | Iterable[int],
     ) -> list[Message]:
+        """
+        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        userbot, should use str type
 
-        msg_ids = [str(msg_id) for msg_id in message_ids]
+        Socket use only int, and server raise exception if you try to send message ids use str type
+        """
+
+        # msg_ids = [str(msg_id) for msg_id in message_ids]
         response = await self.send(
             method=GetMessagesMethod(
                 chat_id=chat_id,
-                message_ids=msg_ids,
+                message_ids=message_ids,
             )
         )
 
@@ -332,3 +353,23 @@ class MessageMixin(MixinProtocol):
                 "server return unknown response different from expected"
             )
         return mapped_messages.payload.message_ids or []
+
+    async def delete_messages(
+        self, chat_id: int, message_ids: list[str] | list[int], for_me: bool = False
+    ) -> None:
+        """
+        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        userbot, should use str type
+
+        Socket use only int, and server raise exception if you try to send message ids use str type
+        """
+
+        await self.send(
+            method=DeleteMessageMethod(
+                chat_id=chat_id,
+                message_ids=message_ids,
+                for_me=for_me,
+            )
+        )
+
+        return None

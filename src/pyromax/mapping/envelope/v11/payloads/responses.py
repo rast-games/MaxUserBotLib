@@ -4,11 +4,17 @@ from typing_extensions import Self
 
 from .shared import CamelCaseModel
 from pydantic import Field, AliasPath, model_validator, AliasChoices
-from .models import (ProfileMappingModel, MessageMappingModel, ReactionInfoMappingModel, ContactMappingModel, PasswordConfig)
+from .models import (
+    ProfileMappingModel,
+    MessageMappingModel,
+    ReactionInfoMappingModel,
+    ContactMappingModel,
+    PasswordConfig,
+)
 
 
 class TokenAttrsResponse(CamelCaseModel):
-    token: str = Field(validation_alias=AliasPath('LOGIN', 'token'))
+    token: str = Field(validation_alias=AliasPath("LOGIN", "token"))
 
 
 class SuccessLoginResponse(CamelCaseModel):
@@ -28,7 +34,7 @@ class StartSMSAuthResponse(CamelCaseModel):
 class PasswordChallengeResponse(CamelCaseModel):
     config: PasswordConfig
     track_id: str
-    email: str
+    email: str | None = None
 
 
 class TwoFactorLoginResponse(CamelCaseModel):
@@ -36,8 +42,10 @@ class TwoFactorLoginResponse(CamelCaseModel):
     token_attrs: dict[Any, Any]
     TwoFactor: ClassVar[bool] = True
 
+
 class ChoiceLoginVariantResponse(CamelCaseModel):
     payload: SuccessLoginResponse | TwoFactorLoginResponse
+
 
 class AuthResponse(CamelCaseModel):
     chats: list[Any]
@@ -78,7 +86,7 @@ class GetMessagesResponse(GetChatHistoryMessagesResponse):
 
 class ErrorMessageResponse(CamelCaseModel):
     error: str | None = None
-    error_message: str | None = Field(default=None, alias='message')
+    error_message: str | None = Field(default=None, alias="message")
     localized_message: str | None = None
     title: str | None = None
 
@@ -87,7 +95,7 @@ class TrackStatusResponse(CamelCaseModel):
     expires_at: int | float
     login_available: bool = False
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_after(self, v: Any) -> Self:
         self.expires_at /= 1000
         return self
@@ -104,7 +112,7 @@ class MetadataResponse(CamelCaseModel):
     track_id: str
     expires_at: int | float
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_after(self, v: Any) -> Self:
         self.polling_interval /= 1000
         self.expires_at /= 1000
@@ -113,29 +121,25 @@ class MetadataResponse(CamelCaseModel):
 
 class ResponseWithUrl(CamelCaseModel):
     upload_url: str = Field(
-        validation_alias=AliasChoices(
-            AliasPath('url'),
-            AliasPath('info', 0, 'url')
-        )
+        validation_alias=AliasChoices(AliasPath("url"), AliasPath("info", 0, "url"))
     )
     token: str | None = Field(
-        validation_alias=AliasPath('info', 0, 'token'),
-        default=None
+        validation_alias=AliasPath("info", 0, "token"), default=None
     )
     file_id: int | None = Field(
-        validation_alias=AliasPath('info', 0, 'fileId'),
-        default=None
+        validation_alias=AliasPath("info", 0, "fileId"), default=None
     )
     video_id: int | None = Field(
-        validation_alias=AliasPath('info', 0, 'videoId'),
-        default=None
+        validation_alias=AliasPath("info", 0, "videoId"), default=None
     )
 
 
 class GetContactResponse(CamelCaseModel):
     contacts: list[ContactMappingModel]
 
+
 # --- Updates ---
+
 
 class PushUpdateResponse(CamelCaseModel):
     chat_id: int
@@ -150,5 +154,3 @@ class EmojiReactionUpdateResponse(CamelCaseModel):
     chat_id: int
     message_id: str | int
     reaction_info: ReactionInfoMappingModel
-
-

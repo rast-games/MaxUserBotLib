@@ -84,7 +84,7 @@ class GetMessagesResponse(GetChatHistoryMessagesResponse):
     chat_id: int
 
 
-class AddReactionResponse(CamelCaseModel):
+class AddOrRemoveReactionResponse(CamelCaseModel):
     reaction_info: ReactionInfoMappingModel | None = None
 
 

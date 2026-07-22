@@ -7,6 +7,7 @@ from .GetChatHistory import GetChatHistoryMethod
 from .DeleteMessages import DeleteMessagesMethod
 from .PinMessage import PinMessageMethod
 from .AddReaction import AddReactionMethod
+from .RemoveReaction import RemoveReactionMethod
 from .GetMemberById import GetMemberByIdMethod
 from .DownloadFile import DownloadFileMethod
 from .UploadFile import UploadFileMethod
@@ -21,6 +22,7 @@ __all__ = [
     "DeleteMessagesMethod",
     "PinMessageMethod",
     "AddReactionMethod",
+    "RemoveReactionMethod",
     "GetMemberByIdMethod",
     "DownloadFileMethod",
     "UploadFileMethod",

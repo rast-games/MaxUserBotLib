@@ -18,6 +18,7 @@ from ..methods.immutable import (
     DeleteMessageMethod,
     PinMessageMethod,
     AddReactionMethod,
+    RemoveReactionMethod,
 )
 from .....exceptions import (
     SendMessageFileError,
@@ -34,7 +35,7 @@ from ..payloads.responses import (
     GetChatHistoryResponse,
     GetChatHistoryMessagesResponse,
     GetChatHistoryMessagesIdsResponse,
-    AddReactionResponse,
+    AddOrRemoveReactionResponse,
 )
 from ..translate.ToDTO import translate_models
 from .....models import Message, EmojiReaction
@@ -453,7 +454,9 @@ class MessageMixin(MixinProtocol):
                 "Unknown error while adding reaction to message"
             ) from e
 
-        mapped_reaction_info = AddReactionResponse(**response.payload).reaction_info
+        mapped_reaction_info = AddOrRemoveReactionResponse(
+            **response.payload
+        ).reaction_info
 
         if mapped_reaction_info is None:
             return None
@@ -465,6 +468,36 @@ class MessageMixin(MixinProtocol):
                 chat_id=chat_id,
                 message_id=message_id,
                 status="ADD",
+            ),
+        )
+
+        return reaction_info
+
+    async def remove_reaction(
+        self,
+        chat_id: int,
+        message_id: str | int,
+    ) -> EmojiReaction | None:
+        response = await self.send(
+            method=RemoveReactionMethod(
+                chat_id=chat_id,
+                message_id=message_id,
+            )
+        )
+        mapped_reaction_info = AddOrRemoveReactionResponse(
+            **response.payload
+        ).reaction_info
+
+        if mapped_reaction_info is None:
+            return None
+
+        reaction_info = cast(
+            EmojiReaction,
+            translate_models(
+                mapped_reaction_info,
+                chat_id=chat_id,
+                message_id=message_id,
+                status="REMOVE",
             ),
         )
 

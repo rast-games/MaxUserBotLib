@@ -17,6 +17,7 @@ from ..methods import (
     DeleteMessagesMethod,
     PinMessageMethod,
     AddReactionMethod,
+    RemoveReactionMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -482,4 +483,16 @@ class MaxApi(AsyncInitializerMixin):
                 reaction_id=reaction_id,
                 reaction_type=reaction_type,
             ),
+        )
+
+    async def remove_reaction(
+        self,
+        chat_id: int,
+        message_id: int | str,
+    ) -> EmojiReaction | None:
+        from ..models import EmojiReaction
+
+        return cast(
+            EmojiReaction | None,
+            await self(RemoveReactionMethod, chat_id=chat_id, message_id=message_id),
         )

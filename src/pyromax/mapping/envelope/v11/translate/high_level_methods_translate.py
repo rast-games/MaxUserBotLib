@@ -17,6 +17,7 @@ from .....methods import (
     DeleteMessagesMethod,
     PinMessageMethod,
     AddReactionMethod,
+    RemoveReactionMethod,
 )
 
 if TYPE_CHECKING:
@@ -89,6 +90,11 @@ def get_registry(
             "WEB": mapper.add_reaction,
             "ANDROID": mapper.add_reaction,
             "DESKTOP": mapper.add_reaction,
+        },
+        RemoveReactionMethod: {
+            "WEB": mapper.remove_reaction,
+            "ANDROID": mapper.remove_reaction,
+            "DESKTOP": mapper.remove_reaction,
         },
     }
 

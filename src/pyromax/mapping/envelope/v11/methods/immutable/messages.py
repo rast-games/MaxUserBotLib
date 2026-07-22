@@ -9,6 +9,7 @@ from ...payloads.requests import (
     DeleteMessageRequest,
     PinMessageRequest,
     AddReactionRequest,
+    RemoveReactionRequest,
     ReactionInfoRequest,
 )
 from ...translate.FromDTO import reverse_translate_message
@@ -141,6 +142,18 @@ class AddReactionMethod(BaseMethod):
         return request
 
 
+class RemoveReactionMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.REMOVE_REACTION
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = RemoveReactionRequest(
+            chat_id=self.args["chat_id"],
+            message_id=self.args["message_id"],
+        )
+        return request
+
+
 __all__ = [
     "SendMessageMethod",
     "EditMessageMethod",
@@ -149,4 +162,5 @@ __all__ = [
     "DeleteMessageMethod",
     "PinMessageMethod",
     "AddReactionMethod",
+    "RemoveReactionMethod",
 ]

@@ -114,6 +114,11 @@ class AddReactionRequest(CamelCaseModel):
     reaction: ReactionInfoRequest
 
 
+class RemoveReactionRequest(CamelCaseModel):
+    chat_id: int
+    message_id: str | int
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

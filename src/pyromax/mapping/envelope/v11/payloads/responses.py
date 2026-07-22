@@ -88,6 +88,10 @@ class AddOrRemoveReactionResponse(CamelCaseModel):
     reaction_info: ReactionInfoMappingModel | None = None
 
 
+class GetReactionsResponse(CamelCaseModel):
+    messages_reactions: dict[str | int, ReactionInfoMappingModel]
+
+
 class ErrorMessageResponse(CamelCaseModel):
     error: str | None = None
     error_message: str | None = Field(default=None, alias="message")

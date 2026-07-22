@@ -19,6 +19,7 @@ from ..methods.immutable import (
     PinMessageMethod,
     AddReactionMethod,
     RemoveReactionMethod,
+    GetReactionsMethod,
 )
 from .....exceptions import (
     SendMessageFileError,
@@ -36,6 +37,7 @@ from ..payloads.responses import (
     GetChatHistoryMessagesResponse,
     GetChatHistoryMessagesIdsResponse,
     AddOrRemoveReactionResponse,
+    GetReactionsResponse,
 )
 from ..translate.ToDTO import translate_models
 from .....models import Message, EmojiReaction
@@ -502,3 +504,31 @@ class MessageMixin(MixinProtocol):
         )
 
         return reaction_info
+
+    async def get_reactions(
+        self,
+        chat_id: int,
+        message_ids: list[str] | list[int],
+    ) -> dict[str, EmojiReaction] | None:
+        response = await self.send(
+            method=GetReactionsMethod(
+                chat_id=chat_id,
+                message_ids=message_ids,
+            ),
+        )
+
+        mapped_messages_reactions = GetReactionsResponse(
+            **response.payload
+        ).messages_reactions
+        if mapped_messages_reactions is None:
+            return None
+
+        return cast(
+            dict[str, EmojiReaction],
+            {
+                message_id: translate_models(
+                    reaction_info, chat_id=chat_id, message_id=message_id
+                )
+                for message_id, reaction_info in mapped_messages_reactions.items()
+            },
+        )

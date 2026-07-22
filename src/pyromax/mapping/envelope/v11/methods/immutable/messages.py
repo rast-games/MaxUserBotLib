@@ -10,6 +10,7 @@ from ...payloads.requests import (
     PinMessageRequest,
     AddReactionRequest,
     RemoveReactionRequest,
+    GetReactionsRequest,
     ReactionInfoRequest,
 )
 from ...translate.FromDTO import reverse_translate_message
@@ -150,7 +151,19 @@ class RemoveReactionMethod(BaseMethod):
         request.payload = RemoveReactionRequest(
             chat_id=self.args["chat_id"],
             message_id=self.args["message_id"],
-        )
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
+class GetReactionsMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.GET_REACTIONS
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = GetReactionsRequest(
+            chat_id=self.args["chat_id"],
+            message_ids=self.args["message_ids"],
+        ).model_dump(by_alias=True, exclude_none=True)
         return request
 
 
@@ -163,4 +176,5 @@ __all__ = [
     "PinMessageMethod",
     "AddReactionMethod",
     "RemoveReactionMethod",
+    "GetReactionsMethod",
 ]

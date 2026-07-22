@@ -16,6 +16,7 @@ from ..methods.immutable import (
     GetMessagesMethod,
     GetChatHistoryMethod,
     DeleteMessageMethod,
+    PinMessageMethod,
 )
 from .....exceptions import (
     SendMessageFileError,
@@ -372,4 +373,17 @@ class MessageMixin(MixinProtocol):
             )
         )
 
+        return None
+
+    async def pin_message(
+        self,
+        chat_id: int,
+        pin_message_id: int | str,
+        notify_pin: bool = True,
+    ) -> None:
+        await self.send(
+            method=PinMessageMethod(
+                chat_id=chat_id, pin_message_id=pin_message_id, notify_pin=notify_pin
+            )
+        )
         return None

@@ -97,6 +97,12 @@ class DeleteMessageRequest(CamelCaseModel):
     for_me: bool = False
 
 
+class PinMessageRequest(CamelCaseModel):
+    chat_id: int
+    notify_pin: bool = True
+    pin_message_id: str | int
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

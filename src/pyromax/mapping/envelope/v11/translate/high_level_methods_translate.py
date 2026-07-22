@@ -15,6 +15,7 @@ from .....methods import (
     EditMessageMethod,
     GetChatHistoryMethod,
     DeleteMessagesMethod,
+    PinMessageMethod,
 )
 
 if TYPE_CHECKING:
@@ -77,6 +78,11 @@ def get_registry(
             "WEB": mapper.delete_messages,
             "ANDROID": mapper.delete_messages,
             "DESKTOP": mapper.delete_messages,
+        },
+        PinMessageMethod: {
+            "WEB": mapper.pin_message,
+            "ANDROID": mapper.pin_message,
+            "DESKTOP": mapper.pin_message,
         },
     }
 

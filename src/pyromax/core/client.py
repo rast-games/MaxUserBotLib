@@ -15,6 +15,7 @@ from ..methods import (
     EditMessageMethod,
     GetChatHistoryMethod,
     DeleteMessagesMethod,
+    PinMessageMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -422,5 +423,19 @@ class MaxApi(AsyncInitializerMixin):
                 chat_id=chat_id,
                 message_ids=message_ids,
                 for_me=for_me,
+            ),
+        )
+
+    async def pin_message(
+        self, chat_id: int, message_id: int | str, notify: bool = True
+    ) -> None:
+
+        return cast(
+            None,
+            await self(
+                PinMessageMethod,
+                chat_id=chat_id,
+                message_id=message_id,
+                notify=notify,
             ),
         )

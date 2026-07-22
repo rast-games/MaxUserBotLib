@@ -7,6 +7,7 @@ from ...payloads.requests import (
     EditMessageRequest,
     GetChatHistoryRequest,
     DeleteMessageRequest,
+    PinMessageRequest,
 )
 from ...translate.FromDTO import reverse_translate_message
 from ...payloads.models import MessageMappingModel, MessageLinkMappingModel
@@ -109,10 +110,24 @@ class DeleteMessageMethod(BaseMethod):
         return request
 
 
+class PinMessageMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.PIN_MESSAGE
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = PinMessageRequest(
+            chat_id=self.args["chat_id"],
+            notify_pin=self.args["notify_pin"],
+            pin_message_id=self.args["pin_message_id"],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "SendMessageMethod",
     "EditMessageMethod",
     "GetMessagesMethod",
     "GetChatHistoryMethod",
     "DeleteMessageMethod",
+    "PinMessageMethod",
 ]

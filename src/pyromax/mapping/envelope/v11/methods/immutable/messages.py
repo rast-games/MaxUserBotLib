@@ -8,6 +8,8 @@ from ...payloads.requests import (
     GetChatHistoryRequest,
     DeleteMessageRequest,
     PinMessageRequest,
+    AddReactionRequest,
+    ReactionInfoRequest,
 )
 from ...translate.FromDTO import reverse_translate_message
 from ...payloads.models import MessageMappingModel, MessageLinkMappingModel
@@ -123,6 +125,22 @@ class PinMessageMethod(BaseMethod):
         return request
 
 
+class AddReactionMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.ADD_REACTION
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = AddReactionRequest(
+            chat_id=self.args["chat_id"],
+            message_id=self.args["message_id"],
+            reaction=ReactionInfoRequest(
+                reaction_type=self.args.get("reaction_type", "EMOJI"),
+                id=self.args["reaction_id"],
+            ),
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "SendMessageMethod",
     "EditMessageMethod",
@@ -130,4 +148,5 @@ __all__ = [
     "GetChatHistoryMethod",
     "DeleteMessageMethod",
     "PinMessageMethod",
+    "AddReactionMethod",
 ]

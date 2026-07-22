@@ -103,6 +103,17 @@ class PinMessageRequest(CamelCaseModel):
     pin_message_id: str | int
 
 
+class ReactionInfoRequest(CamelCaseModel):
+    reaction_type: str = "EMOJI"
+    id: str
+
+
+class AddReactionRequest(CamelCaseModel):
+    chat_id: int
+    message_id: str | int
+    reaction: ReactionInfoRequest
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

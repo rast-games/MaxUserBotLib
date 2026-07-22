@@ -16,6 +16,7 @@ from ..methods import (
     GetChatHistoryMethod,
     DeleteMessagesMethod,
     PinMessageMethod,
+    AddReactionMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
     from ..dispatcher.event import Update, MaxObject
     from ..protocol import Response
     from ..methods import BaseMaxApiMethod
-    from ..models import BaseFileAttachment, MessageLink, Message
+    from ..models import BaseFileAttachment, MessageLink, Message, EmojiReaction
 
 from .context import *
 
@@ -437,5 +438,48 @@ class MaxApi(AsyncInitializerMixin):
                 chat_id=chat_id,
                 message_id=message_id,
                 notify=notify,
+            ),
+        )
+
+    async def add_reaction(
+        self,
+        chat_id: int,
+        message_id: int | str,
+        reaction_id: str,
+        reaction_type: str = "EMOJI",
+    ) -> EmojiReaction | None:
+        """
+        Parameters
+        ----------
+        chat_id
+            int
+        message_id
+            int | str
+        reaction_id
+            str
+        reaction_type
+            str
+
+        Returns
+        -------
+        EmojiReaction | None
+            info about reaction or None if cannot get this info
+
+        Raises
+        -------
+            ReactionMapperError
+                if adding reaction failed
+        """
+
+        from ..models import EmojiReaction
+
+        return cast(
+            EmojiReaction | None,
+            await self(
+                AddReactionMethod,
+                chat_id=chat_id,
+                message_id=message_id,
+                reaction_id=reaction_id,
+                reaction_type=reaction_type,
             ),
         )

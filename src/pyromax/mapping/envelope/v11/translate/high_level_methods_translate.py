@@ -16,6 +16,7 @@ from .....methods import (
     GetChatHistoryMethod,
     DeleteMessagesMethod,
     PinMessageMethod,
+    AddReactionMethod,
 )
 
 if TYPE_CHECKING:
@@ -83,6 +84,11 @@ def get_registry(
             "WEB": mapper.pin_message,
             "ANDROID": mapper.pin_message,
             "DESKTOP": mapper.pin_message,
+        },
+        AddReactionMethod: {
+            "WEB": mapper.add_reaction,
+            "ANDROID": mapper.add_reaction,
+            "DESKTOP": mapper.add_reaction,
         },
     }
 

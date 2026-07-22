@@ -1,17 +1,41 @@
 from abc import ABC, abstractmethod
-from typing import cast, TypeVar, Generic, Any
+from typing import cast, TypeVar, Generic, Any, TYPE_CHECKING, Literal
 
 from ...payloads.shared import CamelCaseModel
-from ......models import (Contact, Message, MessageLink, BaseMaxObject)
-from ...payloads.models import (ContactMappingModel, MessageMappingModel, MessageLinkMappingModel)
+from ......models import (
+    Contact,
+    Message,
+    MessageLink,
+    BaseMaxObject,
+    EmojiReaction,
+)
+from ...payloads.models import (
+    ContactMappingModel,
+    MessageMappingModel,
+    MessageLinkMappingModel,
+    ReactionInfoMappingModel,
+)
 
+TranslateObj = TypeVar("TranslateObj", bound=CamelCaseModel)
 
-TranslateObj = TypeVar('TranslateObj', bound=CamelCaseModel)
 
 class BaseTranslateMappingModel(ABC, Generic[TranslateObj]):
-    @staticmethod
-    @abstractmethod
-    def translate(mapping_model: TranslateObj) -> BaseMaxObject: pass
+
+    if TYPE_CHECKING:
+
+        @staticmethod
+        @abstractmethod
+        def translate(*args: Any, **kwargs: Any) -> BaseMaxObject:
+            pass
+
+    else:
+
+        @staticmethod
+        @abstractmethod
+        def translate(
+            mapping_model: TranslateObj, *args: Any, **kwargs: Any
+        ) -> BaseMaxObject:
+            pass
 
 
 class TranslateContact(BaseTranslateMappingModel[ContactMappingModel]):
@@ -19,10 +43,10 @@ class TranslateContact(BaseTranslateMappingModel[ContactMappingModel]):
     def translate(contact: ContactMappingModel) -> Contact:
         return Contact(
             id=contact.id,
-            name=contact.names[0].name if contact.names else '',
+            name=contact.names[0].name if contact.names else "",
             description=contact.description,
-            first_name=contact.names[0].first_name if contact.names else '',
-            last_name=contact.names[0].last_name if contact.names else '',
+            first_name=contact.names[0].first_name if contact.names else "",
+            last_name=contact.names[0].last_name if contact.names else "",
             phone=str(contact.phone),
             avatar_url=contact.base_url,
             raw_avatar_url=contact.base_raw_url,
@@ -32,6 +56,7 @@ class TranslateContact(BaseTranslateMappingModel[ContactMappingModel]):
             email=contact.email,
             registration_time=contact.registration_time,
         )
+
 
 class TranslateMessage(BaseTranslateMappingModel[MessageMappingModel]):
     @staticmethod
@@ -76,8 +101,8 @@ class TranslateMessage(BaseTranslateMappingModel[MessageMappingModel]):
                     link=MessageLink(
                         message=translate_message(msg=msg_link.message),
                         message_id=msg_link.message_id,
-                        type=msg_link.type
-                    )
+                        type=msg_link.type,
+                    ),
                 )
 
             return Message(
@@ -92,23 +117,47 @@ class TranslateMessage(BaseTranslateMappingModel[MessageMappingModel]):
                 sender_id=msg.sender,
                 attaches=msg.attaches,
             )
-        return translate_message(
-            msg=message
+
+        return translate_message(msg=message)
+
+
+class TranslateReactionInfo(BaseTranslateMappingModel[ReactionInfoMappingModel]):
+
+    @staticmethod
+    def translate(
+        reaction: ReactionInfoMappingModel,
+        chat_id: int,
+        message_id: int | str,
+        status: str = "ADD",
+    ) -> EmojiReaction:
+        from ......models.EmojiReaction import Counters
+
+        return EmojiReaction(
+            chat_id=chat_id,
+            message_id=message_id,
+            counters=cast(list[Counters] | None, reaction.counters),
+            total_count=reaction.total_count,
+            your_reaction=reaction.your_reaction,
+            status=cast(Literal["ADD", "REMOVE"], status),
         )
 
 
-TRANSLATE_MAPPING_MODELS: dict[type[CamelCaseModel], type[BaseTranslateMappingModel[Any]]] = {
+TRANSLATE_MAPPING_MODELS: dict[
+    type[CamelCaseModel], type[BaseTranslateMappingModel[Any]]
+] = {
     ContactMappingModel: TranslateContact,
-    MessageMappingModel: TranslateMessage
+    MessageMappingModel: TranslateMessage,
+    ReactionInfoMappingModel: TranslateReactionInfo,
 }
 
 
-
-def translate_models(mapping_obj: CamelCaseModel) -> BaseMaxObject | CamelCaseModel:
+def translate_models(
+    mapping_obj: CamelCaseModel, *args: Any, **kwargs: Any
+) -> BaseMaxObject | CamelCaseModel:
     translate_model = TRANSLATE_MAPPING_MODELS.get(type(mapping_obj), None)
     if translate_model is None:
         return mapping_obj
 
-    translated_obj = translate_model.translate(mapping_obj)
+    translated_obj = translate_model.translate(mapping_obj, *args, **kwargs)
 
     return translated_obj

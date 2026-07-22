@@ -165,6 +165,7 @@ class TransportMixin(MixinProtocol):
         method: BaseMethod,
         data: dict[Any, Any] | None = None,
         return_exception: bool = False,
+        check_errors: bool = False,
     ) -> Envelope:
         """
         Raises
@@ -184,7 +185,9 @@ class TransportMixin(MixinProtocol):
                     raise RuntimeError("Lifecycle manager not initialized")
                 gen = await self._lifecycle_manager.get_generation()
                 storage["gen"] = gen
-                response = await self.send_raw(method=method, data=data)
+                response = await self.send_raw(
+                    method=method, data=data, check_errors=check_errors
+                )
                 return response
             except (MapperCancelledError, AlreadyFailedError) as e:
                 if self._lifecycle_manager is None:
@@ -203,6 +206,33 @@ class TransportMixin(MixinProtocol):
                 self._logger.warning(msg, exc_info=True, stack_info=True)
                 if return_exception:
                     raise MapperCancelledError("Cancelled request") from e
+
+            except MapperApiError as e:
+                if check_errors:
+                    raise e
+                self._logger.warning(
+                    f"Caught exception when sending request: %s"
+                    f"method: {method.__class__.__name__}",
+                    e,
+                    exc_info=True,
+                    stack_info=True,
+                )
+                if self._lifecycle_manager is None:
+                    self._logger.warning("lifecycle manager not available, wait init")
+                    await self._lifecycle_manager_inited.wait()
+
+                if self._lifecycle_manager is None:
+                    raise RuntimeError("Lifecycle manager not initialized")
+                self._lifecycle_manager.notify_about_exception(
+                    e,
+                    generation=storage["gen"],
+                    source="mapper.send",
+                )
+                self._authorized.clear()
+                if return_exception:
+                    raise MapperTransportError(
+                        "unknown exception was catch while send"
+                    ) from e
             except Exception as e:
                 self._logger.warning(
                     f"Caught exception when sending request: %s"

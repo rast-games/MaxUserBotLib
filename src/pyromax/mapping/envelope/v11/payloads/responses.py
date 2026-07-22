@@ -84,6 +84,10 @@ class GetMessagesResponse(GetChatHistoryMessagesResponse):
     chat_id: int
 
 
+class AddReactionResponse(CamelCaseModel):
+    reaction_info: ReactionInfoMappingModel | None = None
+
+
 class ErrorMessageResponse(CamelCaseModel):
     error: str | None = None
     error_message: str | None = Field(default=None, alias="message")

@@ -17,6 +17,7 @@ from ..methods.immutable import (
     GetChatHistoryMethod,
     DeleteMessageMethod,
     PinMessageMethod,
+    AddReactionMethod,
 )
 from .....exceptions import (
     SendMessageFileError,
@@ -24,6 +25,7 @@ from .....exceptions import (
     SendMessageError,
     BackoffError,
     MapperApiError,
+    ReactionMapperError,
 )
 from ..payloads.responses import (
     SendMessageResponse,
@@ -32,9 +34,10 @@ from ..payloads.responses import (
     GetChatHistoryResponse,
     GetChatHistoryMessagesResponse,
     GetChatHistoryMessagesIdsResponse,
+    AddReactionResponse,
 )
 from ..translate.ToDTO import translate_models
-from .....models import Message
+from .....models import Message, EmojiReaction
 
 from .MixinProtocol import MixinProtocol
 
@@ -381,9 +384,88 @@ class MessageMixin(MixinProtocol):
         pin_message_id: int | str,
         notify_pin: bool = True,
     ) -> None:
+        """
+        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        userbot, should use str type
+
+        Socket use only int, and server raise exception if you try to send message ids use str type
+        """
+
         await self.send(
             method=PinMessageMethod(
                 chat_id=chat_id, pin_message_id=pin_message_id, notify_pin=notify_pin
             )
         )
         return None
+
+    async def add_reaction(
+        self,
+        chat_id: int,
+        message_id: int | str,
+        reaction_id: str,
+        reaction_type: str = "EMOJI",
+    ) -> EmojiReaction | None:
+        """
+        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        userbot, should use str type
+
+        Socket use only int, and server raise exception if you try to send message ids use str type
+
+
+        Parameters
+        ----------
+        chat_id
+            int
+        message_id
+            int | str
+        reaction_id
+            str
+        reaction_type
+            str
+
+        Returns
+        -------
+        EmojiReaction | None
+            info about reaction or None if cannot get this info
+
+        Raises
+        -------
+            ReactionMapperError
+                if adding reaction failed
+        """
+
+        try:
+            response = await self.send(
+                method=AddReactionMethod(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    reaction_id=reaction_id,
+                    reaction_type=reaction_type,
+                ),
+                check_errors=True,
+            )
+        except MapperApiError as e:
+            if e.error == "error.message.like.unknown.reaction":
+                raise ReactionMapperError(
+                    f"Your reaction_id is not supported by server"
+                ) from e
+            raise ReactionMapperError(
+                "Unknown error while adding reaction to message"
+            ) from e
+
+        mapped_reaction_info = AddReactionResponse(**response.payload).reaction_info
+
+        if mapped_reaction_info is None:
+            return None
+
+        reaction_info = cast(
+            EmojiReaction,
+            translate_models(
+                mapped_reaction_info,
+                chat_id=chat_id,
+                message_id=message_id,
+                status="ADD",
+            ),
+        )
+
+        return reaction_info

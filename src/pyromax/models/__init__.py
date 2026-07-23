@@ -7,6 +7,7 @@ from .UserAgent import BaseUserAgent
 from .Helpers import DataDict, MapperUpdateTranslator
 from .ErrorEvent import ErrorEvent
 from .ReadState import ReadState
+from .Chat import Chat
 
 __all__ = [
     "BaseMaxObject",
@@ -18,10 +19,12 @@ __all__ = [
     "VideoAttachment",
     "FileAttachment",
     "ShareAttachment",
+    "ControlAttachment",
     "Contact",
     "BaseUserAgent",
     "DataDict",
     "MapperUpdateTranslator",
     "ErrorEvent",
     "ReadState",
+    "Chat",
 ]

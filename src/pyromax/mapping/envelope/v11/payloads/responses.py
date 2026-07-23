@@ -10,6 +10,8 @@ from .models import (
     ReactionInfoMappingModel,
     ContactMappingModel,
     PasswordConfig,
+    CreateGroupMessageMappingModel,
+    ChatMappingModel,
 )
 
 
@@ -90,6 +92,13 @@ class AddOrRemoveReactionResponse(CamelCaseModel):
 
 class GetReactionsResponse(CamelCaseModel):
     messages_reactions: dict[str | int, ReactionInfoMappingModel]
+
+
+class CreateGroupResponse(CamelCaseModel):
+    chat_id: int | None = None
+    mark: int
+    message: MessageMappingModel
+    chat: ChatMappingModel | None = None
 
 
 class ErrorMessageResponse(CamelCaseModel):

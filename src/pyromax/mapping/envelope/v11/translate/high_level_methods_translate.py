@@ -20,6 +20,7 @@ from .....methods import (
     RemoveReactionMethod,
     GetReactionsMethod,
     ReadMessageMethod,
+    CreateGroupMethod,
 )
 
 if TYPE_CHECKING:
@@ -107,6 +108,11 @@ def get_registry(
             "WEB": mapper.read_message,
             "ANDROID": mapper.read_message,
             "DESKTOP": mapper.read_message,
+        },
+        CreateGroupMethod: {
+            "WEB": mapper.create_group,
+            "ANDROID": mapper.create_group,
+            "DESKTOP": mapper.create_group,
         },
     }
 

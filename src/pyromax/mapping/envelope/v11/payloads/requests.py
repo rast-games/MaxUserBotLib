@@ -15,6 +15,7 @@ from .models import (
     PhotoMappingModel,
     FileMappingModel,
     ShareMappingModel,
+    CreateGroupMessageMappingModel,
 )
 
 
@@ -130,6 +131,11 @@ class ReadMessageRequest(CamelCaseModel):
     message_id: str | int
     type: Literal["READ_MESSAGE", "READ_REACTION"] = "READ_MESSAGE"
     mark: int = Field(default_factory=lambda: int(time.time() * 1000))
+
+
+class CreateChatRequest(CamelCaseModel):
+    message: CreateGroupMessageMappingModel
+    notify: bool = True
 
 
 class KeepAliveRequest(CamelCaseModel):

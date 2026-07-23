@@ -159,7 +159,12 @@ class MessageMixin(MixinProtocol):
                         setattr(attach, attr, value)
             mapped_message = response_parsed.message
             mapped_message.chat_id = response_parsed.chat_id
-            translated_message = cast(Message, translate_models(mapped_message))
+            translated_message = cast(
+                Message,
+                translate_models(
+                    mapped_message, fallback_chat_id=response_parsed.chat_id
+                ),
+            )
             return translated_message
 
         except (
@@ -541,6 +546,13 @@ class MessageMixin(MixinProtocol):
         typeof: str,
         mark: int | None = None,
     ) -> ReadState:
+        """
+        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        userbot, should use str type
+
+        Socket use only int, and server raise exception if you try to send message ids use str type
+        """
+
         if mark is None:
             mark = int(time.time() * 1000)
         response = await self.send(

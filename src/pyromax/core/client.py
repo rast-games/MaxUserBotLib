@@ -20,6 +20,7 @@ from ..methods import (
     RemoveReactionMethod,
     GetReactionsMethod,
     ReadMessageMethod,
+    CreateGroupMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -33,6 +34,7 @@ if TYPE_CHECKING:
         Message,
         EmojiReaction,
         ReadState,
+        Chat,
     )
 
 from .context import *
@@ -534,5 +536,29 @@ class MaxApi(AsyncInitializerMixin):
                 message_id=message_id,
                 typeof=typeof,
                 mark=mark,
+            ),
+        )
+
+    async def create_group(
+        self,
+        title: str,
+        participant_ids: list[int] | None = None,
+        notify: bool = True,
+        chat_type: str = "CHAT",
+        event: str = "new",
+        typeof: str = "CONTROL",
+    ) -> Chat | None:
+        from ..models import Chat
+
+        return cast(
+            Chat | None,
+            await self(
+                CreateGroupMethod,
+                title=title,
+                participant_ids=participant_ids,
+                notify=notify,
+                chat_type=chat_type,
+                event=event,
+                typeof=typeof,
             ),
         )

@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class BaseFileAttachment(BaseModel):
     pass
 
@@ -15,5 +16,10 @@ class PhotoAttachment(BaseFileAttachment):
 class FileAttachment(BaseFileAttachment):
     pass
 
+
 class ShareAttachment(BaseFileAttachment):
+    pass
+
+
+class ControlAttachment(BaseFileAttachment):
     pass

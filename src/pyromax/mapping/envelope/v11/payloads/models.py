@@ -13,6 +13,7 @@ from .....models import (
     FileAttachment,
     ShareAttachment,
     BaseUserAgent,
+    ControlAttachment,
 )
 from .shared import CamelCaseModel
 from .....utils import (
@@ -375,6 +376,23 @@ class ShareMappingModel(BaseFileMappingModel, ShareAttachment):
         raise TypeError("Try a download Share attachment")
 
 
+class ControlMappingModel(BaseFileMappingModel, ControlAttachment):
+    event: str
+    title: str
+    user_ids: list[str | int]
+    is_attach: ClassVar[bool] = False
+    is_downloadable: ClassVar[bool] = False
+    uploaded: bool = True
+
+    @property
+    def to_payload(self) -> list[dict[str, Any]]:
+        return []
+
+    @property
+    def get_payload_to_get_link(self) -> dict[str, Any] | None:
+        raise TypeError("Try a download Control attachment")
+
+
 class MessageLinkMappingModel(CamelCaseModel):
     type: str | None = None
     message: MessageMappingModel | None = None
@@ -398,6 +416,7 @@ class MessageMappingModel(CamelCaseModel):
         | PhotoMappingModel
         | FileMappingModel
         | ShareMappingModel
+        | ControlMappingModel
         | Any
     ] = []
     sender: int | None = None
@@ -423,6 +442,52 @@ class ReadStateMappingModel(CamelCaseModel):
 
 
 MessageLinkMappingModel.model_rebuild()
+
+
+class ChatMappingModel(CamelCaseModel):
+    id: int
+    type: Literal["DIALOG", "CHAT", "CHANNEL"]
+    status: str
+    owner: int
+    participants: dict[int, int] = Field(default_factory=dict)
+    title: str | None = None
+    base_raw_icon_url: str | None = None
+    base_icon_url: str | None = None
+    last_message: MessageMappingModel | None = None
+    last_event_time: int = 0
+    last_delayed_update_time: int = 0
+    last_fire_delayed_error_time: int = 0
+    created: int = 0
+    new_messages: int = 0
+    link: str | None = None
+    access: Literal["PUBLIC", "PRIVATE", "SECRET"] | None = None
+    restrictions: int | None = None
+    pinned_message: MessageMappingModel | None = None
+    participants_count: int = 0
+    description: str | None = None
+    options: dict[str, bool] | int | None = None
+    join_time: int = 0
+    invited_by: int | None = None
+    modified: int = 0
+    messages_count: int = 0
+    has_bots: bool | None = None
+    prev_message_id: int | None = None
+    admin_participants: dict[int, dict[Any, Any]] = Field(default_factory=dict)
+    admins: list[int] = Field(default_factory=list)
+    cid: int | None = None
+
+
+class CreateGroupAttachMappingModel(CamelCaseModel):
+    type: Literal["CONTROL"] = Field(default="CONTROL", serialization_alias="_type")
+    event: Literal["new"] = "new"
+    chat_type: Literal["CHAT", "DIALOG", "CHANNEL"] = "CHAT"
+    title: str
+    user_ids: list[int]
+
+
+class CreateGroupMessageMappingModel(CamelCaseModel):
+    cid: int = Field(default_factory=lambda: int(time.time() * 1000))
+    attaches: list[CreateGroupAttachMappingModel]
 
 
 # structures that are needed in both requests and responses at the same time

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import cast, TypeVar, Generic, Any, TYPE_CHECKING, Literal
 
+from ...payloads.responses import CreateGroupResponse
 from ...payloads.shared import CamelCaseModel
 from ......models import (
     Contact,
@@ -9,6 +10,7 @@ from ......models import (
     BaseMaxObject,
     EmojiReaction,
     ReadState,
+    Chat,
 )
 from ...payloads.models import (
     ContactMappingModel,
@@ -16,6 +18,7 @@ from ...payloads.models import (
     ReadStateMappingModel,
     MessageLinkMappingModel,
     ReactionInfoMappingModel,
+    ChatMappingModel,
 )
 
 TranslateObj = TypeVar("TranslateObj", bound=CamelCaseModel)
@@ -62,7 +65,8 @@ class TranslateContact(BaseTranslateMappingModel[ContactMappingModel]):
 
 class TranslateMessage(BaseTranslateMappingModel[MessageMappingModel]):
     @staticmethod
-    def translate(message: MessageMappingModel) -> Message:
+    def translate(message: MessageMappingModel, fallback_chat_id: int = -1) -> Message:
+
         def translate_message(msg: MessageMappingModel) -> Message:
             msg_id = msg.id
             # if message.id is None:
@@ -80,7 +84,7 @@ class TranslateMessage(BaseTranslateMappingModel[MessageMappingModel]):
                 msg_id = msg_id
 
             if msg.chat_id is None:
-                chat_id = -1
+                chat_id = fallback_chat_id
             else:
                 chat_id = msg.chat_id
 
@@ -159,6 +163,55 @@ class TranslateReadState(BaseTranslateMappingModel[ReadStateMappingModel]):
         )
 
 
+class TranslateChat(BaseTranslateMappingModel[ChatMappingModel]):
+    @staticmethod
+    def translate(chat: ChatMappingModel) -> Chat:
+        return Chat(
+            id=chat.id,
+            type=chat.type,
+            status=chat.status,
+            owner=chat.owner,
+            participants=chat.participants,
+            title=chat.title,
+            base_raw_icon_url=chat.base_raw_icon_url,
+            base_icon_url=chat.base_icon_url,
+            last_message=(
+                TranslateMessage.translate(
+                    message=chat.last_message, fallback_chat_id=chat.id
+                )
+                if chat.last_message
+                else None
+            ),
+            last_event_time=chat.last_event_time,
+            last_delayed_update_time=chat.last_delayed_update_time,
+            last_fire_delayed_error_time=chat.last_fire_delayed_error_time,
+            created=chat.created,
+            new_messages=chat.new_messages,
+            link=chat.link,
+            access=chat.access,
+            restrictions=chat.restrictions,
+            pinned_message=(
+                TranslateMessage.translate(
+                    message=chat.pinned_message, fallback_chat_id=chat.id
+                )
+                if chat.pinned_message
+                else None
+            ),
+            participants_count=chat.participants_count,
+            description=chat.description,
+            options=chat.options,
+            join_time=chat.join_time,
+            invited_by=chat.invited_by,
+            modified=chat.modified,
+            messages_count=chat.messages_count,
+            has_bots=chat.has_bots,
+            prev_message_id=chat.prev_message_id,
+            admin_participants=chat.admin_participants,
+            admins=chat.admins,
+            cid=chat.cid,
+        )
+
+
 TRANSLATE_MAPPING_MODELS: dict[
     type[CamelCaseModel], type[BaseTranslateMappingModel[Any]]
 ] = {
@@ -166,6 +219,7 @@ TRANSLATE_MAPPING_MODELS: dict[
     MessageMappingModel: TranslateMessage,
     ReactionInfoMappingModel: TranslateReactionInfo,
     ReadStateMappingModel: TranslateReadState,
+    ChatMappingModel: TranslateChat,
 }
 
 

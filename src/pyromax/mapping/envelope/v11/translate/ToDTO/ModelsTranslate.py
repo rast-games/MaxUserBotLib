@@ -11,6 +11,8 @@ from ......models import (
     EmojiReaction,
     ReadState,
     Chat,
+    Name,
+    Profile,
 )
 from ...payloads.models import (
     ContactMappingModel,
@@ -19,6 +21,8 @@ from ...payloads.models import (
     MessageLinkMappingModel,
     ReactionInfoMappingModel,
     ChatMappingModel,
+    NameMappingModel,
+    ProfileMappingModel,
 )
 
 TranslateObj = TypeVar("TranslateObj", bound=CamelCaseModel)
@@ -43,12 +47,25 @@ class BaseTranslateMappingModel(ABC, Generic[TranslateObj]):
             pass
 
 
+class TranslateName(BaseTranslateMappingModel[NameMappingModel]):
+    @staticmethod
+    def translate(
+        mapping_model: NameMappingModel,
+    ) -> Name:
+        return Name(
+            name=mapping_model.name,
+            first_name=mapping_model.first_name,
+            last_name=mapping_model.last_name,
+            type=mapping_model.type,
+        )
+
+
 class TranslateContact(BaseTranslateMappingModel[ContactMappingModel]):
     @staticmethod
     def translate(contact: ContactMappingModel) -> Contact:
         return Contact(
             id=contact.id,
-            name=contact.names[0].name if contact.names else "",
+            names=[TranslateName.translate(name) for name in contact.names],
             description=contact.description,
             first_name=contact.names[0].first_name if contact.names else "",
             last_name=contact.names[0].last_name if contact.names else "",
@@ -60,6 +77,21 @@ class TranslateContact(BaseTranslateMappingModel[ContactMappingModel]):
             account_status=contact.account_status,
             email=contact.email,
             registration_time=contact.registration_time,
+        )
+
+
+class TranslateProfile(BaseTranslateMappingModel[Profile]):
+    @staticmethod
+    def translate(profile: ProfileMappingModel) -> Profile:
+        profile_options = []
+        for option in profile.profile_options:
+            if isinstance(option, int):
+                profile_options.append(option)
+            elif isinstance(option, str) and option.isdigit():
+                profile_options.append(int(option))
+        return Profile(
+            contact=TranslateContact.translate(profile.contact),
+            profile_options=profile_options,
         )
 
 
@@ -220,6 +252,8 @@ TRANSLATE_MAPPING_MODELS: dict[
     ReactionInfoMappingModel: TranslateReactionInfo,
     ReadStateMappingModel: TranslateReadState,
     ChatMappingModel: TranslateChat,
+    NameMappingModel: TranslateName,
+    ProfileMappingModel: TranslateProfile,
 }
 
 

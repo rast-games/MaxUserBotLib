@@ -2,11 +2,12 @@ from __future__ import annotations
 import logging
 import asyncio
 from collections.abc import Callable, Coroutine
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, cast
 import qrcode
 
 
 from .....protocol.envelope import Envelope, EnvelopeProtocol
+from .....models import Profile, Chat, Contact, Message
 from ..payloads.models import BaseUserAgentMappingModel
 from ..methods.immutable import (
     SendUserAgentMethod,
@@ -22,6 +23,7 @@ from ..payloads.responses import (
     ChoiceLoginVariantResponse,
     TwoFactorLoginResponse,
 )
+from ..translate.ToDTO import translate_models
 from .....utils import read_token, write_token, Backoff
 from .....exceptions import (
     MapperCancelledError,
@@ -80,8 +82,21 @@ class AuthMixin(MixinProtocol):
             )
 
         self.max_api.id = auth_model.profile.contact.id
+        self.max_api.me = cast(Profile, translate_models(auth_model.profile))
         self.max_api.phone = str(auth_model.profile.contact.phone)
-        self.max_api.names = auth_model.profile.contact.names
+        self.max_api.chats = [
+            cast(Chat, translate_models(chat)) for chat in auth_model.chats
+        ]
+        self.max_api.contacts = [
+            cast(Contact, translate_models(contact)) for contact in auth_model.contacts
+        ]
+        self.max_api.messages = [
+            {
+                i: [cast(Message, translate_models(msg)) for msg in msg_list]
+                for i, msg_list in auth_model.messages.items()
+            }
+        ]
+        self.max_api.names = self.max_api.me.contact.names
 
     async def login(
         self,

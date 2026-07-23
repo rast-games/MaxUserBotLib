@@ -35,6 +35,8 @@ if TYPE_CHECKING:
         EmojiReaction,
         ReadState,
         Chat,
+        Profile,
+        Name,
     )
 
 from .context import *
@@ -177,7 +179,13 @@ class MaxApi(AsyncInitializerMixin):
         self.password = password
         self.id: int | None = None
         self.phone: str | None = None
-        self.names: Any | list[dict[str, Any]] | None = None
+
+        self.me: Profile | None = None
+        self.chats: list[Chat] | None = None
+        self.names: list[Name] | None = None
+        self.contacts: list[Contact | None] = []
+        self.messages: dict[int, list[Message]]
+
         self.__logger: logging.Logger | None = logger
         self.workflow_data = workflow_data
 

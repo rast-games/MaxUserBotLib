@@ -50,10 +50,10 @@ class ChoiceLoginVariantResponse(CamelCaseModel):
 
 
 class AuthResponse(CamelCaseModel):
-    chats: list[Any]
+    chats: list[ChatMappingModel]
     config: dict[Any, Any]
-    contacts: list[Any]
-    messages: dict[Any, Any]
+    contacts: list[ContactMappingModel | None]
+    messages: dict[int, list[MessageMappingModel]] = Field(default_factory=dict)
     presence: dict[Any, Any]
     profile: ProfileMappingModel
     time: int

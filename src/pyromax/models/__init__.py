@@ -8,6 +8,8 @@ from .Helpers import DataDict, MapperUpdateTranslator
 from .ErrorEvent import ErrorEvent
 from .ReadState import ReadState
 from .Chat import Chat
+from .Name import Name
+from .Profile import Profile
 
 __all__ = [
     "BaseMaxObject",
@@ -27,4 +29,6 @@ __all__ = [
     "ErrorEvent",
     "ReadState",
     "Chat",
+    "Name",
+    "Profile",
 ]

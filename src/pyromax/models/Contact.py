@@ -1,12 +1,13 @@
 from .base import BaseMaxObject
+from .Name import Name
 
 
 class Contact(BaseMaxObject):
-    first_name: str = ''
-    last_name: str = ''
-    name: str = ''
+    first_name: str = ""
+    last_name: str = ""
+    names: list[Name] = ""
     id: int
-    description: str = ''
+    description: str = ""
     phone: str | None = None
     avatar_url: str | None = None
     raw_avatar_url: str | None = None

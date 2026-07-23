@@ -417,6 +417,11 @@ class ReactionInfoMappingModel(CamelCaseModel):
     counters: list[dict[str, Any]] | None = None
 
 
+class ReadStateMappingModel(CamelCaseModel):
+    unread: int
+    mark: int
+
+
 MessageLinkMappingModel.model_rebuild()
 
 

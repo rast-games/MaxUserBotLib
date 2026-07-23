@@ -8,10 +8,12 @@ from ......models import (
     MessageLink,
     BaseMaxObject,
     EmojiReaction,
+    ReadState,
 )
 from ...payloads.models import (
     ContactMappingModel,
     MessageMappingModel,
+    ReadStateMappingModel,
     MessageLinkMappingModel,
     ReactionInfoMappingModel,
 )
@@ -142,12 +144,28 @@ class TranslateReactionInfo(BaseTranslateMappingModel[ReactionInfoMappingModel])
         )
 
 
+class TranslateReadState(BaseTranslateMappingModel[ReadStateMappingModel]):
+    @staticmethod
+    def translate(
+        read_state: ReadStateMappingModel,
+        chat_id: int,
+        message_id: int | str,
+    ) -> ReadState:
+        return ReadState(
+            chat_id=chat_id,
+            message_id=message_id,
+            mark=read_state.mark,
+            unread=read_state.unread,
+        )
+
+
 TRANSLATE_MAPPING_MODELS: dict[
     type[CamelCaseModel], type[BaseTranslateMappingModel[Any]]
 ] = {
     ContactMappingModel: TranslateContact,
     MessageMappingModel: TranslateMessage,
     ReactionInfoMappingModel: TranslateReactionInfo,
+    ReadStateMappingModel: TranslateReadState,
 }
 
 

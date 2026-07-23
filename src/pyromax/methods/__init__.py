@@ -12,6 +12,7 @@ from .GetReactions import GetReactionsMethod
 from .GetMemberById import GetMemberByIdMethod
 from .DownloadFile import DownloadFileMethod
 from .UploadFile import UploadFileMethod
+from .ReadMessage import ReadMessageMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -25,6 +26,7 @@ __all__ = [
     "AddReactionMethod",
     "RemoveReactionMethod",
     "GetReactionsMethod",
+    "ReadMessageMethod",
     "GetMemberByIdMethod",
     "DownloadFileMethod",
     "UploadFileMethod",

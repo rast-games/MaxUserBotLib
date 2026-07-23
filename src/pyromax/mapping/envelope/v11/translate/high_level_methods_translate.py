@@ -19,6 +19,7 @@ from .....methods import (
     AddReactionMethod,
     RemoveReactionMethod,
     GetReactionsMethod,
+    ReadMessageMethod,
 )
 
 if TYPE_CHECKING:
@@ -101,6 +102,11 @@ def get_registry(
             "WEB": mapper.get_reactions,
             "ANDROID": mapper.get_reactions,
             "DESKTOP": mapper.get_reactions,
+        },
+        ReadMessageMethod: {
+            "WEB": mapper.read_message,
+            "ANDROID": mapper.read_message,
+            "DESKTOP": mapper.read_message,
         },
     }
 

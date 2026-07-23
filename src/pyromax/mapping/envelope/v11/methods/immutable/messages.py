@@ -1,4 +1,4 @@
-from typing import cast
+from typing import cast, Literal
 
 from .base import BaseMethod, Envelope, Cmd, Opcode, VERSION
 from ...payloads.requests import (
@@ -12,6 +12,7 @@ from ...payloads.requests import (
     RemoveReactionRequest,
     GetReactionsRequest,
     ReactionInfoRequest,
+    ReadMessageRequest,
 )
 from ...translate.FromDTO import reverse_translate_message
 from ...payloads.models import MessageMappingModel, MessageLinkMappingModel
@@ -167,6 +168,20 @@ class GetReactionsMethod(BaseMethod):
         return request
 
 
+class ReadMessageMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.READ_MESSAGE
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = ReadMessageRequest(
+            type=cast(Literal["READ_MESSAGE", "READ_REACTION"], self.args["type"]),
+            chat_id=self.args["chat_id"],
+            message_id=self.args["message_id"],
+            mark=self.args["mark"],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "SendMessageMethod",
     "EditMessageMethod",
@@ -177,4 +192,5 @@ __all__ = [
     "AddReactionMethod",
     "RemoveReactionMethod",
     "GetReactionsMethod",
+    "ReadMessageMethod",
 ]

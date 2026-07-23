@@ -1,3 +1,4 @@
+import time
 from random import randint
 from typing import Any, Literal
 
@@ -122,6 +123,13 @@ class RemoveReactionRequest(CamelCaseModel):
 class GetReactionsRequest(CamelCaseModel):
     chat_id: int
     message_ids: list[int] | list[str]
+
+
+class ReadMessageRequest(CamelCaseModel):
+    chat_id: int
+    message_id: str | int
+    type: Literal["READ_MESSAGE", "READ_REACTION"] = "READ_MESSAGE"
+    mark: int = Field(default_factory=lambda: int(time.time() * 1000))
 
 
 class KeepAliveRequest(CamelCaseModel):

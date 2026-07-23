@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine
 import time
 import asyncio
 
-from ..payloads.models import BaseFileMappingModel, MessageMappingModel
+from ..payloads.models import BaseFileMappingModel, ReadStateMappingModel
 from .....protocol.envelope import Envelope, EnvelopeProtocol
 from ..constants import DEFAULT_BACKOFF_CONFIG
 from .....utils import clean_and_map, Backoff
@@ -20,6 +20,7 @@ from ..methods.immutable import (
     AddReactionMethod,
     RemoveReactionMethod,
     GetReactionsMethod,
+    ReadMessageMethod,
 )
 from .....exceptions import (
     SendMessageFileError,
@@ -40,7 +41,7 @@ from ..payloads.responses import (
     GetReactionsResponse,
 )
 from ..translate.ToDTO import translate_models
-from .....models import Message, EmojiReaction
+from .....models import Message, EmojiReaction, ReadState
 
 from .MixinProtocol import MixinProtocol
 
@@ -531,4 +532,33 @@ class MessageMixin(MixinProtocol):
                 )
                 for message_id, reaction_info in mapped_messages_reactions.items()
             },
+        )
+
+    async def read_message(
+        self,
+        chat_id: int,
+        message_id: int | str,
+        typeof: str,
+        mark: int | None = None,
+    ) -> ReadState:
+        if mark is None:
+            mark = int(time.time() * 1000)
+        response = await self.send(
+            method=ReadMessageMethod(
+                chat_id=chat_id,
+                message_id=message_id,
+                type=typeof,
+                mark=mark,
+            )
+        )
+
+        mapped_read_state = ReadStateMappingModel(**response.payload)
+
+        return cast(
+            ReadState,
+            translate_models(
+                mapped_read_state,
+                chat_id=chat_id,
+                message_id=message_id,
+            ),
         )

@@ -11,6 +11,7 @@ class Opcode(MappingConstants):
     # CHAT_INFO = 48
     GET_CHAT = 48
     GET_CHAT_MESSAGES_PER_CHUNK = 49
+    READ_MESSAGE = 50
     PIN_MESSAGE = 55
     SEND_MESSAGE = 64
     DELETE_MESSAGE = 66

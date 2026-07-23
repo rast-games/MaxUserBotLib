@@ -19,6 +19,7 @@ from ..methods import (
     AddReactionMethod,
     RemoveReactionMethod,
     GetReactionsMethod,
+    ReadMessageMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -26,7 +27,13 @@ if TYPE_CHECKING:
     from ..dispatcher.event import Update, MaxObject
     from ..protocol import Response
     from ..methods import BaseMaxApiMethod
-    from ..models import BaseFileAttachment, MessageLink, Message, EmojiReaction
+    from ..models import (
+        BaseFileAttachment,
+        MessageLink,
+        Message,
+        EmojiReaction,
+        ReadState,
+    )
 
 from .context import *
 
@@ -508,4 +515,24 @@ class MaxApi(AsyncInitializerMixin):
         return cast(
             dict[str, EmojiReaction] | None,
             await self(GetReactionsMethod, chat_id=chat_id, message_ids=message_ids),
+        )
+
+    async def read_message(
+        self,
+        chat_id: int,
+        message_id: int | str,
+        typeof: str = "READ_MESSAGE",
+        mark: int | None = None,
+    ) -> ReadState:
+        from ..models import ReadState
+
+        return cast(
+            ReadState,
+            await self(
+                ReadMessageMethod,
+                chat_id=chat_id,
+                message_id=message_id,
+                typeof=typeof,
+                mark=mark,
+            ),
         )

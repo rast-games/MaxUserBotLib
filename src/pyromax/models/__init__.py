@@ -6,20 +6,22 @@ from .Contact import Contact
 from .UserAgent import BaseUserAgent
 from .Helpers import DataDict, MapperUpdateTranslator
 from .ErrorEvent import ErrorEvent
+from .ReadState import ReadState
 
 __all__ = [
-    'BaseMaxObject',
-    'Message',
-    'MessageLink',
-    'EmojiReaction',
-    'BaseFileAttachment',
-    'PhotoAttachment',
-    'VideoAttachment',
-    'FileAttachment',
-    'ShareAttachment',
-    'Contact',
-    'BaseUserAgent',
-    'DataDict',
-    'MapperUpdateTranslator',
-    'ErrorEvent'
+    "BaseMaxObject",
+    "Message",
+    "MessageLink",
+    "EmojiReaction",
+    "BaseFileAttachment",
+    "PhotoAttachment",
+    "VideoAttachment",
+    "FileAttachment",
+    "ShareAttachment",
+    "Contact",
+    "BaseUserAgent",
+    "DataDict",
+    "MapperUpdateTranslator",
+    "ErrorEvent",
+    "ReadState",
 ]

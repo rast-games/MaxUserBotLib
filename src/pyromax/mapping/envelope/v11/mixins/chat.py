@@ -3,8 +3,12 @@ from typing import cast
 
 from .MixinProtocol import MixinProtocol
 from .....models import Chat, Message
-from ..methods.immutable import CreateChatMethod, ChatMemberOperationMethod
-from ..payloads.responses import CreateGroupResponse, ChatMemberOperationResponse
+from ..methods.immutable import (
+    CreateChatMethod,
+    ChatMemberOperationMethod,
+    ChangeGroupSettingsMethod,
+)
+from ..payloads.responses import CreateGroupResponse, ChatContainsResponse
 from ..translate.ToDTO import translate_models
 
 
@@ -80,7 +84,7 @@ class ChatMixin(MixinProtocol):
             )
         )
 
-        mapped_chat = ChatMemberOperationResponse(**response.payload).chat
+        mapped_chat = ChatContainsResponse(**response.payload).chat
         if mapped_chat is None:
             return None
 
@@ -103,7 +107,35 @@ class ChatMixin(MixinProtocol):
             )
         )
 
-        mapped_chat = ChatMemberOperationResponse(**response.payload).chat
+        mapped_chat = ChatContainsResponse(**response.payload).chat
+        if mapped_chat is None:
+            return None
+
+        chat = cast(Chat, translate_models(mapped_chat))
+        self._cache_chat(chat)
+        return chat
+
+    async def change_group_settings(
+        self,
+        chat_id: int,
+        all_can_pin_message: bool | None = None,
+        only_owner_can_change_icon_title: bool | None = None,
+        only_admin_can_add_member: bool | None = None,
+        only_admin_can_call: bool | None = None,
+        member_can_see_private_link: bool | None = None,
+    ) -> Chat | None:
+        response = await self.send(
+            method=ChangeGroupSettingsMethod(
+                chat_id=chat_id,
+                all_can_pin_message=all_can_pin_message,
+                only_owner_can_change_icon_title=only_owner_can_change_icon_title,
+                only_admin_can_add_member=only_admin_can_add_member,
+                only_admin_can_call=only_admin_can_call,
+                member_can_see_private_link=member_can_see_private_link,
+            )
+        )
+
+        mapped_chat = ChatContainsResponse(**response.payload).chat
         if mapped_chat is None:
             return None
 

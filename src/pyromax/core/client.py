@@ -23,6 +23,7 @@ from ..methods import (
     CreateGroupMethod,
     InviteUsersToGroupMethod,
     RemoveUsersFromGroupMethod,
+    ChangeGroupSettingsMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -606,5 +607,29 @@ class MaxApi(AsyncInitializerMixin):
                 chat_id=chat_id,
                 user_ids=user_ids,
                 clean_msg_period=clean_msg_period,
+            ),
+        )
+
+    async def change_group_settings(
+        self,
+        chat_id: int,
+        all_can_pin_message: bool | None = None,
+        only_owner_can_change_icon_title: bool | None = None,
+        only_admin_can_add_member: bool | None = None,
+        only_admin_can_call: bool | None = None,
+        member_can_see_private_link: bool | None = None,
+    ) -> Chat | None:
+        from ..models import Chat
+
+        return cast(
+            Chat | None,
+            await self(
+                ChangeGroupSettingsMethod,
+                chat_id=chat_id,
+                all_can_pin_message=all_can_pin_message,
+                only_owner_can_change_icon_title=only_owner_can_change_icon_title,
+                only_admin_can_add_member=only_admin_can_add_member,
+                only_admin_can_call=only_admin_can_call,
+                member_can_see_private_link=member_can_see_private_link,
             ),
         )

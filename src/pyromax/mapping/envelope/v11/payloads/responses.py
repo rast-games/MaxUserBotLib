@@ -101,7 +101,7 @@ class CreateGroupResponse(CamelCaseModel):
     chat: ChatMappingModel | None = None
 
 
-class ChatMemberOperationResponse(CamelCaseModel):
+class ChatContainsResponse(CamelCaseModel):
     chat: ChatMappingModel | None = None
 
 

@@ -16,6 +16,7 @@ from .models import (
     FileMappingModel,
     ShareMappingModel,
     CreateGroupMessageMappingModel,
+    ChangeGroupSettingsModel,
 )
 
 
@@ -144,6 +145,11 @@ class ChatMemberOperationRequest(CamelCaseModel):
     operation: Literal["add", "remove"] = "add"
     show_history: bool | None = None
     clean_msg_period: int | None = None
+
+
+class ChangeGroupSettingsRequest(CamelCaseModel):
+    chat_id: int
+    options: ChangeGroupSettingsModel
 
 
 class KeepAliveRequest(CamelCaseModel):

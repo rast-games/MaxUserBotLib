@@ -241,6 +241,29 @@ class ProfileMappingModel(CamelCaseModel):
     profile_options: list[Any]
 
 
+class ChangeGroupSettingsModel(CamelCaseModel):
+    only_owner_can_change_icon_title: bool | None = Field(
+        default=None,
+        serialization_alias="ONLY_OWNER_CAN_CHANGE_ICON_TITLE",
+    )
+    all_can_pin_message: bool | None = Field(
+        default=None,
+        serialization_alias="ALL_CAN_PIN_MESSAGE",
+    )
+    only_admin_can_add_member: bool | None = Field(
+        default=None,
+        serialization_alias="ONLY_ADMIN_CAN_ADD_MEMBER",
+    )
+    only_admin_can_call: bool | None = Field(
+        default=None,
+        serialization_alias="ONLY_ADMIN_CAN_CALL",
+    )
+    members_can_see_private_link: bool | None = Field(
+        default=None,
+        serialization_alias="MEMBERS_CAN_SEE_PRIVATE_LINK",
+    )
+
+
 class BaseFileMappingModel(BaseFileAttachment, CamelCaseModel, ABC):
     is_attach: ClassVar[bool] = True
     is_downloadable: ClassVar[bool] = True

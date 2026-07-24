@@ -16,6 +16,7 @@ from .ReadMessage import ReadMessageMethod
 from .CreateGroup import CreateGroupMethod
 from .InviteUsersToGroup import InviteUsersToGroupMethod
 from .RemoveUsersFromGroup import RemoveUsersFromGroupMethod
+from .ChangeGroupSettings import ChangeGroupSettingsMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -36,4 +37,5 @@ __all__ = [
     "CreateGroupMethod",
     "InviteUsersToGroupMethod",
     "RemoveUsersFromGroupMethod",
+    "ChangeGroupSettingsMethod",
 ]

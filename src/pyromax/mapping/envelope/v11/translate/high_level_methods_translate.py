@@ -23,6 +23,7 @@ from .....methods import (
     CreateGroupMethod,
     InviteUsersToGroupMethod,
     RemoveUsersFromGroupMethod,
+    ChangeGroupSettingsMethod,
 )
 
 if TYPE_CHECKING:
@@ -125,6 +126,11 @@ def get_registry(
             "WEB": mapper.remove_users_from_group,
             "ANDROID": mapper.remove_users_from_group,
             "DESKTOP": mapper.remove_users_from_group,
+        },
+        ChangeGroupSettingsMethod: {
+            "WEB": mapper.change_group_settings,
+            "ANDROID": mapper.change_group_settings,
+            "DESKTOP": mapper.change_group_settings,
         },
     }
 

@@ -1,10 +1,15 @@
 from typing import cast, Literal
 
 from .base import BaseMethod, Envelope, Cmd, Opcode, VERSION
-from ...payloads.requests import CreateChatRequest, ChatMemberOperationRequest
+from ...payloads.requests import (
+    CreateChatRequest,
+    ChatMemberOperationRequest,
+    ChangeGroupSettingsRequest,
+)
 from ...payloads.models import (
     CreateGroupMessageMappingModel,
     CreateGroupAttachMappingModel,
+    ChangeGroupSettingsModel,
 )
 
 
@@ -49,7 +54,26 @@ class ChatMemberOperationMethod(BaseMethod):
         return request
 
 
-__all__ = [
-    "CreateChatMethod",
-    "ChatMemberOperationMethod",
-]
+class ChangeGroupSettingsMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.CHAT_UPDATE
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = ChangeGroupSettingsRequest(
+            chat_id=self.args["chat_id"],
+            options=ChangeGroupSettingsModel(
+                only_owner_can_change_icon_title=self.args.get(
+                    "only_owner_can_change_icon_title"
+                ),
+                all_can_pin_message=self.args.get("all_can_pin_message"),
+                only_admin_can_add_member=self.args.get("only_admin_can_add_member"),
+                only_admin_can_call=self.args.get("only_admin_can_call"),
+                members_can_see_private_link=self.args.get(
+                    "members_can_see_private_link"
+                ),
+            ),
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
+__all__ = ["CreateChatMethod", "ChatMemberOperationMethod", "ChangeGroupSettingsMethod"]

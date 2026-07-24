@@ -117,7 +117,7 @@ class DeleteMessageMethod(BaseMethod):
 
 class PinMessageMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
-        request.opcode = Opcode.PIN_MESSAGE
+        request.opcode = Opcode.CHAT_UPDATE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
         request.payload = PinMessageRequest(

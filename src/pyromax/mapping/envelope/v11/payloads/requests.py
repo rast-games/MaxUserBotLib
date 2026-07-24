@@ -167,6 +167,10 @@ class RevokePrivateLinkRequest(CamelCaseModel):
     chat_id: int
 
 
+class GetChatInfoRequest(CamelCaseModel):
+    chat_ids: list[int]
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

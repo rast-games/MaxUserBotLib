@@ -29,6 +29,7 @@ from .....methods import (
     JoinChannelMethod,
     ResolveGroupByLinkMethod,
     RevokeInviteLinkMethod,
+    GetChatsMethod,
 )
 
 if TYPE_CHECKING:
@@ -161,6 +162,11 @@ def get_registry(
             "WEB": mapper.revoke_invite_link,
             "ANDROID": mapper.revoke_invite_link,
             "DESKTOP": mapper.revoke_invite_link,
+        },
+        GetChatsMethod: {
+            "WEB": mapper.get_chats,
+            "ANDROID": mapper.get_chats,
+            "DESKTOP": mapper.get_chats,
         },
     }
 

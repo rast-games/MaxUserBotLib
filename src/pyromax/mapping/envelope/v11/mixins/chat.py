@@ -1,5 +1,6 @@
 import time
 from typing import cast
+from collections.abc import Iterable
 
 from .MixinProtocol import MixinProtocol
 from .....exceptions import MapperApiError, ParseMaxApiError
@@ -12,8 +13,13 @@ from ..methods.immutable import (
     JoinGroupMethod,
     ResolveGroupByLinkMethod,
     RevokePrivateLinkMethod,
+    GetChatInfoMethod,
 )
-from ..payloads.responses import CreateGroupResponse, ChatContainsResponse
+from ..payloads.responses import (
+    CreateGroupResponse,
+    ChatContainsResponse,
+    ChatsContainsResponse,
+)
 from ..translate.ToDTO import translate_models
 
 
@@ -33,6 +39,18 @@ class ChatMixin(MixinProtocol):
 
         self.max_api.chats.append(chat)
         return chat
+
+    def _get_cached_chat(self, chat_id: int) -> Chat | None:
+        for chat in self.max_api.chats or []:
+            if chat.id == chat_id:
+                return chat
+        return None
+
+    def _remove_cached_chat(self, chat_id: int) -> None:
+        if self.max_api.chats is None:
+            return
+
+        self.max_api.chats = [chat for chat in self.max_api.chats if chat.id != chat_id]
 
     async def create_group(
         self,
@@ -225,3 +243,25 @@ class ChatMixin(MixinProtocol):
         chat = cast(Chat, translate_models(mapped_chat))
         self._cache_chat(chat)
         return chat
+
+    async def get_chats(self, chat_ids: Iterable[int]) -> list[Chat]:
+        cached = {
+            chat_id: chat
+            for chat_id in chat_ids
+            if (chat := self._get_cached_chat(chat_id)) is not None
+        }
+        missed_chat_ids = [chat_id for chat_id in chat_ids if chat_id not in cached]
+
+        if missed_chat_ids:
+            response = await self.send(
+                method=GetChatInfoMethod(
+                    chat_ids=missed_chat_ids,
+                )
+            )
+            mapped_chats = ChatsContainsResponse(**response.payload).chats
+            for mapped_chat in mapped_chats:
+                chat = cast(Chat, translate_models(mapped_chat))
+                chat = self._cache_chat(chat)
+                cached[chat.id] = chat
+
+        return [cached[chat_id] for chat_id in chat_ids if chat_id in cached]

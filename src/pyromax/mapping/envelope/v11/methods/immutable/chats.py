@@ -8,6 +8,7 @@ from ...payloads.requests import (
     ChangeGroupProfileRequest,
     LinkGroupRequest,
     RevokePrivateLinkRequest,
+    GetChatInfoRequest,
 )
 from ...payloads.models import (
     CreateGroupMessageMappingModel,
@@ -122,6 +123,17 @@ class RevokePrivateLinkMethod(BaseMethod):
         return request
 
 
+class GetChatInfoMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.GET_CHAT
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = GetChatInfoRequest(
+            chat_ids=self.args["chat_ids"],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "CreateChatMethod",
     "ChatMemberOperationMethod",
@@ -130,4 +142,5 @@ __all__ = [
     "JoinGroupMethod",
     "ResolveGroupByLinkMethod",
     "RevokePrivateLinkMethod",
+    "GetChatInfoMethod",
 ]

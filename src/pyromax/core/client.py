@@ -29,6 +29,7 @@ from ..methods import (
     JoinChannelMethod,
     ResolveGroupByLinkMethod,
     RevokeInviteLinkMethod,
+    GetChatsMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -688,3 +689,17 @@ class MaxApi(AsyncInitializerMixin):
             Chat,
             await self(RevokeInviteLinkMethod, chat_id=chat_id),
         )
+
+    async def get_chats(self, chat_ids: Iterable[int]) -> list[Chat]:
+        from ..models import Chat
+
+        return cast(
+            list[Chat],
+            await self(GetChatsMethod, chat_ids=chat_ids),
+        )
+
+    async def get_chat(self, chat_id: int) -> Chat:
+        chats = await self.get_chats([chat_id])
+        if not chats:
+            raise ValueError("Chat not found")
+        return chats[0]

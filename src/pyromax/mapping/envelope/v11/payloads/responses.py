@@ -105,6 +105,10 @@ class ChatContainsResponse(CamelCaseModel):
     chat: ChatMappingModel | None = None
 
 
+class ChatsContainsResponse(CamelCaseModel):
+    chats: list[ChatMappingModel]
+
+
 class ErrorMessageResponse(CamelCaseModel):
     error: str | None = None
     error_message: str | None = Field(default=None, alias="message")

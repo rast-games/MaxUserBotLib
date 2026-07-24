@@ -21,6 +21,7 @@ from .ChangeGroupProfile import ChangeGroupProfileMethod
 from .JoinGroup import JoinGroupMethod, JoinChannelMethod
 from .ResolveGroupByLink import ResolveGroupByLinkMethod
 from .RevokeInviteLink import RevokeInviteLinkMethod
+from .GetChats import GetChatsMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -47,4 +48,5 @@ __all__ = [
     "JoinChannelMethod",
     "ResolveGroupByLinkMethod",
     "RevokeInviteLinkMethod",
+    "GetChatsMethod",
 ]

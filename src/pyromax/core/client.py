@@ -27,6 +27,7 @@ from ..methods import (
     ChangeGroupProfileMethod,
     JoinGroupMethod,
     JoinChannelMethod,
+    ResolveGroupByLinkMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -669,4 +670,12 @@ class MaxApi(AsyncInitializerMixin):
         return cast(
             Chat,
             await self(JoinChannelMethod, link=link),
+        )
+
+    async def resolve_group_by_link(self, link: str) -> Chat | None:
+        from ..models import Chat
+
+        return cast(
+            Chat | None,
+            await self(ResolveGroupByLinkMethod, link=link),
         )

@@ -102,10 +102,18 @@ class JoinGroupMethod(BaseMethod):
         return request
 
 
+class ResolveGroupByLinkMethod(JoinGroupMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request = await super().__call__(request)
+        request.opcode = Opcode.LINK_INFO
+        return request
+
+
 __all__ = [
     "CreateChatMethod",
     "ChatMemberOperationMethod",
     "ChangeGroupSettingsMethod",
     "ChangeGroupProfileMethod",
     "JoinGroupMethod",
+    "ResolveGroupByLinkMethod",
 ]

@@ -27,6 +27,7 @@ from .....methods import (
     ChangeGroupProfileMethod,
     JoinGroupMethod,
     JoinChannelMethod,
+    ResolveGroupByLinkMethod,
 )
 
 if TYPE_CHECKING:
@@ -149,6 +150,11 @@ def get_registry(
             "WEB": mapper.join_channel,
             "ANDROID": mapper.join_channel,
             "DESKTOP": mapper.join_channel,
+        },
+        ResolveGroupByLinkMethod: {
+            "WEB": mapper.resolve_group_by_link,
+            "ANDROID": mapper.resolve_group_by_link,
+            "DESKTOP": mapper.resolve_group_by_link,
         },
     }
 

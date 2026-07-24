@@ -24,6 +24,7 @@ class Opcode(MappingConstants):
     GET_VIDEO = 83
     GET_FILE = 88
     CREATE_FILE = 87
+    LINK_INFO = 89
     RESOLVE_2FA = 115
     PUSH_NOTIFICATION = 128
     MESSAGE_REACTION_UPDATE = 156

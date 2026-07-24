@@ -10,6 +10,7 @@ from ..methods.immutable import (
     ChangeGroupSettingsMethod,
     ChangeGroupProfileMethod,
     JoinGroupMethod,
+    ResolveGroupByLinkMethod,
 )
 from ..payloads.responses import CreateGroupResponse, ChatContainsResponse
 from ..translate.ToDTO import translate_models
@@ -191,3 +192,20 @@ class ChatMixin(MixinProtocol):
         parsed_link = self._prepare_chat_join_link(link)
 
         return await self._join_chat(parsed_link or link)
+
+    async def resolve_group_by_link(self, link: str) -> Chat | None:
+        parsed_link = self._prepare_chat_join_link(link)
+        if parsed_link is None:
+            raise ValueError("Invalid group link")
+
+        response = await self.send(
+            method=ResolveGroupByLinkMethod(
+                link=parsed_link,
+            )
+        )
+        mapped_chat = ChatContainsResponse(**response.payload).chat
+        if mapped_chat is None:
+            return None
+        chat = cast(Chat, translate_models(mapped_chat))
+        self._cache_chat(chat)
+        return chat

@@ -166,6 +166,7 @@ class TransportMixin(MixinProtocol):
         data: dict[Any, Any] | None = None,
         return_exception: bool = False,
         check_errors: bool = False,
+        max_retries: int = 3,
     ) -> Envelope:
         """
         Raises
@@ -177,7 +178,7 @@ class TransportMixin(MixinProtocol):
             data = {}
 
         storage = {"gen": -1}
-        while True:
+        for _ in range(max_retries):
             try:
                 await self._mapper_connected.wait()
                 await self._authorized.wait()
@@ -257,6 +258,10 @@ class TransportMixin(MixinProtocol):
                     raise MapperTransportError(
                         "unknown exception was catch while send"
                     ) from e
+        else:
+            raise MapperTransportError(
+                f"max retries to send exceeded",
+            )
 
     async def _call_build_in_method(
         self,

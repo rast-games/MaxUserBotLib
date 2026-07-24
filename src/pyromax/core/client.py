@@ -30,6 +30,8 @@ from ..methods import (
     ResolveGroupByLinkMethod,
     RevokeInviteLinkMethod,
     GetChatsMethod,
+    LeaveChannelMethod,
+    LeaveGroupMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -703,3 +705,25 @@ class MaxApi(AsyncInitializerMixin):
         if not chats:
             raise ValueError("Chat not found")
         return chats[0]
+
+    async def leave_group(self, chat_id: int) -> Message | None:
+        from ..models import Message
+
+        return cast(
+            Message | None,
+            await self(
+                LeaveGroupMethod,
+                chat_id=chat_id,
+            ),
+        )
+
+    async def leave_channel(self, chat_id: int) -> Message | None:
+        from ..models import Message
+
+        return cast(
+            Message | None,
+            await self(
+                LeaveChannelMethod,
+                chat_id=chat_id,
+            ),
+        )

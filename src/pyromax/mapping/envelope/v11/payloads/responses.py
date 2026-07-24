@@ -105,6 +105,10 @@ class ChatContainsResponse(CamelCaseModel):
     chat: ChatMappingModel | None = None
 
 
+class MessageContainsResponse(CamelCaseModel):
+    message: MessageMappingModel | None = None
+
+
 class ChatsContainsResponse(CamelCaseModel):
     chats: list[ChatMappingModel]
 

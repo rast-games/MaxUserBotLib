@@ -1,4 +1,4 @@
-from typing import Union, cast
+from typing import cast
 
 from .Base import BaseMaxApiMethod
 from ..models import Chat
@@ -18,7 +18,7 @@ class JoinGroupMethod(BaseMaxApiMethod[Chat]):
 class JoinChannelMethod(BaseMaxApiMethod[Chat]):
     async def __call__(self, link: str) -> Chat:
         if not self._max_api:
-            raise RuntimeError("JoinGroup method not bound to MaxApi instance")
+            raise RuntimeError("JoinChannel method not bound to MaxApi instance")
 
         return cast(
             Chat,

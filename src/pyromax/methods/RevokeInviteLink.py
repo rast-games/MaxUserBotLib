@@ -1,4 +1,4 @@
-from typing import Union, cast
+from typing import cast
 
 from .Base import BaseMaxApiMethod
 from ..models import Chat
@@ -10,7 +10,7 @@ class RevokeInviteLinkMethod(BaseMaxApiMethod[Chat]):
             raise RuntimeError("ResolveGroupByLink method not bound to MaxApi instance")
 
         return cast(
-            Chat | None,
+            Chat,
             await self._max_api.mapper.call_method(
                 type(self),
                 chat_id=chat_id,

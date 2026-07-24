@@ -171,6 +171,10 @@ class GetChatInfoRequest(CamelCaseModel):
     chat_ids: list[int]
 
 
+class LeaveChatRequest(CamelCaseModel):
+    chat_id: int
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

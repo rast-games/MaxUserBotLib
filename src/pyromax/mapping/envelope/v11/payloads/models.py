@@ -401,8 +401,8 @@ class ShareMappingModel(BaseFileMappingModel, ShareAttachment):
 
 class ControlMappingModel(BaseFileMappingModel, ControlAttachment):
     event: str
-    title: str
-    user_ids: list[str | int]
+    title: str | None = None
+    user_ids: list[str | int] | None = None
     is_attach: ClassVar[bool] = False
     is_downloadable: ClassVar[bool] = False
     uploaded: bool = True

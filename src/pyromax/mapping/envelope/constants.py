@@ -14,6 +14,7 @@ class Opcode(MappingConstants):
     READ_MESSAGE = 50
     CHAT_UPDATE = 55
     JOIN_GROUP = 57
+    LEAVE_CHAT = 58
     SEND_MESSAGE = 64
     DELETE_MESSAGE = 66
     EDIT_MESSAGE = 67

@@ -14,11 +14,13 @@ from ..methods.immutable import (
     ResolveGroupByLinkMethod,
     RevokePrivateLinkMethod,
     GetChatInfoMethod,
+    LeaveChatMethod,
 )
 from ..payloads.responses import (
     CreateGroupResponse,
     ChatContainsResponse,
     ChatsContainsResponse,
+    MessageContainsResponse,
 )
 from ..translate.ToDTO import translate_models
 
@@ -41,12 +43,18 @@ class ChatMixin(MixinProtocol):
         return chat
 
     def _get_cached_chat(self, chat_id: int) -> Chat | None:
+        if self.max_api is None:
+            raise RuntimeError("Mapper not bound to max_api instance")
+
         for chat in self.max_api.chats or []:
             if chat.id == chat_id:
                 return chat
         return None
 
     def _remove_cached_chat(self, chat_id: int) -> None:
+        if self.max_api is None:
+            raise RuntimeError("Mapper not bound to max_api instance")
+
         if self.max_api.chats is None:
             return
 
@@ -265,3 +273,21 @@ class ChatMixin(MixinProtocol):
                 cached[chat.id] = chat
 
         return [cached[chat_id] for chat_id in chat_ids if chat_id in cached]
+
+    async def leave_group(self, chat_id: int) -> Message | None:
+        response = await self.send(
+            method=LeaveChatMethod(
+                chat_id=chat_id,
+            )
+        )
+
+        msg = MessageContainsResponse(**response.payload).message
+        if msg is None:
+            return None
+        msg.chat_id = chat_id
+
+        self._remove_cached_chat(chat_id)
+        return cast(Message, translate_models(msg))
+
+    async def leave_channel(self, chat_id: int) -> Message | None:
+        return await self.leave_group(chat_id)

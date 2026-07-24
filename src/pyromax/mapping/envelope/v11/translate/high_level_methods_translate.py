@@ -25,6 +25,8 @@ from .....methods import (
     RemoveUsersFromGroupMethod,
     ChangeGroupSettingsMethod,
     ChangeGroupProfileMethod,
+    JoinGroupMethod,
+    JoinChannelMethod,
 )
 
 if TYPE_CHECKING:
@@ -137,6 +139,16 @@ def get_registry(
             "WEB": mapper.change_group_profile,
             "ANDROID": mapper.change_group_profile,
             "DESKTOP": mapper.change_group_profile,
+        },
+        JoinGroupMethod: {
+            "WEB": mapper.join_group,
+            "ANDROID": mapper.join_group,
+            "DESKTOP": mapper.join_group,
+        },
+        JoinChannelMethod: {
+            "WEB": mapper.join_channel,
+            "ANDROID": mapper.join_channel,
+            "DESKTOP": mapper.join_channel,
         },
     }
 

@@ -35,6 +35,7 @@ from .ProtocolErrors import (
     ConnectProtocolError,
 )
 from .fsm import DataNotDictLikeError
+from .ParseError import ParseMaxApiError
 
 __all__ = [
     "BaseMaxApiException",
@@ -68,4 +69,5 @@ __all__ = [
     "MapperNotImplementedError",
     "MapperNotImplementedMethodError",
     "MapperTransportNotSupportedForMethodError",
+    "ParseMaxApiError",
 ]

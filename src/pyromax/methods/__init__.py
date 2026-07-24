@@ -18,6 +18,7 @@ from .InviteUsersToGroup import InviteUsersToGroupMethod
 from .RemoveUsersFromGroup import RemoveUsersFromGroupMethod
 from .ChangeGroupSettings import ChangeGroupSettingsMethod
 from .ChangeGroupProfile import ChangeGroupProfileMethod
+from .JoinGroup import JoinGroupMethod, JoinChannelMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -40,4 +41,6 @@ __all__ = [
     "RemoveUsersFromGroupMethod",
     "ChangeGroupSettingsMethod",
     "ChangeGroupProfileMethod",
+    "JoinGroupMethod",
+    "JoinChannelMethod",
 ]

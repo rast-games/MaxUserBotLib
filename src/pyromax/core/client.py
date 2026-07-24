@@ -25,6 +25,8 @@ from ..methods import (
     RemoveUsersFromGroupMethod,
     ChangeGroupSettingsMethod,
     ChangeGroupProfileMethod,
+    JoinGroupMethod,
+    JoinChannelMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -651,4 +653,20 @@ class MaxApi(AsyncInitializerMixin):
                 name=name,
                 description=description,
             ),
+        )
+
+    async def join_group(self, link: str) -> Chat:
+        from ..models import Chat
+
+        return cast(
+            Chat,
+            await self(JoinGroupMethod, link=link),
+        )
+
+    async def join_channel(self, link: str) -> Chat:
+        from ..models import Chat
+
+        return cast(
+            Chat,
+            await self(JoinChannelMethod, link=link),
         )

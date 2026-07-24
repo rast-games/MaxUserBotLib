@@ -2,12 +2,14 @@ import time
 from typing import cast
 
 from .MixinProtocol import MixinProtocol
+from .....exceptions import MapperApiError, ParseMaxApiError
 from .....models import Chat, Message
 from ..methods.immutable import (
     CreateChatMethod,
     ChatMemberOperationMethod,
     ChangeGroupSettingsMethod,
     ChangeGroupProfileMethod,
+    JoinGroupMethod,
 )
 from ..payloads.responses import CreateGroupResponse, ChatContainsResponse
 from ..translate.ToDTO import translate_models
@@ -164,3 +166,28 @@ class ChatMixin(MixinProtocol):
         chat = cast(Chat, translate_models(mapped_chat))
         self._cache_chat(chat)
         return chat
+
+    async def _join_chat(self, link: str) -> Chat:
+        response = await self.send(method=JoinGroupMethod(link=link))
+        mapped_chat = ChatContainsResponse(**response.payload).chat
+        if mapped_chat is None:
+            raise MapperApiError("JoinGroup request doesn't return a chat")
+        chat = cast(Chat, translate_models(mapped_chat))
+        self._cache_chat(chat)
+        return chat
+
+    @staticmethod
+    def _prepare_chat_join_link(link: str) -> str | None:
+        idx = link.find("join/")
+        return link[idx:] if idx != -1 else None
+
+    async def join_group(self, link: str) -> Chat:
+        parsed_link = self._prepare_chat_join_link(link)
+        if parsed_link is None:
+            raise ValueError("Join link invalid")
+        return await self._join_chat(parsed_link)
+
+    async def join_channel(self, link: str) -> Chat:
+        parsed_link = self._prepare_chat_join_link(link)
+
+        return await self._join_chat(parsed_link or link)

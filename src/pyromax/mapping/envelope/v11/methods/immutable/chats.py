@@ -6,6 +6,7 @@ from ...payloads.requests import (
     ChatMemberOperationRequest,
     ChangeGroupSettingsRequest,
     ChangeGroupProfileRequest,
+    LinkGroupRequest,
 )
 from ...payloads.models import (
     CreateGroupMessageMappingModel,
@@ -90,9 +91,21 @@ class ChangeGroupProfileMethod(BaseMethod):
         return request
 
 
+class JoinGroupMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.JOIN_GROUP
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = LinkGroupRequest(
+            link=self.args["link"],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "CreateChatMethod",
     "ChatMemberOperationMethod",
     "ChangeGroupSettingsMethod",
     "ChangeGroupProfileMethod",
+    "JoinGroupMethod",
 ]

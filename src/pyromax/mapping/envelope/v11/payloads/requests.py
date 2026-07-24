@@ -158,6 +158,10 @@ class ChangeGroupProfileRequest(CamelCaseModel):
     description: str | None = None
 
 
+class LinkGroupRequest(CamelCaseModel):
+    link: str
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

@@ -162,6 +162,11 @@ class LinkGroupRequest(CamelCaseModel):
     link: str
 
 
+class RevokePrivateLinkRequest(CamelCaseModel):
+    revoke_private_link: bool = True
+    chat_id: int
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

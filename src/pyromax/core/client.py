@@ -28,6 +28,7 @@ from ..methods import (
     JoinGroupMethod,
     JoinChannelMethod,
     ResolveGroupByLinkMethod,
+    RevokeInviteLinkMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -678,4 +679,12 @@ class MaxApi(AsyncInitializerMixin):
         return cast(
             Chat | None,
             await self(ResolveGroupByLinkMethod, link=link),
+        )
+
+    async def revoke_invite_link(self, chat_id: int) -> Chat:
+        from ..models import Chat
+
+        return cast(
+            Chat,
+            await self(RevokeInviteLinkMethod, chat_id=chat_id),
         )

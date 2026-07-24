@@ -28,6 +28,7 @@ from .....methods import (
     JoinGroupMethod,
     JoinChannelMethod,
     ResolveGroupByLinkMethod,
+    RevokeInviteLinkMethod,
 )
 
 if TYPE_CHECKING:
@@ -155,6 +156,11 @@ def get_registry(
             "WEB": mapper.resolve_group_by_link,
             "ANDROID": mapper.resolve_group_by_link,
             "DESKTOP": mapper.resolve_group_by_link,
+        },
+        RevokeInviteLinkMethod: {
+            "WEB": mapper.revoke_invite_link,
+            "ANDROID": mapper.revoke_invite_link,
+            "DESKTOP": mapper.revoke_invite_link,
         },
     }
 

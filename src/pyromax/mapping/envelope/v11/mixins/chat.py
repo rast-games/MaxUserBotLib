@@ -11,6 +11,7 @@ from ..methods.immutable import (
     ChangeGroupProfileMethod,
     JoinGroupMethod,
     ResolveGroupByLinkMethod,
+    RevokePrivateLinkMethod,
 )
 from ..payloads.responses import CreateGroupResponse, ChatContainsResponse
 from ..translate.ToDTO import translate_models
@@ -206,6 +207,21 @@ class ChatMixin(MixinProtocol):
         mapped_chat = ChatContainsResponse(**response.payload).chat
         if mapped_chat is None:
             return None
+        chat = cast(Chat, translate_models(mapped_chat))
+        self._cache_chat(chat)
+        return chat
+
+    async def revoke_invite_link(self, chat_id: int) -> Chat:
+        response = await self.send(
+            method=RevokePrivateLinkMethod(
+                chat_id=chat_id,
+                rework_private_link=True,
+            )
+        )
+
+        mapped_chat = ChatContainsResponse(**response.payload).chat
+        if mapped_chat is None:
+            raise MapperApiError("rework invite link request doesn't return a chat")
         chat = cast(Chat, translate_models(mapped_chat))
         self._cache_chat(chat)
         return chat

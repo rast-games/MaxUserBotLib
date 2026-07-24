@@ -88,14 +88,15 @@ class AuthMixin(MixinProtocol):
             cast(Chat, translate_models(chat)) for chat in auth_model.chats
         ]
         self.max_api.contacts = [
-            cast(Contact, translate_models(contact)) for contact in auth_model.contacts
+            cast(Contact, translate_models(contact))
+            for contact in auth_model.contacts
+            if contact is not None
         ]
-        self.max_api.messages = [
-            {
-                i: [cast(Message, translate_models(msg)) for msg in msg_list]
-                for i, msg_list in auth_model.messages.items()
-            }
-        ]
+        self.max_api.messages = {
+            i: [cast(Message, translate_models(msg)) for msg in msg_list]
+            for i, msg_list in auth_model.messages.items()
+        }
+
         self.max_api.names = self.max_api.me.contact.names
 
     async def login(

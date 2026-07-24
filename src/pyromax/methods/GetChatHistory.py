@@ -1,7 +1,7 @@
 from typing import Union, overload, cast, Literal
 
 from .Base import BaseMaxApiMethod
-from ..models import Message
+from ..models.Message import Message
 
 
 class GetChatHistoryMethod(BaseMaxApiMethod[Union[list[Message], list[str]]]):

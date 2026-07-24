@@ -21,6 +21,8 @@ from .....methods import (
     GetReactionsMethod,
     ReadMessageMethod,
     CreateGroupMethod,
+    InviteUsersToGroupMethod,
+    RemoveUsersFromGroupMethod,
 )
 
 if TYPE_CHECKING:
@@ -113,6 +115,16 @@ def get_registry(
             "WEB": mapper.create_group,
             "ANDROID": mapper.create_group,
             "DESKTOP": mapper.create_group,
+        },
+        InviteUsersToGroupMethod: {
+            "WEB": mapper.invite_users_to_group,
+            "ANDROID": mapper.invite_users_to_group,
+            "DESKTOP": mapper.invite_users_to_group,
+        },
+        RemoveUsersFromGroupMethod: {
+            "WEB": mapper.remove_users_from_group,
+            "ANDROID": mapper.remove_users_from_group,
+            "DESKTOP": mapper.remove_users_from_group,
         },
     }
 

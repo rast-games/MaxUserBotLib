@@ -138,6 +138,14 @@ class CreateChatRequest(CamelCaseModel):
     notify: bool = True
 
 
+class ChatMemberOperationRequest(CamelCaseModel):
+    chat_id: int
+    user_ids: list[str] | list[int]
+    operation: Literal["add", "remove"] = "add"
+    show_history: bool | None = None
+    clean_msg_period: int | None = None
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

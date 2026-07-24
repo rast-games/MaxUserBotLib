@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from .base import BaseMaxObject
 from .Name import Name
 
@@ -5,7 +7,7 @@ from .Name import Name
 class Contact(BaseMaxObject):
     first_name: str = ""
     last_name: str = ""
-    names: list[Name] = ""
+    names: list[Name] = Field(default_factory=list)
     id: int
     description: str = ""
     phone: str | None = None

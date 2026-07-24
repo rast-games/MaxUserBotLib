@@ -1,7 +1,7 @@
 from typing import cast, Literal
 
 from .base import BaseMethod, Envelope, Cmd, Opcode, VERSION
-from ...payloads.requests import CreateChatRequest
+from ...payloads.requests import CreateChatRequest, ChatMemberOperationRequest
 from ...payloads.models import (
     CreateGroupMessageMappingModel,
     CreateGroupAttachMappingModel,
@@ -16,7 +16,7 @@ class CreateChatMethod(BaseMethod):
         request.payload = CreateChatRequest(
             notify=self.args.get("notify", True),
             message=CreateGroupMessageMappingModel(
-                cid=self.args.get("cid"),
+                cid=self.args["cid"],
                 attaches=[
                     CreateGroupAttachMappingModel(
                         type=cast(Literal["CONTROL"], self.args.get("type", "CONTROL")),
@@ -34,6 +34,22 @@ class CreateChatMethod(BaseMethod):
         return request
 
 
+class ChatMemberOperationMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.OPERATION_WITH_CHAT_MEMBER
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = ChatMemberOperationRequest(
+            chat_id=self.args["chat_id"],
+            user_ids=self.args["user_ids"],
+            show_history=self.args.get("show_history"),
+            operation=self.args["operation"],
+            clean_msg_period=self.args.get("clean_msg_period"),
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "CreateChatMethod",
+    "ChatMemberOperationMethod",
 ]

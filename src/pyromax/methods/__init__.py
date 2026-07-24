@@ -14,6 +14,8 @@ from .DownloadFile import DownloadFileMethod
 from .UploadFile import UploadFileMethod
 from .ReadMessage import ReadMessageMethod
 from .CreateGroup import CreateGroupMethod
+from .InviteUsersToGroup import InviteUsersToGroupMethod
+from .RemoveUsersFromGroup import RemoveUsersFromGroupMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -32,4 +34,6 @@ __all__ = [
     "DownloadFileMethod",
     "UploadFileMethod",
     "CreateGroupMethod",
+    "InviteUsersToGroupMethod",
+    "RemoveUsersFromGroupMethod",
 ]

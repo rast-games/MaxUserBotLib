@@ -1520,7 +1520,7 @@ wheels = [
 
 [[package]]
 name = "pyromax"
-version = "0.7.7"
+version = "0.8"
 source = { virtual = "." }
 dependencies = [
     { name = "aiofiles" },

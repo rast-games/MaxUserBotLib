@@ -1,10 +1,12 @@
 from typing import Union, cast
 
 from .Base import BaseMaxApiMethod
-from ..models import Chat
+from ..models import Chat, Message
 
 
-class CreateGroupMethod(BaseMaxApiMethod[Union[Chat, None]]):
+class CreateGroupMethod(
+    BaseMaxApiMethod[Union[tuple[Chat, Message], tuple[None, None]]]
+):
     async def __call__(
         self,
         title: str,
@@ -13,12 +15,12 @@ class CreateGroupMethod(BaseMaxApiMethod[Union[Chat, None]]):
         chat_type: str = "CHAT",
         event: str = "new",
         typeof: str = "CONTROL",
-    ) -> Chat | None:
+    ) -> tuple[Chat, Message] | tuple[None, None]:
         if not self._max_api:
             raise RuntimeError("CreateGroup method not bound to MaxApi instance")
 
         return cast(
-            Chat | None,
+            tuple[Chat, Message] | tuple[None, None],
             await self._max_api.mapper.call_method(
                 type(self),
                 title=title,

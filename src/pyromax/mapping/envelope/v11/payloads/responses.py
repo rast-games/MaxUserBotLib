@@ -101,6 +101,10 @@ class CreateGroupResponse(CamelCaseModel):
     chat: ChatMappingModel | None = None
 
 
+class ChatMemberOperationResponse(CamelCaseModel):
+    chat: ChatMappingModel | None = None
+
+
 class ErrorMessageResponse(CamelCaseModel):
     error: str | None = None
     error_message: str | None = Field(default=None, alias="message")

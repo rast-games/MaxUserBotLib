@@ -80,7 +80,7 @@ class TranslateContact(BaseTranslateMappingModel[ContactMappingModel]):
         )
 
 
-class TranslateProfile(BaseTranslateMappingModel[Profile]):
+class TranslateProfile(BaseTranslateMappingModel[ProfileMappingModel]):
     @staticmethod
     def translate(profile: ProfileMappingModel) -> Profile:
         profile_options = []

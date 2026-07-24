@@ -21,6 +21,8 @@ from ..methods import (
     GetReactionsMethod,
     ReadMessageMethod,
     CreateGroupMethod,
+    InviteUsersToGroupMethod,
+    RemoveUsersFromGroupMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -555,11 +557,11 @@ class MaxApi(AsyncInitializerMixin):
         chat_type: str = "CHAT",
         event: str = "new",
         typeof: str = "CONTROL",
-    ) -> Chat | None:
-        from ..models import Chat
+    ) -> tuple[Chat, Message] | tuple[None, None]:
+        from ..models import Chat, Message
 
         return cast(
-            Chat | None,
+            tuple[Chat, Message] | tuple[None, None],
             await self(
                 CreateGroupMethod,
                 title=title,
@@ -568,5 +570,41 @@ class MaxApi(AsyncInitializerMixin):
                 chat_type=chat_type,
                 event=event,
                 typeof=typeof,
+            ),
+        )
+
+    async def invite_users_to_group(
+        self,
+        chat_id: int,
+        user_ids: list[int] | list[str],
+        show_history: bool = True,
+    ) -> Chat | None:
+        from ..models import Chat
+
+        return cast(
+            Chat | None,
+            await self(
+                InviteUsersToGroupMethod,
+                chat_id=chat_id,
+                user_ids=user_ids,
+                show_history=show_history,
+            ),
+        )
+
+    async def remove_users_from_group(
+        self,
+        chat_id: int,
+        user_ids: list[int] | list[str],
+        clean_msg_period: int,
+    ) -> Chat | None:
+        from ..models import Chat
+
+        return cast(
+            Chat | None,
+            await self(
+                RemoveUsersFromGroupMethod,
+                chat_id=chat_id,
+                user_ids=user_ids,
+                clean_msg_period=clean_msg_period,
             ),
         )

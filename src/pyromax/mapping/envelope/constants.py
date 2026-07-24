@@ -17,6 +17,7 @@ class Opcode(MappingConstants):
     DELETE_MESSAGE = 66
     EDIT_MESSAGE = 67
     GET_MESSAGES = 71
+    OPERATION_WITH_CHAT_MEMBER = 77
     CREATE_PHOTO = 80
     CREATE_VIDEO = 82
     GET_VIDEO = 83

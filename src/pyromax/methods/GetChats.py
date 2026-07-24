@@ -1,4 +1,4 @@
-from typing import Union, cast
+from typing import cast
 from collections.abc import Iterable
 
 from .Base import BaseMaxApiMethod
@@ -8,7 +8,7 @@ from ..models import Chat
 class GetChatsMethod(BaseMaxApiMethod[list[Chat]]):
     async def __call__(self, chat_ids: Iterable[int]) -> list[Chat]:
         if not self._max_api:
-            raise RuntimeError("ResolveGroupByLink method not bound to MaxApi instance")
+            raise RuntimeError("GetChats method not bound to MaxApi instance")
 
         return cast(
             list[Chat],

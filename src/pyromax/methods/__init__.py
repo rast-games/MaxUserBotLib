@@ -23,6 +23,7 @@ from .ResolveGroupByLink import ResolveGroupByLinkMethod
 from .RevokeInviteLink import RevokeInviteLinkMethod
 from .GetChats import GetChatsMethod
 from .LeaveGroup import LeaveGroupMethod, LeaveChannelMethod
+from .FetchChats import FetchChatsMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -52,4 +53,5 @@ __all__ = [
     "GetChatsMethod",
     "LeaveGroupMethod",
     "LeaveChannelMethod",
+    "FetchChatsMethod",
 ]

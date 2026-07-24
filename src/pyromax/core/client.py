@@ -32,6 +32,7 @@ from ..methods import (
     GetChatsMethod,
     LeaveChannelMethod,
     LeaveGroupMethod,
+    FetchChatsMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -726,4 +727,12 @@ class MaxApi(AsyncInitializerMixin):
                 LeaveChannelMethod,
                 chat_id=chat_id,
             ),
+        )
+
+    async def fetch_chats(self, marker: int | None = None) -> list[Chat]:
+        from ..models import Chat
+
+        return cast(
+            list[Chat],
+            await self(FetchChatsMethod, marker=marker),
         )

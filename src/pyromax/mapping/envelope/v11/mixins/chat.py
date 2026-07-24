@@ -15,6 +15,7 @@ from ..methods.immutable import (
     RevokePrivateLinkMethod,
     GetChatInfoMethod,
     LeaveChatMethod,
+    FetchChatsMethod,
 )
 from ..payloads.responses import (
     CreateGroupResponse,
@@ -291,3 +292,18 @@ class ChatMixin(MixinProtocol):
 
     async def leave_channel(self, chat_id: int) -> Message | None:
         return await self.leave_group(chat_id)
+
+    async def fetch_chats(self, marker: int | None = None) -> list[Chat]:
+        response = await self.send(
+            method=FetchChatsMethod(
+                marker=marker or int(time.time() * 1000),
+            )
+        )
+
+        mapped_chats = ChatsContainsResponse(**response.payload).chats
+        chats = [
+            self._cache_chat(cast(Chat, translate_models(chat)))
+            for chat in mapped_chats
+        ]
+
+        return chats

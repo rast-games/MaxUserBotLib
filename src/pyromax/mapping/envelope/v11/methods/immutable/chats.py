@@ -1,3 +1,4 @@
+import time
 from typing import cast, Literal
 
 from .base import BaseMethod, Envelope, Cmd, Opcode, VERSION
@@ -10,6 +11,7 @@ from ...payloads.requests import (
     RevokePrivateLinkRequest,
     GetChatInfoRequest,
     LeaveChatRequest,
+    FetchChatsRequest,
 )
 from ...payloads.models import (
     CreateGroupMessageMappingModel,
@@ -146,6 +148,17 @@ class LeaveChatMethod(BaseMethod):
         return request
 
 
+class FetchChatsMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.FETCH_CHATS
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = FetchChatsRequest(
+            marker=self.args.get("marker") or int(time.time() * 1000),
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "CreateChatMethod",
     "ChatMemberOperationMethod",
@@ -156,4 +169,5 @@ __all__ = [
     "RevokePrivateLinkMethod",
     "GetChatInfoMethod",
     "LeaveChatMethod",
+    "FetchChatsMethod",
 ]

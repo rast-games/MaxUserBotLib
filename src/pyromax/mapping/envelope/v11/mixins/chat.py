@@ -7,6 +7,7 @@ from ..methods.immutable import (
     CreateChatMethod,
     ChatMemberOperationMethod,
     ChangeGroupSettingsMethod,
+    ChangeGroupProfileMethod,
 )
 from ..payloads.responses import CreateGroupResponse, ChatContainsResponse
 from ..translate.ToDTO import translate_models
@@ -135,6 +136,27 @@ class ChatMixin(MixinProtocol):
             )
         )
 
+        mapped_chat = ChatContainsResponse(**response.payload).chat
+        if mapped_chat is None:
+            return None
+
+        chat = cast(Chat, translate_models(mapped_chat))
+        self._cache_chat(chat)
+        return chat
+
+    async def change_group_profile(
+        self,
+        chat_id: int,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> Chat | None:
+        response = await self.send(
+            method=ChangeGroupProfileMethod(
+                chat_id=chat_id,
+                name=name,
+                description=description,
+            )
+        )
         mapped_chat = ChatContainsResponse(**response.payload).chat
         if mapped_chat is None:
             return None

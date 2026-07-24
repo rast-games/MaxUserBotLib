@@ -152,6 +152,12 @@ class ChangeGroupSettingsRequest(CamelCaseModel):
     options: ChangeGroupSettingsModel
 
 
+class ChangeGroupProfileRequest(CamelCaseModel):
+    chat_id: int
+    theme: str | None = None
+    description: str | None = None
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

@@ -24,6 +24,7 @@ from .....methods import (
     InviteUsersToGroupMethod,
     RemoveUsersFromGroupMethod,
     ChangeGroupSettingsMethod,
+    ChangeGroupProfileMethod,
 )
 
 if TYPE_CHECKING:
@@ -131,6 +132,11 @@ def get_registry(
             "WEB": mapper.change_group_settings,
             "ANDROID": mapper.change_group_settings,
             "DESKTOP": mapper.change_group_settings,
+        },
+        ChangeGroupProfileMethod: {
+            "WEB": mapper.change_group_profile,
+            "ANDROID": mapper.change_group_profile,
+            "DESKTOP": mapper.change_group_profile,
         },
     }
 

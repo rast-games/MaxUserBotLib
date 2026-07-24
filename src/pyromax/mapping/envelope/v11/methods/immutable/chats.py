@@ -5,6 +5,7 @@ from ...payloads.requests import (
     CreateChatRequest,
     ChatMemberOperationRequest,
     ChangeGroupSettingsRequest,
+    ChangeGroupProfileRequest,
 )
 from ...payloads.models import (
     CreateGroupMessageMappingModel,
@@ -76,4 +77,22 @@ class ChangeGroupSettingsMethod(BaseMethod):
         return request
 
 
-__all__ = ["CreateChatMethod", "ChatMemberOperationMethod", "ChangeGroupSettingsMethod"]
+class ChangeGroupProfileMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.CHAT_UPDATE
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = ChangeGroupProfileRequest(
+            chat_id=self.args["chat_id"],
+            theme=self.args.get("name"),
+            description=self.args.get("description"),
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
+__all__ = [
+    "CreateChatMethod",
+    "ChatMemberOperationMethod",
+    "ChangeGroupSettingsMethod",
+    "ChangeGroupProfileMethod",
+]

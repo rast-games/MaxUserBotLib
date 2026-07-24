@@ -24,6 +24,7 @@ from ..methods import (
     InviteUsersToGroupMethod,
     RemoveUsersFromGroupMethod,
     ChangeGroupSettingsMethod,
+    ChangeGroupProfileMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -631,5 +632,23 @@ class MaxApi(AsyncInitializerMixin):
                 only_admin_can_add_member=only_admin_can_add_member,
                 only_admin_can_call=only_admin_can_call,
                 member_can_see_private_link=member_can_see_private_link,
+            ),
+        )
+
+    async def change_group_profile(
+        self,
+        chat_id: int,
+        name: str | None = None,
+        description: str | None = None,
+    ) -> Chat | None:
+        from ..models import Chat
+
+        return cast(
+            Chat | None,
+            await self(
+                ChangeGroupProfileMethod,
+                chat_id=chat_id,
+                name=name,
+                description=description,
             ),
         )

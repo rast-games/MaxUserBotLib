@@ -17,6 +17,7 @@ from ..methods.immutable import (
     LeaveChatMethod,
     FetchChatsMethod,
     FetchJoinRequestsMethod,
+    DeleteChatMethod,
 )
 from ..payloads.responses import (
     CreateGroupResponse,
@@ -348,3 +349,19 @@ class ChatMixin(MixinProtocol):
 
         chat = cast(Chat, translate_models(mapped_chat))
         return self._cache_chat(chat)
+
+    async def delete_chat(
+        self,
+        chat_id: int,
+        last_event_time: int | None = None,
+        for_all: bool = True,
+    ) -> None:
+        await self.send(
+            method=DeleteChatMethod(
+                chat_id=chat_id,
+                last_event_time=last_event_time or int(time.time() * 1000),
+                for_all=for_all,
+            )
+        )
+
+        return None

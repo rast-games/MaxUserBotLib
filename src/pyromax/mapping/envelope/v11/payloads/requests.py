@@ -193,6 +193,12 @@ class JoinRequestActionRequest(CamelCaseModel):
     operation: Literal["add", "remove"]
 
 
+class DeleteChatRequest(CamelCaseModel):
+    chat_id: int
+    last_event_time: int
+    for_all: bool = True
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

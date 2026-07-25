@@ -12,6 +12,7 @@ class Opcode(MappingConstants):
     GET_CHAT = 48
     GET_CHAT_MESSAGES_PER_CHUNK = 49
     READ_MESSAGE = 50
+    DELETE_CHAT = 52
     FETCH_CHATS = 53
     CHAT_UPDATE = 55
     JOIN_GROUP = 57

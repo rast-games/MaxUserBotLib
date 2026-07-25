@@ -36,6 +36,7 @@ from ..methods import (
     GetJoinRequestsMethod,
     ConfirmJoinRequestsMethod,
     DeclineJoinRequestsMethod,
+    DeleteChatMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -807,4 +808,20 @@ class MaxApi(AsyncInitializerMixin):
         return await self.decline_join_requests(
             chat_id=chat_id,
             user_ids=[user_id],
+        )
+
+    async def delete_chat(
+        self,
+        chat_id: int,
+        last_event_time: int | None = None,
+        for_all: bool = True,
+    ) -> None:
+        return cast(
+            None,
+            await self(
+                DeleteChatMethod,
+                chat_id=chat_id,
+                last_event_time=last_event_time,
+                for_all=for_all,
+            ),
         )

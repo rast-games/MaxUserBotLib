@@ -27,6 +27,7 @@ from .FetchChats import FetchChatsMethod
 from .GetJoinRequests import GetJoinRequestsMethod
 from .ConfirmJoinRequests import ConfirmJoinRequestsMethod
 from .DeclineJoinRequests import DeclineJoinRequestsMethod
+from .DeleteChat import DeleteChatMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -60,4 +61,5 @@ __all__ = [
     "GetJoinRequestsMethod",
     "ConfirmJoinRequestsMethod",
     "DeclineJoinRequestsMethod",
+    "DeleteChatMethod",
 ]

@@ -13,6 +13,7 @@ from ...payloads.requests import (
     LeaveChatRequest,
     FetchChatsRequest,
     FetchJoinRequestsRequest,
+    DeleteChatRequest,
 )
 from ...payloads.models import (
     CreateGroupMessageMappingModel,
@@ -173,6 +174,19 @@ class FetchJoinRequestsMethod(BaseMethod):
         return request
 
 
+class DeleteChatMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.DELETE_CHAT
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = DeleteChatRequest(
+            chat_id=self.args["chat_id"],
+            last_event_time=self.args["last_event_time"],
+            for_all=self.args.get("for_all") or True,
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "CreateChatMethod",
     "ChatMemberOperationMethod",
@@ -185,4 +199,5 @@ __all__ = [
     "LeaveChatMethod",
     "FetchChatsMethod",
     "FetchJoinRequestsMethod",
+    "DeleteChatMethod",
 ]

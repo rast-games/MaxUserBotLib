@@ -35,6 +35,7 @@ from ..methods import (
     FetchChatsMethod,
     GetJoinRequestsMethod,
     ConfirmJoinRequestsMethod,
+    DeclineJoinRequestsMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -780,4 +781,30 @@ class MaxApi(AsyncInitializerMixin):
             chat_id=chat_id,
             user_ids=[user_id],
             show_history=show_history,
+        )
+
+    async def decline_join_requests(
+        self,
+        chat_id: int,
+        user_ids: Iterable[int],
+    ) -> Chat | None:
+        from ..models import Chat
+
+        return cast(
+            Chat | None,
+            await self(
+                DeclineJoinRequestsMethod,
+                chat_id=chat_id,
+                user_ids=user_ids,
+            ),
+        )
+
+    async def decline_join_request(
+        self,
+        chat_id: int,
+        user_id: int,
+    ) -> Chat | None:
+        return await self.decline_join_requests(
+            chat_id=chat_id,
+            user_ids=[user_id],
         )

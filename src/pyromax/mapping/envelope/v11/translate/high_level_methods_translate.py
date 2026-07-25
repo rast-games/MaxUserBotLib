@@ -35,6 +35,7 @@ from .....methods import (
     FetchChatsMethod,
     GetJoinRequestsMethod,
     ConfirmJoinRequestsMethod,
+    DeclineJoinRequestsMethod,
 )
 
 if TYPE_CHECKING:
@@ -197,6 +198,11 @@ def get_registry(
             "WEB": mapper.confirm_join_requests,
             "ANDROID": mapper.confirm_join_requests,
             "DESKTOP": mapper.confirm_join_requests,
+        },
+        DeclineJoinRequestsMethod: {
+            "WEB": mapper.decline_join_requests,
+            "ANDROID": mapper.decline_join_requests,
+            "DESKTOP": mapper.decline_join_requests,
         },
     }
 

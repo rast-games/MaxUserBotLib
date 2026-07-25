@@ -99,9 +99,7 @@ class ChatMixin(MixinProtocol):
 
         message = cast(Message, translate_models(mapped_create_chat_message))
         chat = cast(Chat, translate_models(mapped_chat))
-        self._cache_chat(chat)
-
-        return chat, message
+        return self._cache_chat(chat), message
 
     async def invite_users_to_group(
         self,
@@ -123,8 +121,7 @@ class ChatMixin(MixinProtocol):
             return None
 
         chat = cast(Chat, translate_models(mapped_chat))
-        self._cache_chat(chat)
-        return chat
+        return self._cache_chat(chat)
 
     async def remove_users_from_group(
         self,
@@ -146,8 +143,7 @@ class ChatMixin(MixinProtocol):
             return None
 
         chat = cast(Chat, translate_models(mapped_chat))
-        self._cache_chat(chat)
-        return chat
+        return self._cache_chat(chat)
 
     async def change_group_settings(
         self,
@@ -174,8 +170,7 @@ class ChatMixin(MixinProtocol):
             return None
 
         chat = cast(Chat, translate_models(mapped_chat))
-        self._cache_chat(chat)
-        return chat
+        return self._cache_chat(chat)
 
     async def change_group_profile(
         self,
@@ -195,8 +190,7 @@ class ChatMixin(MixinProtocol):
             return None
 
         chat = cast(Chat, translate_models(mapped_chat))
-        self._cache_chat(chat)
-        return chat
+        return self._cache_chat(chat)
 
     async def _join_chat(self, link: str) -> Chat:
         response = await self.send(method=JoinGroupMethod(link=link))
@@ -204,8 +198,7 @@ class ChatMixin(MixinProtocol):
         if mapped_chat is None:
             raise MapperApiError("JoinGroup request doesn't return a chat")
         chat = cast(Chat, translate_models(mapped_chat))
-        self._cache_chat(chat)
-        return chat
+        return self._cache_chat(chat)
 
     @staticmethod
     def _prepare_chat_join_link(link: str) -> str | None:
@@ -237,8 +230,7 @@ class ChatMixin(MixinProtocol):
         if mapped_chat is None:
             return None
         chat = cast(Chat, translate_models(mapped_chat))
-        self._cache_chat(chat)
-        return chat
+        return self._cache_chat(chat)
 
     async def revoke_invite_link(self, chat_id: int) -> Chat:
         response = await self.send(
@@ -252,8 +244,7 @@ class ChatMixin(MixinProtocol):
         if mapped_chat is None:
             raise MapperApiError("rework invite link request doesn't return a chat")
         chat = cast(Chat, translate_models(mapped_chat))
-        self._cache_chat(chat)
-        return chat
+        return self._cache_chat(chat)
 
     async def get_chats(self, chat_ids: Iterable[int]) -> list[Chat]:
         cached = {
@@ -338,5 +329,22 @@ class ChatMixin(MixinProtocol):
         mapped_chat = ChatContainsResponse(**response.payload)
         if mapped_chat is None:
             return None
+        chat = cast(Chat, translate_models(mapped_chat))
+        return self._cache_chat(chat)
+
+    async def decline_join_requests(
+        self, chat_id: int, user_ids: Iterable[int]
+    ) -> Chat | None:
+        response = await self.send(
+            method=ChatMemberOperationMethod(
+                chat_id=chat_id,
+                user_ids=user_ids,
+                operation="remove",
+            )
+        )
+        mapped_chat = ChatContainsResponse(**response.payload).chat
+        if mapped_chat is None:
+            return None
+
         chat = cast(Chat, translate_models(mapped_chat))
         return self._cache_chat(chat)

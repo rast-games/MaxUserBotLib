@@ -5,16 +5,15 @@ from .Base import BaseMaxApiMethod
 from ..models import Chat
 
 
-class ConfirmJoinRequestsMethod(BaseMaxApiMethod[Union[Chat, None]]):
+class DeclineJoinRequestsMethod(BaseMaxApiMethod[Union[Chat, None]]):
     async def __call__(
         self,
         chat_id: int,
         user_ids: Iterable[int],
-        show_history: bool = True,
     ) -> Chat | None:
         if not self._max_api:
             raise RuntimeError(
-                "ConfirmJoinRequests method not bound to MaxApi instance"
+                "DeclineJoinRequests method not bound to MaxApi instance"
             )
 
         return cast(
@@ -23,6 +22,5 @@ class ConfirmJoinRequestsMethod(BaseMaxApiMethod[Union[Chat, None]]):
                 type(self),
                 chat_id=chat_id,
                 user_ids=user_ids,
-                show_history=show_history,
             ),
         )

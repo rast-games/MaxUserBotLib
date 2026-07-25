@@ -33,6 +33,7 @@ from .....methods import (
     LeaveChannelMethod,
     LeaveGroupMethod,
     FetchChatsMethod,
+    GetJoinRequestsMethod,
 )
 
 if TYPE_CHECKING:
@@ -185,6 +186,11 @@ def get_registry(
             "WEB": mapper.fetch_chats,
             "ANDROID": mapper.fetch_chats,
             "DESKTOP": mapper.fetch_chats,
+        },
+        GetJoinRequestsMethod: {
+            "WEB": mapper.get_join_requests,
+            "ANDROID": mapper.get_join_requests,
+            "DESKTOP": mapper.get_join_requests,
         },
     }
 

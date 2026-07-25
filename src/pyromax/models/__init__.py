@@ -10,6 +10,9 @@ from .ReadState import ReadState
 from .Chat import Chat
 from .Name import Name
 from .Profile import Profile
+from .Presence import Presence
+from .Member import Member
+
 
 __all__ = [
     "BaseMaxObject",
@@ -31,4 +34,6 @@ __all__ = [
     "Chat",
     "Name",
     "Profile",
+    "Presence",
+    "Member"
 ]

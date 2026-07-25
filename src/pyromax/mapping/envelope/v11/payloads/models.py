@@ -241,6 +241,16 @@ class ProfileMappingModel(CamelCaseModel):
     profile_options: list[Any]
 
 
+class PresenceMappingModel(CamelCaseModel):
+    seen: int | None = None
+    status: int | None = None
+
+
+class MemberMappingModel(CamelCaseModel):
+    contact: ContactMappingModel
+    presence: PresenceMappingModel
+
+
 class ChangeGroupSettingsModel(CamelCaseModel):
     only_owner_can_change_icon_title: bool | None = Field(
         default=None,

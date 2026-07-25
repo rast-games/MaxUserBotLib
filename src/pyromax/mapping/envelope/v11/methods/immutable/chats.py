@@ -12,6 +12,7 @@ from ...payloads.requests import (
     GetChatInfoRequest,
     LeaveChatRequest,
     FetchChatsRequest,
+    FetchJoinRequestsRequest,
 )
 from ...payloads.models import (
     CreateGroupMessageMappingModel,
@@ -159,6 +160,19 @@ class FetchChatsMethod(BaseMethod):
         return request
 
 
+class FetchJoinRequestsMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.CHAT_MEMBERS
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = FetchJoinRequestsRequest(
+            chat_id=self.args["chat_id"],
+            count=self.args["count"],
+            type=self.args.get("type") or "JOIN_REQUEST",
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "CreateChatMethod",
     "ChatMemberOperationMethod",
@@ -170,4 +184,5 @@ __all__ = [
     "GetChatInfoMethod",
     "LeaveChatMethod",
     "FetchChatsMethod",
+    "FetchJoinRequestsMethod",
 ]

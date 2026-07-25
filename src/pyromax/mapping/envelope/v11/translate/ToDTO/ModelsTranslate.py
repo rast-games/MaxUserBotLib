@@ -13,6 +13,8 @@ from ......models import (
     Chat,
     Name,
     Profile,
+    Presence,
+    Member,
 )
 from ...payloads.models import (
     ContactMappingModel,
@@ -23,6 +25,8 @@ from ...payloads.models import (
     ChatMappingModel,
     NameMappingModel,
     ProfileMappingModel,
+    PresenceMappingModel,
+    MemberMappingModel,
 )
 
 TranslateObj = TypeVar("TranslateObj", bound=CamelCaseModel)
@@ -92,6 +96,24 @@ class TranslateProfile(BaseTranslateMappingModel[ProfileMappingModel]):
         return Profile(
             contact=TranslateContact.translate(profile.contact),
             profile_options=profile_options,
+        )
+
+
+class TranslatePresence(BaseTranslateMappingModel[PresenceMappingModel]):
+    @staticmethod
+    def translate(presence: PresenceMappingModel) -> Presence:
+        return Presence(
+            seen=presence.seen,
+            status=presence.status,
+        )
+
+
+class TranslateMember(BaseTranslateMappingModel[MemberMappingModel]):
+    @staticmethod
+    def translate(member: MemberMappingModel) -> Member:
+        return Member(
+            presence=TranslatePresence.translate(member.presence),
+            contact=TranslateContact.translate(member.contact),
         )
 
 
@@ -254,6 +276,8 @@ TRANSLATE_MAPPING_MODELS: dict[
     ChatMappingModel: TranslateChat,
     NameMappingModel: TranslateName,
     ProfileMappingModel: TranslateProfile,
+    PresenceMappingModel: TranslatePresence,
+    MemberMappingModel: TranslateMember,
 }
 
 

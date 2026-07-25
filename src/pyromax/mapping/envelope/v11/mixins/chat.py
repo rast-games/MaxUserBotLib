@@ -4,7 +4,7 @@ from collections.abc import Iterable
 
 from .MixinProtocol import MixinProtocol
 from .....exceptions import MapperApiError, ParseMaxApiError
-from .....models import Chat, Message
+from .....models import Chat, Message, Member
 from ..methods.immutable import (
     CreateChatMethod,
     ChatMemberOperationMethod,
@@ -16,12 +16,14 @@ from ..methods.immutable import (
     GetChatInfoMethod,
     LeaveChatMethod,
     FetchChatsMethod,
+    FetchJoinRequestsMethod,
 )
 from ..payloads.responses import (
     CreateGroupResponse,
     ChatContainsResponse,
     ChatsContainsResponse,
     MessageContainsResponse,
+    MembersContainsResponse,
 )
 from ..translate.ToDTO import translate_models
 
@@ -267,7 +269,7 @@ class ChatMixin(MixinProtocol):
                     chat_ids=missed_chat_ids,
                 )
             )
-            mapped_chats = ChatsContainsResponse(**response.payload).chats
+            mapped_chats = ChatsContainsResponse(**response.payload).chats or []
             for mapped_chat in mapped_chats:
                 chat = cast(Chat, translate_models(mapped_chat))
                 chat = self._cache_chat(chat)
@@ -300,10 +302,21 @@ class ChatMixin(MixinProtocol):
             )
         )
 
-        mapped_chats = ChatsContainsResponse(**response.payload).chats
+        mapped_chats = ChatsContainsResponse(**response.payload).chats or []
         chats = [
             self._cache_chat(cast(Chat, translate_models(chat)))
             for chat in mapped_chats
         ]
 
         return chats
+
+    async def get_join_requests(self, chat_id: int, count: int = 100) -> list[Member]:
+        response = await self.send(
+            method=FetchJoinRequestsMethod(
+                chat_id=chat_id,
+                count=count,
+            )
+        )
+
+        mapped_members = MembersContainsResponse(**response.payload).members or []
+        return [cast(Member, translate_models(member)) for member in mapped_members]

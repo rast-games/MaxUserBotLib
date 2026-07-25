@@ -24,6 +24,7 @@ from .RevokeInviteLink import RevokeInviteLinkMethod
 from .GetChats import GetChatsMethod
 from .LeaveGroup import LeaveGroupMethod, LeaveChannelMethod
 from .FetchChats import FetchChatsMethod
+from .GetJoinRequests import GetJoinRequestsMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -54,4 +55,5 @@ __all__ = [
     "LeaveGroupMethod",
     "LeaveChannelMethod",
     "FetchChatsMethod",
+    "GetJoinRequestsMethod",
 ]

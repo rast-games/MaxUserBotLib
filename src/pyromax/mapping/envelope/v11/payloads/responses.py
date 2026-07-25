@@ -110,7 +110,11 @@ class MessageContainsResponse(CamelCaseModel):
 
 
 class ChatsContainsResponse(CamelCaseModel):
-    chats: list[ChatMappingModel]
+    chats: list[ChatMappingModel] | None = None
+
+
+class MembersContainsResponse(CamelCaseModel):
+    members: list[ContactMappingModel] | None = None
 
 
 class ErrorMessageResponse(CamelCaseModel):

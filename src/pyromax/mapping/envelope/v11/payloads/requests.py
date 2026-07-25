@@ -179,6 +179,20 @@ class FetchChatsRequest(CamelCaseModel):
     marker: int
 
 
+class FetchJoinRequestsRequest(CamelCaseModel):
+    chat_id: int
+    count: int = 100
+    type: str = "JOIN_REQUEST"
+
+
+class JoinRequestActionRequest(CamelCaseModel):
+    chat_id: int
+    user_ids: list[int]
+    type: str = "JOIN_REQUEST"
+    show_history: bool | None = True
+    operation: Literal["add", "remove"]
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

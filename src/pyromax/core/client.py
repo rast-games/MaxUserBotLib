@@ -33,6 +33,7 @@ from ..methods import (
     LeaveChannelMethod,
     LeaveGroupMethod,
     FetchChatsMethod,
+    GetJoinRequestsMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -49,6 +50,7 @@ if TYPE_CHECKING:
         Chat,
         Profile,
         Name,
+        Member,
     )
 
 from .context import *
@@ -735,4 +737,16 @@ class MaxApi(AsyncInitializerMixin):
         return cast(
             list[Chat],
             await self(FetchChatsMethod, marker=marker),
+        )
+
+    async def get_join_requests(self, chat_id: int, count: int = 100) -> list[Member]:
+        from ..models import Member
+
+        return cast(
+            list[Member],
+            await self(
+                GetJoinRequestsMethod,
+                chat_id=chat_id,
+                count=count,
+            ),
         )

@@ -2,7 +2,7 @@ from collections.abc import Iterable
 from typing import cast
 
 from .Base import BaseMaxApiMethod
-from ..models import ChannelPermissions
+from ..models.ChannelPermissions import ChannelPermissions
 
 NoneType = type(None)
 

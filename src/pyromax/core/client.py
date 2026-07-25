@@ -34,6 +34,7 @@ from ..methods import (
     LeaveGroupMethod,
     FetchChatsMethod,
     GetJoinRequestsMethod,
+    ConfirmJoinRequestsMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -588,7 +589,7 @@ class MaxApi(AsyncInitializerMixin):
     async def invite_users_to_group(
         self,
         chat_id: int,
-        user_ids: list[int] | list[str],
+        user_ids: list[int],
         show_history: bool = True,
     ) -> Chat | None:
         from ..models import Chat
@@ -749,4 +750,34 @@ class MaxApi(AsyncInitializerMixin):
                 chat_id=chat_id,
                 count=count,
             ),
+        )
+
+    async def confirm_join_requests(
+        self,
+        chat_id: int,
+        user_ids: Iterable[int],
+        show_history: bool = True,
+    ) -> Chat | None:
+        from ..models import Chat
+
+        return cast(
+            Chat | None,
+            await self(
+                ConfirmJoinRequestsMethod,
+                chat_id=chat_id,
+                user_ids=user_ids,
+                show_history=show_history,
+            ),
+        )
+
+    async def confirm_join_request(
+        self,
+        chat_id: int,
+        user_id: int,
+        show_history: bool = True,
+    ) -> Chat | None:
+        return await self.confirm_join_requests(
+            chat_id=chat_id,
+            user_ids=[user_id],
+            show_history=show_history,
         )

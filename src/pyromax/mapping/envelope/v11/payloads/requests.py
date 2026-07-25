@@ -141,7 +141,7 @@ class CreateChatRequest(CamelCaseModel):
 
 class ChatMemberOperationRequest(CamelCaseModel):
     chat_id: int
-    user_ids: list[str] | list[int]
+    user_ids: list[int]
     operation: Literal["add", "remove"] = "add"
     show_history: bool | None = None
     clean_msg_period: int | None = None

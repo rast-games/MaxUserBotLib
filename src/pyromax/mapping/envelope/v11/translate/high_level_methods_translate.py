@@ -34,6 +34,7 @@ from .....methods import (
     LeaveGroupMethod,
     FetchChatsMethod,
     GetJoinRequestsMethod,
+    ConfirmJoinRequestsMethod,
 )
 
 if TYPE_CHECKING:
@@ -191,6 +192,11 @@ def get_registry(
             "WEB": mapper.get_join_requests,
             "ANDROID": mapper.get_join_requests,
             "DESKTOP": mapper.get_join_requests,
+        },
+        ConfirmJoinRequestsMethod: {
+            "WEB": mapper.confirm_join_requests,
+            "ANDROID": mapper.confirm_join_requests,
+            "DESKTOP": mapper.confirm_join_requests,
         },
     }
 

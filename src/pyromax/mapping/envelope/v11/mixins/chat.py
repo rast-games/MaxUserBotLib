@@ -106,7 +106,7 @@ class ChatMixin(MixinProtocol):
     async def invite_users_to_group(
         self,
         chat_id: int,
-        user_ids: list[int] | list[str],
+        user_ids: list[int],
         show_history: bool = True,
     ) -> Chat | None:
         response = await self.send(
@@ -320,3 +320,23 @@ class ChatMixin(MixinProtocol):
 
         mapped_members = MembersContainsResponse(**response.payload).members or []
         return [cast(Member, translate_models(member)) for member in mapped_members]
+
+    async def confirm_join_requests(
+        self,
+        chat_id: int,
+        user_ids: Iterable[int],
+        show_history: bool = True,
+    ) -> Chat | None:
+        response = await self.send(
+            method=ChatMemberOperationMethod(
+                chat_id=chat_id,
+                user_ids=user_ids,
+                show_history=show_history,
+                operation="add",
+            )
+        )
+        mapped_chat = ChatContainsResponse(**response.payload)
+        if mapped_chat is None:
+            return None
+        chat = cast(Chat, translate_models(mapped_chat))
+        return self._cache_chat(chat)

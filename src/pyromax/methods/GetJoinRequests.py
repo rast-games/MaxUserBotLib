@@ -7,7 +7,7 @@ from ..models.Member import Member
 class GetJoinRequestsMethod(BaseMaxApiMethod[list[Member]]):
     async def __call__(self, chat_id: int, count: int = 100) -> list[Member]:
         if not self._max_api:
-            raise RuntimeError("FetchChats method not bound to MaxApi instance")
+            raise RuntimeError("GetJoinRequests method not bound to MaxApi instance")
 
         return cast(
             list[Member],

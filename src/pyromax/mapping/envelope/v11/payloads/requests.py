@@ -199,6 +199,14 @@ class DeleteChatRequest(CamelCaseModel):
     for_all: bool = True
 
 
+class AddAdminRequest(CamelCaseModel):
+    chat_id: int
+    user_ids: list[int]
+    type: Literal["ADMIN"] = "ADMIN"
+    operation: str = "add"
+    permissions: int
+
+
 class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 

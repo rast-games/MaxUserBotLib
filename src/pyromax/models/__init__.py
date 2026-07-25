@@ -12,7 +12,7 @@ from .Name import Name
 from .Profile import Profile
 from .Presence import Presence
 from .Member import Member
-
+from .ChannelPermissions import ChannelPermissions
 
 __all__ = [
     "BaseMaxObject",
@@ -35,5 +35,6 @@ __all__ = [
     "Name",
     "Profile",
     "Presence",
-    "Member"
+    "Member",
+    "ChannelPermissions",
 ]

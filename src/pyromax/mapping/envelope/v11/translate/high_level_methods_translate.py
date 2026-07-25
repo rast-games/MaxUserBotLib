@@ -37,6 +37,7 @@ from .....methods import (
     ConfirmJoinRequestsMethod,
     DeclineJoinRequestsMethod,
     DeleteChatMethod,
+    AddAdminMethod,
 )
 
 if TYPE_CHECKING:
@@ -209,6 +210,11 @@ def get_registry(
             "WEB": mapper.delete_chat,
             "ANDROID": mapper.delete_chat,
             "DESKTOP": mapper.delete_chat,
+        },
+        AddAdminMethod: {
+            "WEB": mapper.add_admin,
+            "ANDROID": mapper.add_admin,
+            "DESKTOP": mapper.add_admin,
         },
     }
 

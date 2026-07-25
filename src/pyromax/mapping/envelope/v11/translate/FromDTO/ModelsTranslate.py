@@ -1,7 +1,11 @@
 from typing import cast, Literal
 
-from ...payloads.models import MessageLinkMappingModel, MessageMappingModel
-from ......models import Message
+from ...payloads.models import (
+    MessageLinkMappingModel,
+    MessageMappingModel,
+    ChannelPermissionsMappingModel,
+)
+from ......models import Message, ChannelPermissions
 
 
 def reverse_translate_message(message: Message) -> MessageMappingModel | None:
@@ -42,3 +46,20 @@ def reverse_translate_message(message: Message) -> MessageMappingModel | None:
         elements=message.elements if message.elements and message.text else None,
         chat_id=message.chat_id,
     )
+
+
+channel_permissions_map: dict[ChannelPermissions, ChannelPermissionsMappingModel] = {
+    ChannelPermissions.ADD_REMOVE_MEMBER: ChannelPermissionsMappingModel.ADD_REMOVE_MEMBER,
+    ChannelPermissions.ADD_ADMIN: ChannelPermissionsMappingModel.ADD_ADMIN,
+    ChannelPermissions.CHANGE_CHAT_INFO: ChannelPermissionsMappingModel.CHANGE_CHAT_INFO,
+    ChannelPermissions.PIN_MESSAGE: ChannelPermissionsMappingModel.PIN_MESSAGE,
+    ChannelPermissions.POST_MESSAGE: ChannelPermissionsMappingModel.POST_MESSAGE,
+    ChannelPermissions.EDIT_MESSAGE: ChannelPermissionsMappingModel.EDIT_MESSAGE,
+    ChannelPermissions.DELETE_MESSAGE: ChannelPermissionsMappingModel.DELETE_MESSAGE,
+}
+
+
+def reverse_translate_channel_permissions(
+    channel_permissions: ChannelPermissions,
+) -> ChannelPermissionsMappingModel:
+    return channel_permissions_map[channel_permissions]

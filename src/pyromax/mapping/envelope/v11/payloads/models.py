@@ -1,4 +1,5 @@
 from __future__ import annotations
+from enum import Enum
 from abc import abstractmethod, ABC
 import random
 from typing import Annotated, Literal, Any, ClassVar, TYPE_CHECKING, Self
@@ -32,6 +33,16 @@ if TYPE_CHECKING:
     )
 
 import time
+
+
+class ChannelPermissionsMappingModel(Enum):
+    ADD_REMOVE_MEMBER = 2
+    ADD_ADMIN = 4
+    CHANGE_CHAT_INFO = 8
+    PIN_MESSAGE = 16
+    POST_MESSAGE = 256
+    EDIT_MESSAGE = 512
+    DELETE_MESSAGE = 1024
 
 
 class BaseUserAgentMappingModel(BaseUserAgent, CamelCaseModel, ABC):

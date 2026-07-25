@@ -1,10 +1,12 @@
 import time
 from typing import cast
 from collections.abc import Iterable
+from functools import reduce
+from operator import or_
 
 from .MixinProtocol import MixinProtocol
 from .....exceptions import MapperApiError, ParseMaxApiError
-from .....models import Chat, Message, Member
+from .....models import Chat, Message, Member, ChannelPermissions
 from ..methods.immutable import (
     CreateChatMethod,
     ChatMemberOperationMethod,
@@ -18,6 +20,7 @@ from ..methods.immutable import (
     FetchChatsMethod,
     FetchJoinRequestsMethod,
     DeleteChatMethod,
+    AddAdminMethod,
 )
 from ..payloads.responses import (
     CreateGroupResponse,
@@ -27,6 +30,7 @@ from ..payloads.responses import (
     MembersContainsResponse,
 )
 from ..translate.ToDTO import translate_models
+from ..translate.FromDTO import reverse_translate_channel_permissions
 
 
 class ChatMixin(MixinProtocol):
@@ -364,4 +368,21 @@ class ChatMixin(MixinProtocol):
             )
         )
 
+        return None
+
+    async def add_admin(
+        self, chat_id: int, user_id: int, permissions: Iterable[ChannelPermissions]
+    ) -> None:
+        mapped_channel_permissions = [
+            reverse_translate_channel_permissions(permission)
+            for permission in permissions
+        ]
+
+        response = await self.send(
+            method=AddAdminMethod(
+                chat_id=chat_id,
+                user_ids=[user_id],
+                permissions=reduce(or_, mapped_channel_permissions),
+            )
+        )
         return None

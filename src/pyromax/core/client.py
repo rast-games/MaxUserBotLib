@@ -37,6 +37,7 @@ from ..methods import (
     ConfirmJoinRequestsMethod,
     DeclineJoinRequestsMethod,
     DeleteChatMethod,
+    AddAdminMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -54,6 +55,7 @@ if TYPE_CHECKING:
         Profile,
         Name,
         Member,
+        ChannelPermissions,
     )
 
 from .context import *
@@ -823,5 +825,18 @@ class MaxApi(AsyncInitializerMixin):
                 chat_id=chat_id,
                 last_event_time=last_event_time,
                 for_all=for_all,
+            ),
+        )
+
+    async def add_admin(
+        self, chat_id: int, user_id: int, permissions: Iterable[ChannelPermissions]
+    ) -> None:
+        return cast(
+            None,
+            await self(
+                AddAdminMethod,
+                chat_id=chat_id,
+                user_id=user_id,
+                permissions=permissions,
             ),
         )

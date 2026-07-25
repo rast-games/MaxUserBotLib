@@ -14,6 +14,7 @@ from ...payloads.requests import (
     FetchChatsRequest,
     FetchJoinRequestsRequest,
     DeleteChatRequest,
+    AddAdminRequest,
 )
 from ...payloads.models import (
     CreateGroupMessageMappingModel,
@@ -187,6 +188,19 @@ class DeleteChatMethod(BaseMethod):
         return request
 
 
+class AddAdminMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.OPERATION_WITH_CHAT_MEMBER
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = AddAdminRequest(
+            chat_id=self.args["chat_id"],
+            user_ids=self.args["user_ids"],
+            permissions=self.args["permissions"],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "CreateChatMethod",
     "ChatMemberOperationMethod",
@@ -200,4 +214,5 @@ __all__ = [
     "FetchChatsMethod",
     "FetchJoinRequestsMethod",
     "DeleteChatMethod",
+    "AddAdminMethod",
 ]

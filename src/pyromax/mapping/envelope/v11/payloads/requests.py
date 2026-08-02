@@ -17,6 +17,7 @@ from .models import (
     ShareMappingModel,
     CreateGroupMessageMappingModel,
     ChangeGroupSettingsModel,
+    TwoFactorActionMappingModel,
 )
 
 
@@ -94,6 +95,18 @@ class SetTwoFactorRequest(CamelCaseModel):
     track_id: str
     password: str
     hint: str | None = None
+
+
+class RemoveTwoFactorRequest(CamelCaseModel):
+    track_id: str
+    expected_capabilities: list[int] = Field(
+        default_factory=lambda: [TwoFactorActionMappingModel.REMOVE_2FA.value]
+    )
+    remove2fa: bool = Field(default=True, alias="remove2fa")
+
+
+class ApproveQrLoginRequest(CamelCaseModel):
+    qr_link: str
 
 
 class SendMessageRequest(CamelCaseModel):

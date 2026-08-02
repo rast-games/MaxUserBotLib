@@ -15,7 +15,7 @@ from .....models import (
     TwoFactorAction,
     RegistrationConfig,
 )
-from ..payloads.models import BaseUserAgentMappingModel
+from ..payloads.models import BaseUserAgentMappingModel, ProfileOptionsMappingModel
 from ..methods.immutable import (
     SendUserAgentMethod,
     SendAuthTokenMethod,
@@ -33,6 +33,9 @@ from ..methods.immutable import (
     GetTrackIdFor2FAMethod,
     SetTwoFactorMethod,
     GetUserDataMethod,
+    CheckPasswordMethod,
+    RemoveTwoFactorMethod,
+    ApproveQrLoginMethod,
 )
 from ..payloads.responses import (
     AuthResponse,
@@ -339,6 +342,101 @@ class AuthMixin(MixinProtocol):
             )
         )
 
+    async def _check_2fa_password(
+        self, track_id: str, password: str
+    ) -> GetTrackIdFor2FAResponse:
+        response = await self.send(
+            method=CheckPasswordMethod(
+                track_id=track_id,
+                password=password,
+            )
+        )
+
+        return GetTrackIdFor2FAResponse(**response.payload)
+
+    async def remove_2fa(
+        self,
+        password: str,
+        expected_capabilities: list[TwoFactorAction] | None = None,
+        remove_2fa: bool = True,
+    ) -> None:
+        if expected_capabilities is None:
+            expected_capabilities = []
+        self._logger.info("removing 2fa password_set=%s", bool(password))
+
+        track_id = await self._get_track_id()
+
+        if track_id is None:
+            self._logger.error("missing track_id in auth create track response")
+            raise RuntimeError("Failed to create auth track")
+
+        await self._check_2fa_password(track_id, password)
+
+        response = await self.send(
+            method=RemoveTwoFactorMethod(
+                track_id=track_id,
+                expected_capabilities=[
+                    reverse_translate_two_factor_actions(action)
+                    for action in expected_capabilities
+                ],
+                remove2fa=remove_2fa,
+            )
+        )
+        return None
+
+    async def approve_qr_login(self, qr_link: str) -> None:
+        response = await self.send(
+            method=ApproveQrLoginMethod(
+                qr_link=qr_link,
+            )
+        )
+        return None
+
+    async def check_2fa(self) -> bool:
+        if self.max_api is None:
+            raise MapperApiError("Mapper not bound to MaxApi instance.")
+
+        if self.max_api.me is None or self.max_api.me.profile_options is None:
+            return False
+        return (
+            ProfileOptionsMappingModel.SECOND_FACTOR_PASSWORD_ENABLED
+            in self.max_api.me.profile_options
+        )
+
+    async def change_password(
+        self,
+        password_old: str,
+        password_new: str,
+        expected_capabilities: list[TwoFactorAction] | None = None,
+        hint: str | None = None,
+    ) -> None:
+        if expected_capabilities is None:
+            expected_capabilities = []
+        if TwoFactorAction.UPDATE_PASSWORD not in expected_capabilities:
+            expected_capabilities.append(TwoFactorAction.UPDATE_PASSWORD)
+
+        track_id = await self._get_track_id()
+
+        if not track_id:
+            self._logger.error("missing track_id in auth create track response")
+            raise RuntimeError("Failed to create auth track")
+
+        await self._check_2fa_password(track_id, password_old)
+
+        await self._set_password(track_id, password_new)
+
+        response = await self.send(
+            method=SetTwoFactorMethod(
+                track_id=track_id,
+                password=password_new,
+                hint=hint,
+                expected_capabilities=[
+                    reverse_translate_two_factor_actions(action)
+                    for action in expected_capabilities
+                ],
+            )
+        )
+
     async def login(
         self,
         url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None = None,
@@ -425,8 +523,13 @@ class AuthMixin(MixinProtocol):
             user: SuccessLoginResponse
 
             if isinstance(choice.payload, TwoFactorLoginResponse):
-                user = await self._resolve_two_factor(
-                    track_id=choice.payload.password_challenge.track_id
+                if self.password is None:
+                    raise MapperApiError(
+                        "password is required to login in account with 2FA."
+                    )
+                user = await self.resolve_two_factor(
+                    track_id=choice.payload.password_challenge.track_id,
+                    password=self.password,
                 )
             else:
                 user = choice.payload
@@ -444,12 +547,14 @@ class AuthMixin(MixinProtocol):
             await login_backoff.asleep()
             raise RestartMapperError("Failed to login")
 
-    async def _resolve_two_factor(self, track_id: str) -> SuccessLoginResponse:
-        if self.password is None:
-            raise RuntimeError("No password given, but need 2FA")
+    async def resolve_two_factor(
+        self, track_id: str, password: str
+    ) -> SuccessLoginResponse:
+        # if password is None:
+        #     raise RuntimeError("No password given, but need 2FA")
         response = await self.send_raw_with_running_wait(
             method=Resolve2FAMethod(
-                password=self.password,
+                password=password,
                 track_id=track_id,
             )
         )

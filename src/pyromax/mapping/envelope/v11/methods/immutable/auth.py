@@ -16,6 +16,8 @@ from ...payloads.requests import (
     VerifyEmailRequest,
     GetTrackIdFor2FARequest,
     SetTwoFactorRequest,
+    ApproveQrLoginRequest,
+    RemoveTwoFactorRequest,
 )
 from .base import VERSION
 
@@ -207,6 +209,37 @@ class SetTwoFactorMethod(BaseMethod):
         return request
 
 
+class CheckPasswordMethod(SetPasswordMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request = await super().__call__(request)
+        request.opcode = Opcode.AUTH_CHECK_PASSWORD
+        return request
+
+
+class RemoveTwoFactorMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.SET_2_FACTOR
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = RemoveTwoFactorRequest(
+            track_id=self.args["track_id"],
+            expected_capabilities=self.args["expected_capabilities"],
+            remove2fa=self.args.get("remove2fa") or True,
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
+class ApproveQrLoginMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.AUTH_QR_APPROVE
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = ApproveQrLoginRequest(
+            qr_link=self.args["qr_link"],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "TrackLoginMethod",
     "GetUserDataMethod",
@@ -224,4 +257,7 @@ __all__ = [
     "VerifyEmailMethod",
     "GetTrackIdFor2FAMethod",
     "SetTwoFactorMethod",
+    "CheckPasswordMethod",
+    "RemoveTwoFactorMethod",
+    "ApproveQrLoginMethod",
 ]

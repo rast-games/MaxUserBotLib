@@ -39,6 +39,10 @@ from .....methods import (
     DeleteChatMethod,
     AddAdminMethod,
     Set2FaMethod,
+    Remove2FaMethod,
+    ChangePasswordMethod,
+    Check2FaMethod,
+    ApproveQrLoginMethod,
 )
 
 if TYPE_CHECKING:
@@ -221,6 +225,26 @@ def get_registry(
             "WEB": mapper.set_2fa,
             "ANDROID": mapper.set_2fa,
             "DESKTOP": mapper.set_2fa,
+        },
+        Remove2FaMethod: {
+            "WEB": mapper.remove_2fa,
+            "ANDROID": mapper.remove_2fa,
+            "DESKTOP": mapper.remove_2fa,
+        },
+        ChangePasswordMethod: {
+            "WEB": mapper.change_password,
+            "ANDROID": mapper.change_password,
+            "DESKTOP": mapper.change_password,
+        },
+        Check2FaMethod: {
+            "WEB": mapper.check_2fa,
+            "ANDROID": mapper.check_2fa,
+            "DESKTOP": mapper.check_2fa,
+        },
+        ApproveQrLoginMethod: {
+            # "WEB": mapper.approve_qr_login,
+            "ANDROID": mapper.approve_qr_login,
+            # "DESKTOP": mapper.approve_qr_login,
         },
     }
 

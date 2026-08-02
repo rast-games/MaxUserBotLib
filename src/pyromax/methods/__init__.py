@@ -30,6 +30,10 @@ from .DeclineJoinRequests import DeclineJoinRequestsMethod
 from .DeleteChat import DeleteChatMethod
 from .AddAdmin import AddAdminMethod
 from .Set2Fa import Set2FaMethod
+from .Remove2Fa import Remove2FaMethod
+from .ChangePassword import ChangePasswordMethod
+from .Check2Fa import Check2FaMethod
+from .ApproveQrLogin import ApproveQrLoginMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -66,4 +70,8 @@ __all__ = [
     "DeleteChatMethod",
     "AddAdminMethod",
     "Set2FaMethod",
+    "Remove2FaMethod",
+    "ChangePasswordMethod",
+    "Check2FaMethod",
+    "ApproveQrLoginMethod",
 ]

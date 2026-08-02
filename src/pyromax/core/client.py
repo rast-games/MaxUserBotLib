@@ -47,6 +47,10 @@ from ..methods import (
     DeleteChatMethod,
     AddAdminMethod,
     Set2FaMethod,
+    Remove2FaMethod,
+    ChangePasswordMethod,
+    Check2FaMethod,
+    ApproveQrLoginMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -925,5 +929,56 @@ class MaxApi(AsyncInitializerMixin):
                 hint=hint,
                 email_code_getter=email_code_getter,
                 two_factor_actions=two_factor_actions,
+            ),
+        )
+
+    async def remove_2fa(
+        self,
+        password: str,
+        two_factor_actions: list[TwoFactorAction] | None = None,
+        remove_2fa: bool = True,
+    ) -> None:
+        return cast(
+            None,
+            await self(
+                Remove2FaMethod,
+                password=password,
+                two_factor_actions=two_factor_actions,
+                remove_2fa=remove_2fa,
+            ),
+        )
+
+    async def change_password(
+        self,
+        password_old: str,
+        password_new: str,
+        hint: str | None = None,
+        two_factor_actions: list[TwoFactorAction] | None = None,
+    ) -> None:
+        return cast(
+            None,
+            await self(
+                ChangePasswordMethod,
+                password_old=password_old,
+                password_new=password_new,
+                hint=hint,
+                two_factor_actions=two_factor_actions,
+            ),
+        )
+
+    async def check_2fa(self) -> bool:
+        return cast(
+            bool,
+            await self(
+                Check2FaMethod,
+            ),
+        )
+
+    async def approve_qr_login(self, qr_link: str) -> None:
+        return cast(
+            None,
+            await self(
+                ApproveQrLoginMethod,
+                qr_link=qr_link,
             ),
         )

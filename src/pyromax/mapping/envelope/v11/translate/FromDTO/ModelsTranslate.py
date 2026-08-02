@@ -4,8 +4,9 @@ from ...payloads.models import (
     MessageLinkMappingModel,
     MessageMappingModel,
     ChannelPermissionsMappingModel,
+    TwoFactorActionMappingModel,
 )
-from ......models import Message, ChannelPermissions
+from ......models import Message, ChannelPermissions, TwoFactorAction
 
 
 def reverse_translate_message(message: Message) -> MessageMappingModel | None:
@@ -60,6 +61,22 @@ channel_permissions_map: dict[ChannelPermissions, ChannelPermissionsMappingModel
 
 
 def reverse_translate_channel_permissions(
-    channel_permissions: ChannelPermissions,
+    channel_permission: ChannelPermissions,
 ) -> ChannelPermissionsMappingModel:
-    return channel_permissions_map[channel_permissions]
+    return channel_permissions_map[channel_permission]
+
+
+two_factor_action_map: dict[TwoFactorAction, TwoFactorActionMappingModel] = {
+    TwoFactorAction.SET_PASSWORD: TwoFactorActionMappingModel.SET_PASSWORD,
+    TwoFactorAction.HINT: TwoFactorActionMappingModel.HINT,
+    TwoFactorAction.EMAIL: TwoFactorActionMappingModel.EMAIL,
+    TwoFactorAction.UPDATE_PASSWORD: TwoFactorActionMappingModel.UPDATE_PASSWORD,
+    TwoFactorAction.REMOVE_2FA: TwoFactorActionMappingModel.REMOVE_2FA,
+    TwoFactorAction.RESTORE_PASSWORD: TwoFactorActionMappingModel.RESTORE_PASSWORD,
+}
+
+
+def reverse_translate_two_factor_actions(
+    two_factor_action: TwoFactorAction,
+) -> TwoFactorActionMappingModel:
+    return two_factor_action_map[two_factor_action]

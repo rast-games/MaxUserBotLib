@@ -1,7 +1,8 @@
 from typing import Union, cast
 
 from .Base import BaseMaxApiMethod
-from ..models import Chat, Message
+from ..models.Chat import Chat
+from ..models.Message import Message
 
 
 class CreateGroupMethod(

@@ -29,6 +29,7 @@ from .ConfirmJoinRequests import ConfirmJoinRequestsMethod
 from .DeclineJoinRequests import DeclineJoinRequestsMethod
 from .DeleteChat import DeleteChatMethod
 from .AddAdmin import AddAdminMethod
+from .Set2Fa import Set2FaMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -64,4 +65,5 @@ __all__ = [
     "DeclineJoinRequestsMethod",
     "DeleteChatMethod",
     "AddAdminMethod",
+    "Set2FaMethod",
 ]

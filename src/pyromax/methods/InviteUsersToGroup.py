@@ -1,7 +1,7 @@
 from typing import Union, cast
 
 from .Base import BaseMaxApiMethod
-from ..models import Chat
+from ..models.Chat import Chat
 
 
 class InviteUsersToGroupMethod(BaseMaxApiMethod[Union[Chat, None]]):

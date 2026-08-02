@@ -2,7 +2,7 @@ from typing import cast
 from collections.abc import Iterable
 
 from .Base import BaseMaxApiMethod
-from ..models import Chat
+from ..models.Chat import Chat
 
 
 class GetChatsMethod(BaseMaxApiMethod[list[Chat]]):

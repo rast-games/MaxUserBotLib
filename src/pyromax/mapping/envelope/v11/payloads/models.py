@@ -45,6 +45,15 @@ class ChannelPermissionsMappingModel(Enum):
     DELETE_MESSAGE = 1024
 
 
+class TwoFactorActionMappingModel(Enum):
+    SET_PASSWORD = 0
+    UPDATE_PASSWORD = 1
+    RESTORE_PASSWORD = 2
+    HINT = 3
+    EMAIL = 4
+    REMOVE_2FA = 5
+
+
 class BaseUserAgentMappingModel(BaseUserAgent, CamelCaseModel, ABC):
     device_type: str
     locale: str = "ru"

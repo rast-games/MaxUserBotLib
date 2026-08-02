@@ -1,4 +1,4 @@
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 from typing_extensions import Self
 
@@ -15,8 +15,17 @@ from .models import (
 )
 
 
+class UserAgentResponse(CamelCaseModel):
+    calls_seed: int | None = None
+
+
 class TokenAttrsResponse(CamelCaseModel):
-    token: str = Field(validation_alias=AliasPath("LOGIN", "token"))
+    token: str | None = Field(
+        default=None, validation_alias=AliasPath("LOGIN", "token")
+    )
+    register_token: str | None = Field(
+        default=None, validation_alias=AliasPath("REGISTER", "token")
+    )
 
 
 class SuccessLoginResponse(CamelCaseModel):
@@ -41,7 +50,7 @@ class PasswordChallengeResponse(CamelCaseModel):
 
 class TwoFactorLoginResponse(CamelCaseModel):
     password_challenge: PasswordChallengeResponse
-    token_attrs: dict[Any, Any]
+    token_attrs: TokenAttrsResponse
     TwoFactor: ClassVar[bool] = True
 
 
@@ -58,6 +67,23 @@ class AuthResponse(CamelCaseModel):
     profile: ProfileMappingModel
     time: int
     token: str | None = None
+
+
+class ConfirmRegistrationResponse(CamelCaseModel):
+
+    user_token: int
+    profile: ProfileMappingModel
+    token_type: Literal[
+        "START_AUTH",
+        "CHECK_CODE",
+        "REGISTER",
+        "RESEND",
+    ]
+    token: str
+
+
+class GetTrackIdFor2FAResponse(CamelCaseModel):
+    track_id: str | None = None
 
 
 class SendMessageResponse(CamelCaseModel):

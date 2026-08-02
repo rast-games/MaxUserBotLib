@@ -38,6 +38,7 @@ from .....methods import (
     DeclineJoinRequestsMethod,
     DeleteChatMethod,
     AddAdminMethod,
+    Set2FaMethod,
 )
 
 if TYPE_CHECKING:
@@ -215,6 +216,11 @@ def get_registry(
             "WEB": mapper.add_admin,
             "ANDROID": mapper.add_admin,
             "DESKTOP": mapper.add_admin,
+        },
+        Set2FaMethod: {
+            "WEB": mapper.set_2fa,
+            "ANDROID": mapper.set_2fa,
+            "DESKTOP": mapper.set_2fa,
         },
     }
 

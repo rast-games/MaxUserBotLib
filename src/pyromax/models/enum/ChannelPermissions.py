@@ -1,6 +1,6 @@
 from enum import Enum
 
-from .base import BaseMaxObject
+# from .base import BaseMaxObject
 
 
 class ChannelPermissions(Enum):

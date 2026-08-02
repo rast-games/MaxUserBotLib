@@ -2,7 +2,7 @@ from collections.abc import Iterable
 from typing import Union, cast
 
 from .Base import BaseMaxApiMethod
-from ..models import Chat
+from ..models.Chat import Chat
 
 
 class DeclineJoinRequestsMethod(BaseMaxApiMethod[Union[Chat, None]]):

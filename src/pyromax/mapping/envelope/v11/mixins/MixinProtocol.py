@@ -9,12 +9,14 @@ if TYPE_CHECKING:
     from .....protocol import EnvelopeProtocol, Envelope
     from .....core import MaxApi
     from ..LifecycleManager import LifecycleManager
+    from .....utils import FingerprintGenerator
 
 
 class MixinProtocol(Protocol):
     token: str | None
     password: str | None
     phone: str | None
+    fingerprint_generator: FingerprintGenerator
     TOKEN_NAME: str
     max_api: MaxApi | None
     user_agent: BaseUserAgentMappingModel | None

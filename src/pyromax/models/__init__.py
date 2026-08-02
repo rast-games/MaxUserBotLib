@@ -12,7 +12,10 @@ from .Name import Name
 from .Profile import Profile
 from .Presence import Presence
 from .Member import Member
-from .ChannelPermissions import ChannelPermissions
+from .enum import ChannelPermissions
+from .AuthFlow import AuthFlow
+from .RegistrationConfig import RegistrationConfig
+from .enum import TwoFactorAction
 
 __all__ = [
     "BaseMaxObject",
@@ -37,4 +40,7 @@ __all__ = [
     "Presence",
     "Member",
     "ChannelPermissions",
+    "AuthFlow",
+    "RegistrationConfig",
+    "TwoFactorAction",
 ]

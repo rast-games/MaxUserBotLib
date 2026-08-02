@@ -1,8 +1,16 @@
 from __future__ import annotations
 import asyncio
 import logging
-from typing import Any, TYPE_CHECKING, AsyncGenerator, cast, Literal, overload
-from collections.abc import Sequence, Callable, Iterable
+from typing import (
+    Any,
+    TYPE_CHECKING,
+    AsyncGenerator,
+    cast,
+    Literal,
+    overload,
+    TypeAlias,
+)
+from collections.abc import Sequence, Callable, Iterable, Coroutine
 
 from ..mixins import AsyncInitializerMixin
 from ..methods import (
@@ -38,12 +46,15 @@ from ..methods import (
     DeclineJoinRequestsMethod,
     DeleteChatMethod,
     AddAdminMethod,
+    Set2FaMethod,
 )
 from ..exceptions import SendMessageError
 
 if TYPE_CHECKING:
     from ..dispatcher.event import Update, MaxObject
-    from ..protocol import Response
+    from ..protocol import Response, BaseMaxProtocol
+    from ..transport import BaseTransport
+    from ..mapping import BaseMapper
     from ..methods import BaseMaxApiMethod
     from ..models import (
         BaseFileAttachment,
@@ -56,15 +67,13 @@ if TYPE_CHECKING:
         Name,
         Member,
         ChannelPermissions,
+        Contact,
+        RegistrationConfig,
+        TwoFactorAction,
     )
+    from ..auth import AuthMiddlewareManager
 
 from .context import *
-
-if TYPE_CHECKING:
-    from ..protocol import BaseMaxProtocol
-    from ..transport import BaseTransport
-    from ..mapping import BaseMapper
-    from ..models import Contact
 
 
 class MaxApi(AsyncInitializerMixin):
@@ -91,6 +100,9 @@ class MaxApi(AsyncInitializerMixin):
         transport_options: dict[str, Any] | None = None,
         workflow_data: dict[Any, Any] | None = None,
         user_agent_params: dict[str, Any] | None = None,
+        auth_middleware_manager: AuthMiddlewareManager | None = None,
+        registration_config: RegistrationConfig | None = None,
+        token_suffix: str | None = None,
         **kwargs: Any,
     ) -> None:
         if workflow_data is None:
@@ -157,13 +169,64 @@ class MaxApi(AsyncInitializerMixin):
             logger=logger,
             workflow_data=workflow_data,
             device_type=device_type,
+            auth_middleware_manager=auth_middleware_manager,
         )
+
+        if token is None and self.auth_middleware_manager is not None:
+            from ..models.AuthFlow import AuthFlow
+
+            mapper_type = type(self.mapper)
+            protocol_type = type(self.protocol)
+            transport_type = type(self.transport)
+
+            auth_alias = AuthFlow[
+                mapper_type,  # type: ignore[valid-type]
+                protocol_type,  # type: ignore[valid-type]
+                transport_type,  # type: ignore[valid-type]
+            ]
+
+            async def auth_wrapped(
+                auth_flow: AuthFlow[Any, Any, Any],
+                _: dict[Any, Any],
+            ) -> AuthFlow[Any, Any, Any]:
+                return auth_flow
+
+            wrapped = self.auth_middleware_manager.wrap_middlewares(
+                self.auth_middleware_manager,
+                auth_wrapped,
+            )
+
+            auth_alias.model_rebuild(
+                _types_namespace={
+                    "MaxApi": type(self),
+                }
+            )
+            # auth_constructor.model_rebuild()
+
+            flow = auth_alias(
+                max_api=self,
+                mapper=self.mapper,
+                protocol=self.protocol,
+                transport=self.transport,
+            )
+
+            data = {
+                type(self): self,
+                mapper_type: self.mapper,
+                protocol_type: self.protocol,
+                transport_type: self.transport,
+            }
+
+            resolved_flow = await wrapped(flow, cast(dict[Any, Any], data))
+            token = resolved_flow.token
 
         await self.mapper.initialize_client(
             token=token,
             device_type=device_type,
             password=password,
             user_agent_params=user_agent_params,
+            registration_config=registration_config,
+            token_suffix=token_suffix,
             **kwargs,
         )
 
@@ -171,13 +234,16 @@ class MaxApi(AsyncInitializerMixin):
         self,
         device_type: str = "WEB",
         password: str | None = None,
-        transport: str | BaseTransport | None = None,
-        protocol: str | BaseMaxProtocol[Any, Any] | None = None,
+        transport: BaseTransport | None = None,
+        protocol: BaseMaxProtocol[Any, Any] | None = None,
         mapper: BaseMapper[Any, Any] | None = None,
         transport_options: dict[str, Any] | None = None,
         token: str | None = None,
         logger: logging.Logger | None = None,
         workflow_data: dict[Any, Any] | None = None,
+        auth_middleware_manager: AuthMiddlewareManager | None = None,
+        registration_config: RegistrationConfig | None = None,
+        token_suffix: str | None = None,
         **kwargs: Any,
     ) -> None:
 
@@ -207,6 +273,7 @@ class MaxApi(AsyncInitializerMixin):
 
         self.__logger: logging.Logger | None = logger
         self.workflow_data = workflow_data
+        self.auth_middleware_manager = auth_middleware_manager
 
     async def __call__(
         self, class_of_method: type[BaseMaxApiMethod[Any]], *args: Any, **kwargs: Any
@@ -838,5 +905,25 @@ class MaxApi(AsyncInitializerMixin):
                 chat_id=chat_id,
                 user_id=user_id,
                 permissions=permissions,
+            ),
+        )
+
+    async def set_2fa(
+        self,
+        password: str,
+        email: str | None = None,
+        hint: str | None = None,
+        email_code_getter: Callable[[str], Coroutine[Any, Any, str]] | None = None,
+        two_factor_actions: list[TwoFactorAction] | None = None,
+    ) -> None:
+        return cast(
+            None,
+            await self(
+                Set2FaMethod,
+                password=password,
+                email=email,
+                hint=hint,
+                email_code_getter=email_code_getter,
+                two_factor_actions=two_factor_actions,
             ),
         )

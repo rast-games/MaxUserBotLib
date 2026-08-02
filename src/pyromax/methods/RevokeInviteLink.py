@@ -1,7 +1,7 @@
 from typing import cast
 
 from .Base import BaseMaxApiMethod
-from ..models import Chat
+from ..models.Chat import Chat
 
 
 class RevokeInviteLinkMethod(BaseMaxApiMethod[Chat]):

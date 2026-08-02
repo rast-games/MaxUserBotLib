@@ -49,12 +49,51 @@ class Resolve2FARequest(CamelCaseModel):
 class StartPhoneAuthRequest(CamelCaseModel):
     phone: str
     type: str
+    mode: bytes | None
 
 
 class VerifySMSCodeRequest(CamelCaseModel):
     verify_code: str
     token: str
     auth_token_type: str
+
+
+class ConfirmRegistrationRequest(CamelCaseModel):
+    first_name: str
+    last_name: str | None = None
+    token: str
+    token_type: str = "REGISTER"
+
+
+class GetEmailCodeRequest(CamelCaseModel):
+    track_id: str
+    email: str
+
+
+class SetHintRequest(CamelCaseModel):
+    track_id: str
+    hint: str
+
+
+class VerifyEmailRequest(CamelCaseModel):
+    track_id: str
+    verify_code: str
+
+
+class SetPasswordRequest(CamelCaseModel):
+    track_id: str
+    password: str
+
+
+class GetTrackIdFor2FARequest(CamelCaseModel):
+    type: int = 0
+
+
+class SetTwoFactorRequest(CamelCaseModel):
+    expected_capabilities: list[int]
+    track_id: str
+    password: str
+    hint: str | None = None
 
 
 class SendMessageRequest(CamelCaseModel):

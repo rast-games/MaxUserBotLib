@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar, TYPE_CHECKING, TypeAlias
+from typing import Any, TypeVar, TYPE_CHECKING, TypeAlias, Generic
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Awaitable
 
@@ -10,7 +10,22 @@ from ...protocol import Response
 if TYPE_CHECKING:
     from ..event import MaxObject
 
-class BaseMiddleware(ABC):
+
+event_type = TypeVar("event_type")
+return_type = TypeVar("return_type")
+
+
+class AbstractMiddleware(ABC, Generic[event_type, return_type]):
+    @abstractmethod
+    async def __call__(
+        self,
+        handler: Callable[[event_type, dict[type[Any] | str, Any]], Awaitable[Any]],
+        event: event_type,
+        data: dict[type[Any] | str, Any],
+    ) -> return_type: ...
+
+
+class BaseMiddleware(AbstractMiddleware["MaxObject", Any]):
     """
     Generic middleware class
     """
@@ -32,10 +47,11 @@ class BaseMiddleware(ABC):
         """
 
 
+MiddlewareEventType = TypeVar("MiddlewareEventType")
 
-MiddlewareEventType = TypeVar("MiddlewareEventType", bound=BaseMaxObject | Response)
-
-NextMiddlewareType = Callable[[MiddlewareEventType, dict[str, Any]], Awaitable[Any]]
+NextMiddlewareType = Callable[
+    [MiddlewareEventType, dict[type[Any] | str, Any]], Awaitable[Any]
+]
 
 MiddlewareType: TypeAlias = (
     BaseMiddleware

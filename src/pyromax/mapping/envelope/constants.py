@@ -7,6 +7,7 @@ class Opcode(MappingConstants):
     START_SMS_AUTH = 17
     CHECK_SMS_CODE = 18
     AUTHORIZE = 19
+    CONFIRM_REGISTRATION = 23
     GET_CONTACT = 32
     # CHAT_INFO = 48
     GET_CHAT = 48
@@ -29,6 +30,12 @@ class Opcode(MappingConstants):
     GET_FILE = 88
     CREATE_FILE = 87
     LINK_INFO = 89
+    SET_PASSWORD = 107
+    SET_HINT = 108
+    SET_EMAIL = 109
+    VERIFY_EMAIL = 110
+    SET_2_FACTOR = 111
+    GET_TRACKID_FOR2FA = 112
     RESOLVE_2FA = 115
     PUSH_NOTIFICATION = 128
     MESSAGE_REACTION_UPDATE = 156

@@ -8,7 +8,6 @@ from ......exceptions import MapperApiError
 from ..immutable import GetUserDataMethod
 from ...payloads.responses import ChoiceLoginVariantResponse
 
-
 if TYPE_CHECKING:
     from ...Mapper import Mapper
     from ...payloads.responses import MetadataResponse
@@ -16,14 +15,13 @@ if TYPE_CHECKING:
 
 class WebSocketLoginBuildInMappingMethod(LoginBuildInMappingMethod):
     async def __call__(
-            self,
-            mapper: Mapper,
-            *args: Any,
-            # metadata: MetadataResponse | None = None,
-            url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None = None,
-            sms_auth: bool = False,
-            code_getter: Callable[..., Coroutine[Any, Any, int]] | None = None,
-            **kwargs: Any
+        self,
+        mapper: Mapper,
+        *args: Any,
+        url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None = None,
+        sms_auth: bool = False,
+        code_getter: Callable[..., Coroutine[Any, Any, int]] | None = None,
+        **kwargs: Any,
     ) -> ChoiceLoginVariantResponse:
         if sms_auth:
             return await self._resolve_sms_auth(
@@ -31,23 +29,12 @@ class WebSocketLoginBuildInMappingMethod(LoginBuildInMappingMethod):
                 code_getter=code_getter,
             )
 
-        metadata = await self._get_metadata(mapper)
+        metadata = await mapper.request_qr()
         if metadata is None:
-            raise MapperApiError('Metadata not given for login')
-        url = metadata.qr_link
+            raise MapperApiError("Metadata not given for login")
         track_id = metadata.track_id
         await self._resolve_qr(
-            mapper=mapper,
-            url_callback=url_callback,
-            metadata=metadata
+            mapper=mapper, url_callback=url_callback, metadata=metadata
         )
-        response = await mapper.send_raw_with_running_wait(
-            method=GetUserDataMethod(
-                track_id=track_id
-            ),
-        )
-        payload = response.payload
-        user = ChoiceLoginVariantResponse(
-            payload=payload,
-        )
-        return user
+
+        return await mapper.confirm_qr(track_id=track_id)

@@ -36,6 +36,7 @@ from .Check2Fa import Check2FaMethod
 from .ApproveQrLogin import ApproveQrLoginMethod
 from .ChangeProfile import ChangeProfileMethod
 from .CreateFolder import CreateFolderMethod
+from .GetFolders import GetFoldersMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -78,4 +79,5 @@ __all__ = [
     "ApproveQrLoginMethod",
     "ChangeProfileMethod",
     "CreateFolderMethod",
+    "GetFoldersMethod",
 ]

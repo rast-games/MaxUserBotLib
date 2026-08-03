@@ -53,6 +53,7 @@ from ..methods import (
     ApproveQrLoginMethod,
     ChangeProfileMethod,
     CreateFolderMethod,
+    GetFoldersMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -77,6 +78,7 @@ if TYPE_CHECKING:
         RegistrationConfig,
         TwoFactorAction,
         FolderUpdate,
+        FolderList,
     )
     from ..auth import AuthMiddlewareManager
 
@@ -1027,5 +1029,16 @@ class MaxApi(AsyncInitializerMixin):
                 chat_include=chat_include,
                 filters=filters,
                 folder_id=folder_id,
+            ),
+        )
+
+    async def get_folders(self, folder_sync: int = 0) -> FolderList:
+        from ..models import FolderList
+
+        return cast(
+            FolderList,
+            await self(
+                GetFoldersMethod,
+                folder_sync=folder_sync,
             ),
         )

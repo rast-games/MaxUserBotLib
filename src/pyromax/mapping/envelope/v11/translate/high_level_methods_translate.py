@@ -45,6 +45,7 @@ from .....methods import (
     ApproveQrLoginMethod,
     ChangeProfileMethod,
     CreateFolderMethod,
+    GetFoldersMethod,
 )
 
 if TYPE_CHECKING:
@@ -257,6 +258,11 @@ def get_registry(
             "WEB": mapper.create_folder,
             "ANDROID": mapper.create_folder,
             "DESKTOP": mapper.create_folder,
+        },
+        GetFoldersMethod: {
+            "WEB": mapper.get_folders,
+            "ANDROID": mapper.get_folders,
+            "DESKTOP": mapper.get_folders,
         },
     }
 

@@ -2,7 +2,7 @@ import uuid
 from collections.abc import Sequence, Coroutine, Callable
 from typing import cast, Any
 
-from .....models import Contact, PhotoAttachment, Profile, FolderUpdate
+from .....models import Contact, PhotoAttachment, Profile, FolderUpdate, FolderList
 from .....protocol.envelope import Envelope
 from ..payloads.shared import CamelCaseModel
 from ..payloads.responses import (
@@ -15,8 +15,13 @@ from ..methods.immutable import (
     CreateCellForProfilePhotoMethod,
     ChangeProfileMethod,
     CreateFolderMethod,
+    GetFoldersMethod,
 )
-from ..payloads.models import PhotoMappingModel, FolderUpdateMappingModel
+from ..payloads.models import (
+    PhotoMappingModel,
+    FolderUpdateMappingModel,
+    FolderListMappingModel,
+)
 from ..translate.ToDTO import (
     FILE_OPCODES,
     FALLBACK_FILE_OPCODE,
@@ -141,7 +146,7 @@ class UserMixin(MixinProtocol):
         chat_include: list[int],
         filters: list[Any] | None = None,
         folder_id: str | None = None,
-    ):
+    ) -> FolderUpdate:
         self._logger.info("creating folder")
 
         response = await self.send(
@@ -156,3 +161,13 @@ class UserMixin(MixinProtocol):
         folder_update_mapped = FolderUpdateMappingModel(**response.payload)
         folder_update = cast(FolderUpdate, translate_models(folder_update_mapped))
         return folder_update
+
+    async def get_folders(self, folder_sync: int = 0) -> FolderList:
+        response = await self.send(
+            method=GetFoldersMethod(
+                folder_sync=folder_sync,
+            )
+        )
+        mapped_folder_list = FolderListMappingModel(**response.payload)
+        folder_list = cast(FolderList, translate_models(mapped_folder_list))
+        return folder_list

@@ -287,6 +287,10 @@ class CreateFolderRequest(CamelCaseModel):
     filters: list[Any]
 
 
+class GetFoldersRequest(CamelCaseModel):
+    folder_sync: int = 0
+
+
 class AnyFileRequest(CamelCaseModel):
     type: str = Field(serialization_alias="_type")
 

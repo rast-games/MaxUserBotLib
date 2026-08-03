@@ -41,6 +41,7 @@ from .UpdateFolder import UpdateFolderMethod
 from .DeleteFolders import DeleteFoldersMethod
 from .CloseAllSessions import CloseAllSessionsMethod
 from .Logout import LogoutMethod
+from .SetPresence import SetPresenceMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -88,4 +89,5 @@ __all__ = [
     "DeleteFoldersMethod",
     "CloseAllSessionsMethod",
     "LogoutMethod",
+    "SetPresenceMethod",
 ]

@@ -58,6 +58,7 @@ from ..methods import (
     DeleteFoldersMethod,
     CloseAllSessionsMethod,
     LogoutMethod,
+    SetPresenceMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -1096,3 +1097,12 @@ class MaxApi(AsyncInitializerMixin):
 
     async def logout(self) -> None:
         return cast(None, await self(LogoutMethod))
+
+    async def set_presence(self, online: bool) -> None:
+        return cast(
+            None,
+            await self(
+                SetPresenceMethod,
+                online=online,
+            ),
+        )

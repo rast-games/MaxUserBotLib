@@ -231,3 +231,7 @@ class UserMixin(MixinProtocol):
         self._logger.info("logout")
         response = await self.send(method=LogoutMethod())
         return None
+
+    async def set_presence(self, online: bool) -> None:
+        self._logger.info("setting presence to %s", "online" if online else "offline")
+        self.keep_alive_interactive = online

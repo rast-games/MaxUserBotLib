@@ -50,6 +50,7 @@ from .....methods import (
     DeleteFoldersMethod,
     CloseAllSessionsMethod,
     LogoutMethod,
+    SetPresenceMethod,
 )
 
 if TYPE_CHECKING:
@@ -287,6 +288,11 @@ def get_registry(
             "WEB": mapper.logout,
             "ANDROID": mapper.logout,
             "DESKTOP": mapper.logout,
+        },
+        SetPresenceMethod: {
+            "WEB": mapper.set_presence,
+            "ANDROID": mapper.set_presence,
+            "DESKTOP": mapper.set_presence,
         },
     }
 

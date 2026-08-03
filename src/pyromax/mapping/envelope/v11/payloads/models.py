@@ -550,6 +550,29 @@ class CreateGroupMessageMappingModel(CamelCaseModel):
     attaches: list[CreateGroupAttachMappingModel]
 
 
+class FolderMappingModel(CamelCaseModel):
+    source_id: int = 0
+    include: list[int] = Field(default_factory=list)
+    options: list[Any] = Field(default_factory=list)
+    update_time: int = 0
+    id: str = ""
+    filters: list[Any] = Field(default_factory=list)
+    title: str = ""
+
+
+class FolderUpdateMappingModel(CamelCaseModel):
+    folders_order: list[str] = Field(default_factory=list)
+    folder: FolderMappingModel | None = None
+    folder_sync: int = 0
+
+
+class FolderListMappingModel(CamelCaseModel):
+    folders_order: list[str] = Field(default_factory=list)
+    folders: list[FolderMappingModel] = Field(default_factory=list)
+    all_filter_exclude_folders: list[Any] = Field(default_factory=list)
+    folder_sync: int = 0
+
+
 # structures that are needed in both requests and responses at the same time
 
 

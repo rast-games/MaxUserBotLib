@@ -1,7 +1,8 @@
+import uuid
 from collections.abc import Sequence, Coroutine, Callable
 from typing import cast, Any
 
-from .....models import Contact, PhotoAttachment, Profile
+from .....models import Contact, PhotoAttachment, Profile, FolderUpdate
 from .....protocol.envelope import Envelope
 from ..payloads.shared import CamelCaseModel
 from ..payloads.responses import (
@@ -13,8 +14,9 @@ from ..methods.immutable import (
     GetGeneralInfoAboutMemberMethod,
     CreateCellForProfilePhotoMethod,
     ChangeProfileMethod,
+    CreateFolderMethod,
 )
-from ..payloads.models import PhotoMappingModel
+from ..payloads.models import PhotoMappingModel, FolderUpdateMappingModel
 from ..translate.ToDTO import (
     FILE_OPCODES,
     FALLBACK_FILE_OPCODE,
@@ -132,3 +134,25 @@ class UserMixin(MixinProtocol):
         profile = cast(Profile, translate_models(mapped_profile))
         self.max_api.me = profile
         return profile
+
+    async def create_folder(
+        self,
+        title: str,
+        chat_include: list[int],
+        filters: list[Any] | None = None,
+        folder_id: str | None = None,
+    ):
+        self._logger.info("creating folder")
+
+        response = await self.send(
+            method=CreateFolderMethod(
+                id=folder_id or str(uuid.uuid4()),
+                title=title,
+                include=chat_include,
+                filters=filters or [],
+            )
+        )
+
+        folder_update_mapped = FolderUpdateMappingModel(**response.payload)
+        folder_update = cast(FolderUpdate, translate_models(folder_update_mapped))
+        return folder_update

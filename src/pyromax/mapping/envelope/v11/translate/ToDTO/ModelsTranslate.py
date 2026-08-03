@@ -15,6 +15,9 @@ from ......models import (
     Profile,
     Presence,
     Member,
+    Folder,
+    FolderUpdate,
+    FolderList,
 )
 from ...payloads.models import (
     ContactMappingModel,
@@ -27,6 +30,9 @@ from ...payloads.models import (
     ProfileMappingModel,
     PresenceMappingModel,
     MemberMappingModel,
+    FolderMappingModel,
+    FolderUpdateMappingModel,
+    FolderListMappingModel,
 )
 
 TranslateObj = TypeVar("TranslateObj", bound=CamelCaseModel)
@@ -266,6 +272,49 @@ class TranslateChat(BaseTranslateMappingModel[ChatMappingModel]):
         )
 
 
+class TranslateFolder(BaseTranslateMappingModel[FolderMappingModel]):
+    @staticmethod
+    def translate(folder: FolderMappingModel) -> Folder:
+        return Folder(
+            source_id=folder.source_id,
+            include=folder.include,
+            options=folder.options,
+            update_time=folder.update_time,
+            id=folder.id,
+            filters=folder.filters,
+            title=folder.title,
+        )
+
+
+class TranslateFolderUpdate(BaseTranslateMappingModel[FolderUpdateMappingModel]):
+
+    @staticmethod
+    def translate(folder_update: FolderUpdateMappingModel) -> FolderUpdate:
+        return FolderUpdate(
+            folder_sync=folder_update.folder_sync,
+            folders_order=folder_update.folders_order,
+            folder=(
+                TranslateFolder.translate(folder=folder_update.folder)
+                if folder_update.folder is not None
+                else folder_update.folder
+            ),
+        )
+
+
+class TranslateFolderList(BaseTranslateMappingModel[FolderListMappingModel]):
+
+    @staticmethod
+    def translate(folder_list: FolderListMappingModel) -> FolderList:
+        return FolderList(
+            folder_sync=folder_list.folder_sync,
+            folders_order=folder_list.folders_order,
+            all_filter_exclude_folders=folder_list.all_filter_exclude_folders,
+            folders=[
+                TranslateFolder.translate(folder) for folder in folder_list.folders
+            ],
+        )
+
+
 TRANSLATE_MAPPING_MODELS: dict[
     type[CamelCaseModel], type[BaseTranslateMappingModel[Any]]
 ] = {
@@ -278,6 +327,9 @@ TRANSLATE_MAPPING_MODELS: dict[
     ProfileMappingModel: TranslateProfile,
     PresenceMappingModel: TranslatePresence,
     MemberMappingModel: TranslateMember,
+    FolderMappingModel: TranslateFolder,
+    FolderUpdateMappingModel: TranslateFolderUpdate,
+    FolderListMappingModel: TranslateFolderList,
 }
 
 

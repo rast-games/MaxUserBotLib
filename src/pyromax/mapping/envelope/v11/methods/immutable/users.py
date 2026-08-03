@@ -1,5 +1,11 @@
+from uuid import uuid4
+
 from .base import BaseMethod, Envelope, Cmd, Opcode, VERSION
-from ...payloads.requests import GetContactRequest, ChangeProfileRequest
+from ...payloads.requests import (
+    GetContactRequest,
+    ChangeProfileRequest,
+    CreateFolderRequest,
+)
 
 
 class GetGeneralInfoAboutMemberMethod(BaseMethod):
@@ -29,7 +35,22 @@ class ChangeProfileMethod(BaseMethod):
         return request
 
 
+class CreateFolderMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.FOLDERS_UPDATE
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = CreateFolderRequest(
+            id=self.args.get("id") or str(uuid4()),
+            title=self.args["title"],
+            include=self.args["include"],
+            filters=self.args.get("filters") or [],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "GetGeneralInfoAboutMemberMethod",
     "ChangeProfileMethod",
+    "CreateFolderMethod",
 ]

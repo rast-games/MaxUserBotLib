@@ -52,6 +52,7 @@ from ..methods import (
     Check2FaMethod,
     ApproveQrLoginMethod,
     ChangeProfileMethod,
+    CreateFolderMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -75,6 +76,7 @@ if TYPE_CHECKING:
         Contact,
         RegistrationConfig,
         TwoFactorAction,
+        FolderUpdate,
     )
     from ..auth import AuthMiddlewareManager
 
@@ -1005,5 +1007,25 @@ class MaxApi(AsyncInitializerMixin):
                 photo=photo,
                 file_name=file_name,
                 photo_token=photo_token,
+            ),
+        )
+
+    async def create_folder(
+        self,
+        title: str,
+        chat_include: list[int],
+        filters: list[Any] | None = None,
+        folder_id: str | None = None,
+    ) -> FolderUpdate:
+        from ..models import FolderUpdate
+
+        return cast(
+            FolderUpdate,
+            await self(
+                CreateFolderMethod,
+                title=title,
+                chat_include=chat_include,
+                filters=filters,
+                folder_id=folder_id,
             ),
         )

@@ -15,6 +15,7 @@ from .Member import Member
 from .enum import ChannelPermissions
 from .AuthFlow import AuthFlow
 from .RegistrationConfig import RegistrationConfig
+from .Folder import Folder, FolderUpdate, FolderList
 from .enum import TwoFactorAction
 
 __all__ = [
@@ -43,4 +44,7 @@ __all__ = [
     "AuthFlow",
     "RegistrationConfig",
     "TwoFactorAction",
+    "Folder",
+    "FolderUpdate",
+    "FolderList",
 ]

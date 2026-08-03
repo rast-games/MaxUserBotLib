@@ -280,6 +280,13 @@ class ChangeProfileRequest(CamelCaseModel):
     avatar_type: Literal["USER_AVATAR"] = "USER_AVATAR"
 
 
+class CreateFolderRequest(CamelCaseModel):
+    id: str
+    title: str
+    include: list[int]
+    filters: list[Any]
+
+
 class AnyFileRequest(CamelCaseModel):
     type: str = Field(serialization_alias="_type")
 

@@ -34,6 +34,7 @@ from .Remove2Fa import Remove2FaMethod
 from .ChangePassword import ChangePasswordMethod
 from .Check2Fa import Check2FaMethod
 from .ApproveQrLogin import ApproveQrLoginMethod
+from .ChangeProfile import ChangeProfileMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -74,4 +75,5 @@ __all__ = [
     "ChangePasswordMethod",
     "Check2FaMethod",
     "ApproveQrLoginMethod",
+    "ChangeProfileMethod",
 ]

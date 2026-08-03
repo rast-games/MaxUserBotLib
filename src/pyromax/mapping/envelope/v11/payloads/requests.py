@@ -268,6 +268,18 @@ class CreateCellForFileRequest(CamelCaseModel):
     count: int = 1
 
 
+class CreateCellForProfilePhotoRequest(CreateCellForFileRequest):
+    profile: bool = False
+
+
+class ChangeProfileRequest(CamelCaseModel):
+    first_name: str
+    last_name: str | None = None
+    description: str | None = None
+    photo_token: str | None = None
+    avatar_type: Literal["USER_AVATAR"] = "USER_AVATAR"
+
+
 class AnyFileRequest(CamelCaseModel):
     type: str = Field(serialization_alias="_type")
 

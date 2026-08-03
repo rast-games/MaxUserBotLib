@@ -86,6 +86,10 @@ class GetTrackIdFor2FAResponse(CamelCaseModel):
     track_id: str | None = None
 
 
+class ProfileContainsResponse(CamelCaseModel):
+    profile: ProfileMappingModel
+
+
 class SendMessageResponse(CamelCaseModel):
     chat_id: int | None = None
     mark: int | None = None

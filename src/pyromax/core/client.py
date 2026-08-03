@@ -51,6 +51,7 @@ from ..methods import (
     ChangePasswordMethod,
     Check2FaMethod,
     ApproveQrLoginMethod,
+    ChangeProfileMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -980,5 +981,29 @@ class MaxApi(AsyncInitializerMixin):
             await self(
                 ApproveQrLoginMethod,
                 qr_link=qr_link,
+            ),
+        )
+
+    async def change_profile(
+        self,
+        first_name: str,
+        last_name: str | None = None,
+        description: str | None = None,
+        photo: bytes | None = None,
+        file_name: str | None = None,
+        photo_token: str | None = None,
+    ) -> Profile:
+        from ..models import Profile
+
+        return cast(
+            Profile,
+            await self(
+                ChangeProfileMethod,
+                first_name=first_name,
+                last_name=last_name,
+                description=description,
+                photo=photo,
+                file_name=file_name,
+                photo_token=photo_token,
             ),
         )

@@ -43,6 +43,7 @@ from .....methods import (
     ChangePasswordMethod,
     Check2FaMethod,
     ApproveQrLoginMethod,
+    ChangeProfileMethod,
 )
 
 if TYPE_CHECKING:
@@ -245,6 +246,11 @@ def get_registry(
             # "WEB": mapper.approve_qr_login,
             "ANDROID": mapper.approve_qr_login,
             # "DESKTOP": mapper.approve_qr_login,
+        },
+        ChangeProfileMethod: {
+            "WEB": mapper.change_profile,
+            "ANDROID": mapper.change_profile,
+            "DESKTOP": mapper.change_profile,
         },
     }
 

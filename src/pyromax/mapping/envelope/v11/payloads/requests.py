@@ -291,6 +291,14 @@ class GetFoldersRequest(CamelCaseModel):
     folder_sync: int = 0
 
 
+class UpdateFolderRequest(CamelCaseModel):
+    id: str
+    title: str
+    include: list[int]
+    filters: list[Any]
+    options: list[Any]
+
+
 class AnyFileRequest(CamelCaseModel):
     type: str = Field(serialization_alias="_type")
 

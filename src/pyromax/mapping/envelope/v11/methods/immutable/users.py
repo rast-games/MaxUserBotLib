@@ -6,6 +6,7 @@ from ...payloads.requests import (
     ChangeProfileRequest,
     CreateFolderRequest,
     GetFoldersRequest,
+    UpdateFolderRequest,
 )
 
 
@@ -61,9 +62,25 @@ class GetFoldersMethod(BaseMethod):
         return request
 
 
+class UpdateFolderMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.FOLDERS_UPDATE
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = UpdateFolderRequest(
+            id=self.args["id"],
+            title=self.args["title"],
+            include=self.args.get("include") or [],
+            filters=self.args.get("filters") or [],
+            options=self.args.get("options") or [],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "GetGeneralInfoAboutMemberMethod",
     "ChangeProfileMethod",
     "CreateFolderMethod",
     "GetFoldersMethod",
+    "UpdateFolderMethod",
 ]

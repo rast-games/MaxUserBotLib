@@ -37,6 +37,7 @@ from .ApproveQrLogin import ApproveQrLoginMethod
 from .ChangeProfile import ChangeProfileMethod
 from .CreateFolder import CreateFolderMethod
 from .GetFolders import GetFoldersMethod
+from .UpdateFolder import UpdateFolderMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -80,4 +81,5 @@ __all__ = [
     "ChangeProfileMethod",
     "CreateFolderMethod",
     "GetFoldersMethod",
+    "UpdateFolderMethod",
 ]

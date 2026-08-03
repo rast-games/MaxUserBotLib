@@ -46,6 +46,7 @@ from .....methods import (
     ChangeProfileMethod,
     CreateFolderMethod,
     GetFoldersMethod,
+    UpdateFolderMethod,
 )
 
 if TYPE_CHECKING:
@@ -263,6 +264,11 @@ def get_registry(
             "WEB": mapper.get_folders,
             "ANDROID": mapper.get_folders,
             "DESKTOP": mapper.get_folders,
+        },
+        UpdateFolderMethod: {
+            "WEB": mapper.update_folder,
+            "ANDROID": mapper.update_folder,
+            "DESKTOP": mapper.update_folder,
         },
     }
 

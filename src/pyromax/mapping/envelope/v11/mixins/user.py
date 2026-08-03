@@ -16,6 +16,7 @@ from ..methods.immutable import (
     ChangeProfileMethod,
     CreateFolderMethod,
     GetFoldersMethod,
+    UpdateFolderMethod,
 )
 from ..payloads.models import (
     PhotoMappingModel,
@@ -171,3 +172,25 @@ class UserMixin(MixinProtocol):
         mapped_folder_list = FolderListMappingModel(**response.payload)
         folder_list = cast(FolderList, translate_models(mapped_folder_list))
         return folder_list
+
+    async def update_folder(
+        self,
+        folder_id: str,
+        title: str,
+        chat_include: list[int] | None = None,
+        filters: list[Any] | None = None,
+        options: list[Any] | None = None,
+    ) -> FolderUpdate:
+
+        response = await self.send(
+            method=UpdateFolderMethod(
+                id=folder_id,
+                title=title,
+                include=chat_include or [],
+                filters=filters or [],
+                options=options or [],
+            )
+        )
+        folder_update_mapped = FolderUpdateMappingModel(**response.payload)
+        folder_update = cast(FolderUpdate, translate_models(folder_update_mapped))
+        return folder_update

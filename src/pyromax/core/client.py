@@ -54,6 +54,7 @@ from ..methods import (
     ChangeProfileMethod,
     CreateFolderMethod,
     GetFoldersMethod,
+    UpdateFolderMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -1040,5 +1041,27 @@ class MaxApi(AsyncInitializerMixin):
             await self(
                 GetFoldersMethod,
                 folder_sync=folder_sync,
+            ),
+        )
+
+    async def update_folder(
+        self,
+        folder_id: str,
+        title: str,
+        chat_include: list[int] | None = None,
+        filters: list[Any] | None = None,
+        options: list[Any] | None = None,
+    ):
+        from ..models import FolderUpdate
+
+        return cast(
+            FolderUpdate,
+            await self(
+                UpdateFolderMethod,
+                title=title,
+                chat_include=chat_include,
+                filters=filters,
+                folder_id=folder_id,
+                options=options,
             ),
         )

@@ -31,6 +31,7 @@ class Opcode(MappingConstants):
     GET_FILE = 88
     CREATE_FILE = 87
     LINK_INFO = 89
+    SESSIONS_CLOSE = 97
     SET_PASSWORD = 107
     SET_HINT = 108
     SET_EMAIL = 109

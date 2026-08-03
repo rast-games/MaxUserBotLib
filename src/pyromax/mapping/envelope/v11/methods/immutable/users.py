@@ -89,6 +89,15 @@ class DeleteFoldersMethod(BaseMethod):
         return request
 
 
+class CloseAllSessionsMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.SESSIONS_CLOSE
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = {}
+        return request
+
+
 __all__ = [
     "GetGeneralInfoAboutMemberMethod",
     "ChangeProfileMethod",
@@ -96,4 +105,5 @@ __all__ = [
     "GetFoldersMethod",
     "UpdateFolderMethod",
     "DeleteFoldersMethod",
+    "CloseAllSessionsMethod",
 ]

@@ -56,6 +56,7 @@ from ..methods import (
     GetFoldersMethod,
     UpdateFolderMethod,
     DeleteFoldersMethod,
+    CloseAllSessionsMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -1083,3 +1084,11 @@ class MaxApi(AsyncInitializerMixin):
 
     async def delete_folder(self, folder_id: str) -> FolderUpdate:
         return await self.delete_folders(folder_ids=[folder_id])
+
+    async def close_all_sessions(self) -> bool:
+        return cast(
+            bool,
+            await self(
+                CloseAllSessionsMethod,
+            ),
+        )

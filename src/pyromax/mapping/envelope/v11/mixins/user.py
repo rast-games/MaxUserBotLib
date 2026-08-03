@@ -9,6 +9,7 @@ from ..payloads.responses import (
     GetContactResponse,
     ResponseWithUrl,
     ProfileContainsResponse,
+    CloseAllSessionsResponse,
 )
 from ..methods.immutable import (
     GetGeneralInfoAboutMemberMethod,
@@ -18,6 +19,7 @@ from ..methods.immutable import (
     GetFoldersMethod,
     UpdateFolderMethod,
     DeleteFoldersMethod,
+    CloseAllSessionsMethod,
 )
 from ..payloads.models import (
     PhotoMappingModel,
@@ -206,3 +208,20 @@ class UserMixin(MixinProtocol):
         folder_update_mapped = FolderUpdateMappingModel(**response.payload)
         folder_update = cast(FolderUpdate, translate_models(folder_update_mapped))
         return folder_update
+
+    async def close_all_sessions(self) -> bool:
+        self._logger.info("closing all other sessions")
+
+        response = await self.send(method=CloseAllSessionsMethod())
+
+        token = CloseAllSessionsResponse(**response.payload).token
+
+        if token is None:
+            self._logger.warning(
+                "no token received after closing sessions, skipping token update"
+            )
+            return False
+
+        self.token = token
+        self.max_api.token = token
+        return True

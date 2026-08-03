@@ -197,6 +197,10 @@ class ResponseWithUrl(CamelCaseModel):
     )
 
 
+class CloseAllSessionsResponse(CamelCaseModel):
+    token: str | None = None
+
+
 class GetContactResponse(CamelCaseModel):
     contacts: list[ContactMappingModel]
 

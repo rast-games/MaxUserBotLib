@@ -20,6 +20,7 @@ from ..methods.immutable import (
     UpdateFolderMethod,
     DeleteFoldersMethod,
     CloseAllSessionsMethod,
+    LogoutMethod,
 )
 from ..payloads.models import (
     PhotoMappingModel,
@@ -225,3 +226,8 @@ class UserMixin(MixinProtocol):
         self.token = token
         self.max_api.token = token
         return True
+
+    async def logout(self) -> None:
+        self._logger.info("logout")
+        response = await self.send(method=LogoutMethod())
+        return None

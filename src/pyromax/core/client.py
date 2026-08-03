@@ -57,6 +57,7 @@ from ..methods import (
     UpdateFolderMethod,
     DeleteFoldersMethod,
     CloseAllSessionsMethod,
+    LogoutMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -1092,3 +1093,6 @@ class MaxApi(AsyncInitializerMixin):
                 CloseAllSessionsMethod,
             ),
         )
+
+    async def logout(self) -> None:
+        return cast(None, await self(LogoutMethod))

@@ -98,6 +98,13 @@ class CloseAllSessionsMethod(BaseMethod):
         return request
 
 
+class LogoutMethod(CloseAllSessionsMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request = await super().__call__(request)
+        request.opcode = Opcode.LOGOUT
+        return request
+
+
 __all__ = [
     "GetGeneralInfoAboutMemberMethod",
     "ChangeProfileMethod",
@@ -106,4 +113,5 @@ __all__ = [
     "UpdateFolderMethod",
     "DeleteFoldersMethod",
     "CloseAllSessionsMethod",
+    "LogoutMethod",
 ]

@@ -299,6 +299,10 @@ class UpdateFolderRequest(CamelCaseModel):
     options: list[Any]
 
 
+class DeleteFoldersRequest(CamelCaseModel):
+    folder_ids: list[str]
+
+
 class AnyFileRequest(CamelCaseModel):
     type: str = Field(serialization_alias="_type")
 

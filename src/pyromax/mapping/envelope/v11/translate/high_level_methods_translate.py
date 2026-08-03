@@ -47,6 +47,7 @@ from .....methods import (
     CreateFolderMethod,
     GetFoldersMethod,
     UpdateFolderMethod,
+    DeleteFoldersMethod,
 )
 
 if TYPE_CHECKING:
@@ -269,6 +270,11 @@ def get_registry(
             "WEB": mapper.update_folder,
             "ANDROID": mapper.update_folder,
             "DESKTOP": mapper.update_folder,
+        },
+        DeleteFoldersMethod: {
+            "WEB": mapper.delete_folders,
+            "ANDROID": mapper.delete_folders,
+            "DESKTOP": mapper.delete_folders,
         },
     }
 

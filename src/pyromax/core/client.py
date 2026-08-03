@@ -55,6 +55,7 @@ from ..methods import (
     CreateFolderMethod,
     GetFoldersMethod,
     UpdateFolderMethod,
+    DeleteFoldersMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -1051,7 +1052,7 @@ class MaxApi(AsyncInitializerMixin):
         chat_include: list[int] | None = None,
         filters: list[Any] | None = None,
         options: list[Any] | None = None,
-    ):
+    ) -> FolderUpdate:
         from ..models import FolderUpdate
 
         return cast(
@@ -1065,3 +1066,20 @@ class MaxApi(AsyncInitializerMixin):
                 options=options,
             ),
         )
+
+    async def delete_folders(
+        self,
+        folder_ids: list[str] | None = None,
+    ) -> FolderUpdate:
+        from ..models import FolderUpdate
+
+        return cast(
+            FolderUpdate,
+            await self(
+                DeleteFoldersMethod,
+                folder_ids=folder_ids,
+            ),
+        )
+
+    async def delete_folder(self, folder_id: str) -> FolderUpdate:
+        return await self.delete_folders(folder_ids=[folder_id])

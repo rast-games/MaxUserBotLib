@@ -38,6 +38,7 @@ from .ChangeProfile import ChangeProfileMethod
 from .CreateFolder import CreateFolderMethod
 from .GetFolders import GetFoldersMethod
 from .UpdateFolder import UpdateFolderMethod
+from .DeleteFolders import DeleteFoldersMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -82,4 +83,5 @@ __all__ = [
     "CreateFolderMethod",
     "GetFoldersMethod",
     "UpdateFolderMethod",
+    "DeleteFoldersMethod",
 ]

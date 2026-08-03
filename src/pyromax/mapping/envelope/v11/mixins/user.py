@@ -17,6 +17,7 @@ from ..methods.immutable import (
     CreateFolderMethod,
     GetFoldersMethod,
     UpdateFolderMethod,
+    DeleteFoldersMethod,
 )
 from ..payloads.models import (
     PhotoMappingModel,
@@ -164,6 +165,7 @@ class UserMixin(MixinProtocol):
         return folder_update
 
     async def get_folders(self, folder_sync: int = 0) -> FolderList:
+        self._logger.info("fetching folders")
         response = await self.send(
             method=GetFoldersMethod(
                 folder_sync=folder_sync,
@@ -181,7 +183,7 @@ class UserMixin(MixinProtocol):
         filters: list[Any] | None = None,
         options: list[Any] | None = None,
     ) -> FolderUpdate:
-
+        self._logger.info("updating folder")
         response = await self.send(
             method=UpdateFolderMethod(
                 id=folder_id,
@@ -189,6 +191,16 @@ class UserMixin(MixinProtocol):
                 include=chat_include or [],
                 filters=filters or [],
                 options=options or [],
+            )
+        )
+        folder_update_mapped = FolderUpdateMappingModel(**response.payload)
+        folder_update = cast(FolderUpdate, translate_models(folder_update_mapped))
+        return folder_update
+
+    async def delete_folders(self, folder_ids: list[str]) -> FolderUpdate:
+        response = await self.send(
+            method=DeleteFoldersMethod(
+                folder_ids=folder_ids,
             )
         )
         folder_update_mapped = FolderUpdateMappingModel(**response.payload)

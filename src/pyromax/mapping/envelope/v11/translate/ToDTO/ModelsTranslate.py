@@ -87,6 +87,13 @@ class TranslateContact(BaseTranslateMappingModel[ContactMappingModel]):
             account_status=contact.account_status,
             email=contact.email,
             registration_time=contact.registration_time,
+            update_time=contact.update_time,
+            options=contact.options,
+            status=contact.status,
+            gender=contact.gender,
+            link=contact.link,
+            web_app=contact.web_app,
+            menu_button=contact.menu_button,
         )
 
 

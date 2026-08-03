@@ -8,7 +8,6 @@ from pydantic import BaseModel
 from ...protocol import Response
 from ...mixins import AsyncInitializerMixin, AsyncConstructorMeta
 
-
 if TYPE_CHECKING:
     from ...models import BaseFileAttachment, BaseMaxObject, Message, Contact
     from ...protocol import Request
@@ -18,8 +17,8 @@ if TYPE_CHECKING:
     from ...methods import BaseMaxApiMethod
 
 
-T_protocol = TypeVar('T_protocol', bound='BaseMaxProtocol[Any, Any]')
-T_file = TypeVar('T_file', bound='BaseFileAttachment')
+T_protocol = TypeVar("T_protocol", bound="BaseMaxProtocol[Any, Any]")
+T_file = TypeVar("T_file", bound="BaseFileAttachment")
 # attaches_type = TypeVar('attaches_type', bound=BaseFileAttachment)
 
 
@@ -29,38 +28,57 @@ class BaseMapper(AsyncInitializerMixin, Generic[T_protocol, T_file]):
 
     @property
     @abstractmethod
-    def DEVICE_TYPE_TO_USERAGENT_MODEL(self) -> Mapping[str, type[BaseModel]]: pass
+    def DEVICE_TYPE_TO_USERAGENT_MODEL(self) -> Mapping[str, type[BaseModel]]:
+        pass
 
     @abstractmethod
-    async def _async_init(self, max_api: MaxApi, protocol: T_protocol, *args: Any, **kwargs: Any) -> None: pass
-
-
-    @abstractmethod
-    async def initialize_client(self, device_type: str, **kwargs: Any) -> None: pass
-
+    async def _async_init(
+        self, max_api: MaxApi, protocol: T_protocol, *args: Any, **kwargs: Any
+    ) -> None:
+        pass
 
     @abstractmethod
-    def listen_updates(self, context: Any) -> tuple[Callable[[Response], Response | BaseMaxObject], AsyncGenerator[Response, None]]: pass
-
-
-    @abstractmethod
-    async def upload_file(self, data: bytes | None, typeof: type[T_file], **kwargs: Any) -> list[T_file]: pass
-
+    async def initialize_client(self, device_type: str, **kwargs: Any) -> None:
+        pass
 
     @abstractmethod
-    async def download_file(self, file: T_file, **kwargs: Any) -> tuple[bytes, dict[str, str]] | tuple[None, None]: pass
-
-
-    @abstractmethod
-    async def send_message(self, chat_id: int, text: str | None = None, attaches: Sequence[Any] | None = None, **kwargs: Any) -> Message | None: pass
-
-
-    @abstractmethod
-    async def get_member_by_id(self, member_id: int) -> Sequence[Contact]: pass
-
+    def listen_updates(
+        self, context: Any
+    ) -> tuple[
+        Callable[[Response], Response | BaseMaxObject], AsyncGenerator[Response, None]
+    ]:
+        pass
 
     @abstractmethod
-    async def call_method(self, method: type[BaseMaxApiMethod[Any]], *args: Any, **kwargs: Any) -> Any:
+    async def upload_file(
+        self, data: bytes | None, typeof: type[T_file], **kwargs: Any
+    ) -> list[T_file]:
+        pass
+
+    @abstractmethod
+    async def download_file(
+        self, file: T_file, **kwargs: Any
+    ) -> tuple[bytes, dict[str, str]] | tuple[None, None]:
+        pass
+
+    @abstractmethod
+    async def send_message(
+        self,
+        chat_id: int,
+        text: str | None = None,
+        attaches: Sequence[Any] | None = None,
+        **kwargs: Any,
+    ) -> Message | None:
+        pass
+
+    @abstractmethod
+    async def get_members_by_ids(self, member_ids: list[int]) -> Sequence[Contact]:
+        pass
+
+    @abstractmethod
+    async def call_method(
+        self, method: type[BaseMaxApiMethod[Any]], *args: Any, **kwargs: Any
+    ) -> Any:
         """
         Call a high layer method in mapper
 

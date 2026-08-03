@@ -5,6 +5,7 @@ from .construct import ConstructorMixin
 from .message import MessageMixin
 from .chat import ChatMixin
 from .transport import TransportMixin
+from .contact import ContactMixin
 from ..payloads.models import BaseFileMappingModel
 
 from ....bases import BaseMapper
@@ -18,6 +19,7 @@ class FullMixin(  # type: ignore[misc]
     MessageMixin,
     ChatMixin,
     UserMixin,
+    ContactMixin,
     FileMixin,
     BaseMapper[EnvelopeProtocol, BaseFileMappingModel],
 ):

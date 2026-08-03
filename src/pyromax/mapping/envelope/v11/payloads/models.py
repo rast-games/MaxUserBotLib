@@ -248,19 +248,24 @@ class NameMappingModel(CamelCaseModel):
 
 
 class ContactMappingModel(CamelCaseModel):
-    account_status: int
+    account_status: int | None = None
     country: str | None = None
     description: str = ""
     email: str | None = None
     id: int
-    names: list[NameMappingModel]
-    options: list[str]
+    names: list[NameMappingModel] = Field(default_factory=list)
+    options: list[str] = Field(default_factory=list)
     phone: int | None = None
     photo_id: int | None = None
-    update_time: int
-    registration_time: int
+    update_time: int | None = None
+    registration_time: int | None = None
     base_url: str | None = None
     base_raw_url: str | None = None
+    status: str | None = None
+    gender: str | int | None = None
+    link: str | None = None
+    web_app: dict[str, Any] | str | None = None
+    menu_button: dict[str, Any] | None = None
 
 
 class ProfileMappingModel(CamelCaseModel):

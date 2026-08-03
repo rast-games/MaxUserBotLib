@@ -15,7 +15,7 @@ from collections.abc import Sequence, Callable, Iterable, Coroutine
 from ..mixins import AsyncInitializerMixin
 from ..methods import (
     SendMessageMethod,
-    GetMemberByIdMethod,
+    GetMembersByIdsMethod,
     DownloadFileMethod,
     UploadFileMethod,
     ForwardMessageMethod,
@@ -59,6 +59,7 @@ from ..methods import (
     CloseAllSessionsMethod,
     LogoutMethod,
     SetPresenceMethod,
+    GetUserMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -283,6 +284,7 @@ class MaxApi(AsyncInitializerMixin):
         self.chats: list[Chat] | None = None
         self.names: list[Name] | None = None
         self.contacts: list[Contact | None] = []
+        self.users: dict[int, Contact] = {}
         self.messages: dict[int, list[Message]]
 
         self.__logger: logging.Logger | None = logger
@@ -343,19 +345,6 @@ class MaxApi(AsyncInitializerMixin):
                 **kwargs,
             ),
         )
-
-    async def get_member_by_id(self, member_id: int) -> Sequence[Contact]:
-        from ..models import Contact
-
-        contacts = cast(
-            Sequence[Contact],
-            await self(
-                GetMemberByIdMethod,
-                member_id=member_id,
-            ),
-        )
-        return contacts
-        # return await self.mapper.get_member_by_id(member_id)
 
     async def send_message(
         self,
@@ -1106,3 +1095,32 @@ class MaxApi(AsyncInitializerMixin):
                 online=online,
             ),
         )
+
+    async def get_members_by_ids(self, member_ids: list[int]) -> Sequence[Contact]:
+        from ..models import Contact
+
+        contacts = cast(
+            Sequence[Contact],
+            await self(
+                GetMembersByIdsMethod,
+                member_ids=member_ids,
+            ),
+        )
+        return contacts
+        # return await self.mapper.get_member_by_id(member_id)
+
+    async def get_member_by_id(self, member_id: int) -> Contact | None:
+        contacts = await self.get_members_by_ids(member_ids=[member_id])
+        return contacts[0] if contacts else None
+
+    async def get_user(self, user_id: int) -> Contact | None:
+        from ..models import Contact
+
+        user = cast(
+            Contact,
+            await self(
+                GetUserMethod,
+                user_id=user_id,
+            ),
+        )
+        return user

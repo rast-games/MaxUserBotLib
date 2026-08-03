@@ -1,3 +1,4 @@
+from typing import Any
 from pydantic import Field
 
 from .base import BaseMaxObject
@@ -18,3 +19,10 @@ class Contact(BaseMaxObject):
     account_status: int | None = None
     email: str | None = None
     registration_time: int | None = None
+    update_time: int | None = None
+    status: str | None = None
+    gender: str | int | None = None
+    link: str | None = None
+    web_app: dict[str, Any] | str | None = None
+    menu_button: dict[str, Any] | None = None
+    options: list[str] = Field(default_factory=list)

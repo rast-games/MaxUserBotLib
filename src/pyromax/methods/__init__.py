@@ -9,7 +9,6 @@ from .PinMessage import PinMessageMethod
 from .AddReaction import AddReactionMethod
 from .RemoveReaction import RemoveReactionMethod
 from .GetReactions import GetReactionsMethod
-from .GetMemberById import GetMemberByIdMethod
 from .DownloadFile import DownloadFileMethod
 from .UploadFile import UploadFileMethod
 from .ReadMessage import ReadMessageMethod
@@ -42,6 +41,8 @@ from .DeleteFolders import DeleteFoldersMethod
 from .CloseAllSessions import CloseAllSessionsMethod
 from .Logout import LogoutMethod
 from .SetPresence import SetPresenceMethod
+from .GetMembersByIds import GetMembersByIdsMethod
+from .GetUser import GetUserMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -56,7 +57,6 @@ __all__ = [
     "RemoveReactionMethod",
     "GetReactionsMethod",
     "ReadMessageMethod",
-    "GetMemberByIdMethod",
     "DownloadFileMethod",
     "UploadFileMethod",
     "CreateGroupMethod",
@@ -90,4 +90,6 @@ __all__ = [
     "CloseAllSessionsMethod",
     "LogoutMethod",
     "SetPresenceMethod",
+    "GetMembersByIdsMethod",
+    "GetUserMethod",
 ]

@@ -126,6 +126,7 @@ class AuthMixin(MixinProtocol):
             i: [cast(Message, translate_models(msg)) for msg in msg_list]
             for i, msg_list in auth_model.messages.items()
         }
+        self.max_api.users[self.max_api.me.contact.id] = self.max_api.me.contact
 
         self.max_api.names = self.max_api.me.contact.names
 

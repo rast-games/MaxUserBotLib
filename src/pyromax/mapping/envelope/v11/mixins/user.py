@@ -6,13 +6,11 @@ from .....models import Contact, PhotoAttachment, Profile, FolderUpdate, FolderL
 from .....protocol.envelope import Envelope
 from ..payloads.shared import CamelCaseModel
 from ..payloads.responses import (
-    GetContactResponse,
     ResponseWithUrl,
     ProfileContainsResponse,
     CloseAllSessionsResponse,
 )
 from ..methods.immutable import (
-    GetGeneralInfoAboutMemberMethod,
     CreateCellForProfilePhotoMethod,
     ChangeProfileMethod,
     CreateFolderMethod,
@@ -39,31 +37,6 @@ from .MixinProtocol import MixinProtocol
 
 
 class UserMixin(MixinProtocol):
-    async def get_member_by_id(self, member_id: int | list[int]) -> Sequence[Contact]:
-        contact_ids: list[int]
-        if isinstance(member_id, int):
-            contact_ids = [member_id]
-        elif isinstance(member_id, list):
-            contact_ids = member_id
-        else:
-            raise TypeError("member_id must be int or list[int]")
-
-        response_envelope = await self.send(
-            method=GetGeneralInfoAboutMemberMethod(
-                contact_ids=contact_ids,
-            )
-        )
-
-        response = GetContactResponse(**response_envelope.payload)
-
-        contacts = [
-            translate_models(mapping_contact) for mapping_contact in response.contacts
-        ]
-
-        return [contact for contact in contacts if isinstance(contact, Contact)]
-
-        # return cast(list[BaseMaxObject], contacts)
-
     async def _create_cell_for_profile_photo(
         self,
         count: int = 1,
@@ -143,6 +116,7 @@ class UserMixin(MixinProtocol):
 
         profile = cast(Profile, translate_models(mapped_profile))
         self.max_api.me = profile
+        self.max_api.users[profile.contact.id] = profile.contact
         return profile
 
     async def create_folder(

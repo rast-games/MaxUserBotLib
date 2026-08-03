@@ -2,26 +2,12 @@ from uuid import uuid4
 
 from .base import BaseMethod, Envelope, Cmd, Opcode, VERSION
 from ...payloads.requests import (
-    GetContactRequest,
     ChangeProfileRequest,
     CreateFolderRequest,
     GetFoldersRequest,
     UpdateFolderRequest,
     DeleteFoldersRequest,
 )
-
-
-class GetGeneralInfoAboutMemberMethod(BaseMethod):
-
-    async def __call__(self, request: Envelope) -> Envelope:
-        request.opcode = Opcode.GET_CONTACT
-        request.cmd = Cmd.REQUEST
-        request.payload = GetContactRequest(
-            contact_ids=self.args["contact_ids"],
-        ).model_dump(by_alias=True, exclude_none=True)
-        request.ver = VERSION
-
-        return request
 
 
 class ChangeProfileMethod(BaseMethod):
@@ -106,7 +92,6 @@ class LogoutMethod(CloseAllSessionsMethod):
 
 
 __all__ = [
-    "GetGeneralInfoAboutMemberMethod",
     "ChangeProfileMethod",
     "CreateFolderMethod",
     "GetFoldersMethod",

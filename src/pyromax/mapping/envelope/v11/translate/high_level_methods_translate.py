@@ -7,7 +7,6 @@ from collections.abc import Callable, Awaitable
 from .....methods import (
     BaseMaxApiMethod,
     SendMessageMethod,
-    GetMemberByIdMethod,
     DownloadFileMethod,
     UploadFileMethod,
     ForwardMessageMethod,
@@ -51,6 +50,8 @@ from .....methods import (
     CloseAllSessionsMethod,
     LogoutMethod,
     SetPresenceMethod,
+    GetMembersByIdsMethod,
+    GetUserMethod,
 )
 
 if TYPE_CHECKING:
@@ -81,11 +82,11 @@ def get_registry(
             "DESKTOP": mapper.get_messages,
             "ANDROID": mapper.get_messages,
         },
-        GetMemberByIdMethod: {
-            "WEB": mapper.get_member_by_id,
+        GetMembersByIdsMethod: {
+            "WEB": mapper.get_members_by_ids,
             # 'IOS': mapper.get_member_by_id,
-            "DESKTOP": mapper.get_member_by_id,
-            "ANDROID": mapper.get_member_by_id,
+            "DESKTOP": mapper.get_members_by_ids,
+            "ANDROID": mapper.get_members_by_ids,
         },
         DownloadFileMethod: {
             "WEB": mapper.download_file,
@@ -293,6 +294,11 @@ def get_registry(
             "WEB": mapper.set_presence,
             "ANDROID": mapper.set_presence,
             "DESKTOP": mapper.set_presence,
+        },
+        GetUserMethod: {
+            "WEB": mapper.get_user,
+            "ANDROID": mapper.get_user,
+            "DESKTOP": mapper.get_user,
         },
     }
 

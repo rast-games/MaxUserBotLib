@@ -263,6 +263,10 @@ class KeepAliveRequest(CamelCaseModel):
     interactive: bool = True
 
 
+class SearchByPhoneRequest(CamelCaseModel):
+    phone: str
+
+
 # --- Files Requests ---
 class CreateCellForFileRequest(CamelCaseModel):
     count: int = 1

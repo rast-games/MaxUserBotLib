@@ -205,6 +205,10 @@ class GetContactResponse(CamelCaseModel):
     contacts: list[ContactMappingModel]
 
 
+class ContactContainsResponse(CamelCaseModel):
+    contact: ContactMappingModel
+
+
 # --- Updates ---
 
 

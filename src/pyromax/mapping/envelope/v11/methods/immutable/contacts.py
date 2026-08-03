@@ -2,6 +2,7 @@ from .base import BaseMethod, Envelope, Cmd, Opcode, VERSION
 
 from ...payloads.requests import (
     GetContactRequest,
+    SearchByPhoneRequest,
 )
 
 
@@ -18,6 +19,18 @@ class GetGeneralInfoAboutMemberMethod(BaseMethod):
         return request
 
 
+class SearchByPhoneMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.CONTACT_INFO_BY_PHONE
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = SearchByPhoneRequest(
+            phone=self.args["phone"],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "GetGeneralInfoAboutMemberMethod",
+    "SearchByPhoneMethod",
 ]

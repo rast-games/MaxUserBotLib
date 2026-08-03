@@ -42,7 +42,8 @@ from .CloseAllSessions import CloseAllSessionsMethod
 from .Logout import LogoutMethod
 from .SetPresence import SetPresenceMethod
 from .GetMembersByIds import GetMembersByIdsMethod
-from .GetUser import GetUserMethod
+from .GetUsers import GetUsersMethod
+from .SearchByPhone import SearchByPhoneMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -91,5 +92,6 @@ __all__ = [
     "LogoutMethod",
     "SetPresenceMethod",
     "GetMembersByIdsMethod",
-    "GetUserMethod",
+    "GetUsersMethod",
+    "SearchByPhoneMethod",
 ]

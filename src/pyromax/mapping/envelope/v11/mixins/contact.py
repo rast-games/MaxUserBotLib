@@ -5,9 +5,11 @@ from .MixinProtocol import MixinProtocol
 from .....models import Contact
 from ..methods.immutable import (
     GetGeneralInfoAboutMemberMethod,
+    SearchByPhoneMethod,
 )
 from ..payloads.responses import (
     GetContactResponse,
+    ContactContainsResponse,
 )
 from ..translate.ToDTO import translate_models
 
@@ -50,9 +52,28 @@ class ContactMixin(MixinProtocol):
 
         # return cast(list[BaseMaxObject], contacts)
 
-    async def get_user(self, user_id: int) -> Contact | None:
-        if user := self.get_cached_user(user_id):
-            return user
+    async def get_users(self, user_ids: list[int]) -> list[Contact]:
+        cached = {
+            user_id: user
+            for user_id in user_ids
+            if (user := self.get_cached_user(user_id)) is not None
+        }
+        missing_ids = [user_id for user_id in user_ids if user_id not in cached]
 
-        users = await self.get_members_by_ids([user_id])
-        return users[0] if users is not None else None
+        if missing_ids:
+            for user in await self.get_members_by_ids(missing_ids):
+                cached[user.id] = user
+
+        return [cached[user_id] for user_id in user_ids if user_id in cached]
+
+    async def search_by_phone(self, phone: str) -> Contact:
+        response = await self.send(
+            method=SearchByPhoneMethod(
+                phone=phone,
+            )
+        )
+
+        mapped_contact = ContactContainsResponse(**response.payload).contact
+
+        contact = cast(Contact, translate_models(mapped_contact))
+        return self._cache_user(contact)

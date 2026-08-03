@@ -59,7 +59,8 @@ from ..methods import (
     CloseAllSessionsMethod,
     LogoutMethod,
     SetPresenceMethod,
-    GetUserMethod,
+    GetUsersMethod,
+    SearchByPhoneMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -1113,14 +1114,30 @@ class MaxApi(AsyncInitializerMixin):
         contacts = await self.get_members_by_ids(member_ids=[member_id])
         return contacts[0] if contacts else None
 
+    async def get_users(self, user_ids: list[int]) -> list[Contact]:
+        from ..models import Contact
+
+        user = cast(
+            list[Contact],
+            await self(
+                GetUsersMethod,
+                user_ids=user_ids,
+            ),
+        )
+        return user
+
     async def get_user(self, user_id: int) -> Contact | None:
+        user = await self.get_users(user_ids=[user_id])
+        return user[0] if user else None
+
+    async def search_by_phone(self, phone: str) -> Contact:
         from ..models import Contact
 
         user = cast(
             Contact,
             await self(
-                GetUserMethod,
-                user_id=user_id,
+                SearchByPhoneMethod,
+                phone=phone,
             ),
         )
         return user

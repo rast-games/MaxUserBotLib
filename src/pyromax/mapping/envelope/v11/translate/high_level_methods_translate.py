@@ -51,7 +51,8 @@ from .....methods import (
     LogoutMethod,
     SetPresenceMethod,
     GetMembersByIdsMethod,
-    GetUserMethod,
+    GetUsersMethod,
+    SearchByPhoneMethod,
 )
 
 if TYPE_CHECKING:
@@ -295,10 +296,15 @@ def get_registry(
             "ANDROID": mapper.set_presence,
             "DESKTOP": mapper.set_presence,
         },
-        GetUserMethod: {
-            "WEB": mapper.get_user,
-            "ANDROID": mapper.get_user,
-            "DESKTOP": mapper.get_user,
+        GetUsersMethod: {
+            "WEB": mapper.get_users,
+            "ANDROID": mapper.get_users,
+            "DESKTOP": mapper.get_users,
+        },
+        SearchByPhoneMethod: {
+            "WEB": mapper.search_by_phone,
+            "ANDROID": mapper.search_by_phone,
+            "DESKTOP": mapper.search_by_phone,
         },
     }
 

@@ -53,6 +53,7 @@ from .....methods import (
     GetMembersByIdsMethod,
     GetUsersMethod,
     SearchByPhoneMethod,
+    GetSessionsMethod,
 )
 
 if TYPE_CHECKING:
@@ -305,6 +306,11 @@ def get_registry(
             "WEB": mapper.search_by_phone,
             "ANDROID": mapper.search_by_phone,
             "DESKTOP": mapper.search_by_phone,
+        },
+        GetSessionsMethod: {
+            "WEB": mapper.get_sessions,
+            "ANDROID": mapper.get_sessions,
+            "DESKTOP": mapper.get_sessions,
         },
     }
 

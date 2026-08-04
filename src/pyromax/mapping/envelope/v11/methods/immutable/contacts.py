@@ -30,7 +30,17 @@ class SearchByPhoneMethod(BaseMethod):
         return request
 
 
+class GetSessionsMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.SESSIONS_INFO
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = {}
+        return request
+
+
 __all__ = [
     "GetGeneralInfoAboutMemberMethod",
     "SearchByPhoneMethod",
+    "GetSessionsMethod",
 ]

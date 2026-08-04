@@ -44,6 +44,7 @@ from .SetPresence import SetPresenceMethod
 from .GetMembersByIds import GetMembersByIdsMethod
 from .GetUsers import GetUsersMethod
 from .SearchByPhone import SearchByPhoneMethod
+from .GetSessions import GetSessionsMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -94,4 +95,5 @@ __all__ = [
     "GetMembersByIdsMethod",
     "GetUsersMethod",
     "SearchByPhoneMethod",
+    "GetSessionsMethod",
 ]

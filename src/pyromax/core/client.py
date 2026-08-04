@@ -61,6 +61,7 @@ from ..methods import (
     SetPresenceMethod,
     GetUsersMethod,
     SearchByPhoneMethod,
+    GetSessionsMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -86,6 +87,7 @@ if TYPE_CHECKING:
         TwoFactorAction,
         FolderUpdate,
         FolderList,
+        Session,
     )
     from ..auth import AuthMiddlewareManager
 
@@ -1141,3 +1143,8 @@ class MaxApi(AsyncInitializerMixin):
             ),
         )
         return user
+
+    async def get_sessions(self) -> list[Session]:
+        from ..models import Session
+
+        return cast(list[Session], await self(GetSessionsMethod))

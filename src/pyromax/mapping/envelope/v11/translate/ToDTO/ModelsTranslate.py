@@ -18,6 +18,7 @@ from ......models import (
     Folder,
     FolderUpdate,
     FolderList,
+    Session,
 )
 from ...payloads.models import (
     ContactMappingModel,
@@ -33,6 +34,7 @@ from ...payloads.models import (
     FolderMappingModel,
     FolderUpdateMappingModel,
     FolderListMappingModel,
+    SessionMappingModel,
 )
 
 TranslateObj = TypeVar("TranslateObj", bound=CamelCaseModel)
@@ -322,6 +324,39 @@ class TranslateFolderList(BaseTranslateMappingModel[FolderListMappingModel]):
         )
 
 
+class TranslateSession(BaseTranslateMappingModel[SessionMappingModel]):
+    @staticmethod
+    def translate(session: SessionMappingModel) -> Session:
+        if ", IP" in session.location:
+            location, ip = tuple(
+                map(
+                    str.strip,
+                    session.location.split(", IP"),
+                )
+            )
+        else:
+            location = session.location
+            ip = None
+        return Session(
+            id=session.id,
+            device_id=session.device_id,
+            current=session.current,
+            user_agent=session.user_agent,
+            app_version=session.app_version,
+            device_name=session.client or session.device_name,
+            device_type=session.device_type,
+            platform=session.platform,
+            ip=ip,
+            location=location,
+            created=session.created,
+            updated=session.updated,
+            last_activity=session.last_activity,
+            options=session.options,
+            info=session.info,
+            time=session.time,
+        )
+
+
 TRANSLATE_MAPPING_MODELS: dict[
     type[CamelCaseModel], type[BaseTranslateMappingModel[Any]]
 ] = {
@@ -337,6 +372,7 @@ TRANSLATE_MAPPING_MODELS: dict[
     FolderMappingModel: TranslateFolder,
     FolderUpdateMappingModel: TranslateFolderUpdate,
     FolderListMappingModel: TranslateFolderList,
+    SessionMappingModel: TranslateSession,
 }
 
 

@@ -2,14 +2,16 @@ from collections.abc import Sequence
 from typing import cast
 
 from .MixinProtocol import MixinProtocol
-from .....models import Contact
+from .....models import Contact, Session
 from ..methods.immutable import (
     GetGeneralInfoAboutMemberMethod,
     SearchByPhoneMethod,
+    GetSessionsMethod,
 )
 from ..payloads.responses import (
     GetContactResponse,
     ContactContainsResponse,
+    SessionsContainsResponse,
 )
 from ..translate.ToDTO import translate_models
 
@@ -77,3 +79,11 @@ class ContactMixin(MixinProtocol):
 
         contact = cast(Contact, translate_models(mapped_contact))
         return self._cache_user(contact)
+
+    async def get_sessions(self) -> list[Session]:
+        response = await self.send(method=GetSessionsMethod())
+        mapped_sessions = SessionsContainsResponse(**response.payload).sessions
+        sessions = [
+            cast(Session, translate_models(session)) for session in mapped_sessions
+        ]
+        return sessions

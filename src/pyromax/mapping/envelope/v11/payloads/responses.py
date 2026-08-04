@@ -12,6 +12,7 @@ from .models import (
     PasswordConfig,
     CreateGroupMessageMappingModel,
     ChatMappingModel,
+    SessionMappingModel,
 )
 
 
@@ -207,6 +208,10 @@ class GetContactResponse(CamelCaseModel):
 
 class ContactContainsResponse(CamelCaseModel):
     contact: ContactMappingModel
+
+
+class SessionsContainsResponse(CamelCaseModel):
+    sessions: list[SessionMappingModel]
 
 
 # --- Updates ---

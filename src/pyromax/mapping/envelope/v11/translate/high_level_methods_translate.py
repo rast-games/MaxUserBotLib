@@ -54,6 +54,10 @@ from .....methods import (
     GetUsersMethod,
     SearchByPhoneMethod,
     GetSessionsMethod,
+    GetChatIdMethod,
+    AddContactMethod,
+    RemoveContactMethod,
+    ImportContactsMethod,
 )
 
 if TYPE_CHECKING:
@@ -311,6 +315,26 @@ def get_registry(
             "WEB": mapper.get_sessions,
             "ANDROID": mapper.get_sessions,
             "DESKTOP": mapper.get_sessions,
+        },
+        GetChatIdMethod: {
+            "WEB": mapper.get_chat_id,
+            "ANDROID": mapper.get_chat_id,
+            "DESKTOP": mapper.get_chat_id,
+        },
+        AddContactMethod: {
+            "WEB": mapper.add_contact,
+            "ANDROID": mapper.add_contact,
+            "DESKTOP": mapper.add_contact,
+        },
+        RemoveContactMethod: {
+            "WEB": mapper.remove_contact,
+            "ANDROID": mapper.remove_contact,
+            "DESKTOP": mapper.remove_contact,
+        },
+        ImportContactsMethod: {
+            "WEB": mapper.import_contacts,
+            "ANDROID": mapper.import_contacts,
+            "DESKTOP": mapper.import_contacts,
         },
     }
 

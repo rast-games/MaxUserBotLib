@@ -9,8 +9,10 @@ class Opcode(MappingConstants):
     CHECK_SMS_CODE = 18
     AUTHORIZE = 19
     LOGOUT = 20
+    SYNC = 21
     CONFIRM_REGISTRATION = 23
     GET_CONTACT = 32
+    CONTACT_UPDATE = 34
     # CHAT_INFO = 48
     CONTACT_INFO_BY_PHONE = 46
     GET_CHAT = 48

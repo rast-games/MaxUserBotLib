@@ -2,16 +2,19 @@ from collections.abc import Sequence
 from typing import cast
 
 from .MixinProtocol import MixinProtocol
-from .....models import Contact, Session
+from .....models import Contact, Session, ContactInfo
 from ..methods.immutable import (
     GetGeneralInfoAboutMemberMethod,
     SearchByPhoneMethod,
     GetSessionsMethod,
+    ContactActionMethod,
+    ImportContactsMethod,
 )
 from ..payloads.responses import (
     GetContactResponse,
     ContactContainsResponse,
     SessionsContainsResponse,
+    ContactsContainsResponse,
 )
 from ..translate.ToDTO import translate_models
 
@@ -87,3 +90,38 @@ class ContactMixin(MixinProtocol):
             cast(Session, translate_models(session)) for session in mapped_sessions
         ]
         return sessions
+
+    async def add_contact(self, contact_id: int) -> Contact:
+        response = await self.send(
+            method=ContactActionMethod(
+                contact_id=contact_id,
+                action="ADD",
+            )
+        )
+        mapped_contact = ContactContainsResponse(**response.payload).contact
+
+        contact = cast(Contact, translate_models(mapped_contact))
+        return self._cache_user(contact)
+
+    async def remove_contact(self, contact_id: int) -> None:
+        response = await self.send(
+            method=ContactActionMethod(
+                contact_id=contact_id,
+                action="REMOVE",
+            )
+        )
+        self.max_api.users.pop(contact_id, None)
+        return None
+
+    async def import_contacts(self, contacts: list[ContactInfo]) -> list[Contact]:
+        response = await self.send(method=ImportContactsMethod(contact_list=contacts))
+
+        mapped_contacts = ContactsContainsResponse(**response.payload).contacts
+
+        users = [
+            cast(Contact, translate_models(contact)) for contact in mapped_contacts
+        ]
+        return [self._cache_user(user) for user in users]
+
+    async def get_chat_id(self, first_user_id: int, second_user_id: int) -> int:
+        return first_user_id ^ second_user_id

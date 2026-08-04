@@ -16,6 +16,9 @@ from .AuthFlow import AuthFlow
 from .RegistrationConfig import RegistrationConfig
 from .Folder import Folder, FolderUpdate, FolderList
 from .Session import Session
+from .ContactInfo import ContactInfo
+
+
 from .enum import ChannelPermissions
 from .enum import TwoFactorAction
 
@@ -49,4 +52,5 @@ __all__ = [
     "FolderUpdate",
     "FolderList",
     "Session",
+    "ContactInfo",
 ]

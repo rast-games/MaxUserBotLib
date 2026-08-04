@@ -62,6 +62,10 @@ from ..methods import (
     GetUsersMethod,
     SearchByPhoneMethod,
     GetSessionsMethod,
+    GetChatIdMethod,
+    AddContactMethod,
+    RemoveContactMethod,
+    ImportContactsMethod,
 )
 from ..exceptions import SendMessageError
 
@@ -88,6 +92,7 @@ if TYPE_CHECKING:
         FolderUpdate,
         FolderList,
         Session,
+        ContactInfo,
     )
     from ..auth import AuthMiddlewareManager
 
@@ -1148,3 +1153,44 @@ class MaxApi(AsyncInitializerMixin):
         from ..models import Session
 
         return cast(list[Session], await self(GetSessionsMethod))
+
+    async def get_chat_id(self, first_user_id: int, second_user_id: int) -> int:
+        return cast(
+            int,
+            await self(
+                GetChatIdMethod,
+                first_user_id=first_user_id,
+                second_user_id=second_user_id,
+            ),
+        )
+
+    async def add_contact(self, contact_id: int) -> Contact:
+        from ..models import Contact
+
+        return cast(
+            Contact,
+            await self(
+                AddContactMethod,
+                contact_id=contact_id,
+            ),
+        )
+
+    async def remove_contact(self, contact_id: int) -> None:
+        return cast(
+            None,
+            await self(
+                RemoveContactMethod,
+                contact_id=contact_id,
+            ),
+        )
+
+    async def import_contacts(self, contacts: list[ContactInfo]) -> list[Contact]:
+        from ..models import Contact
+
+        return cast(
+            list[Contact],
+            await self(
+                ImportContactsMethod,
+                contacts=contacts,
+            ),
+        )

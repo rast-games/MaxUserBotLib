@@ -45,6 +45,10 @@ from .GetMembersByIds import GetMembersByIdsMethod
 from .GetUsers import GetUsersMethod
 from .SearchByPhone import SearchByPhoneMethod
 from .GetSessions import GetSessionsMethod
+from .GetChatId import GetChatIdMethod
+from .AddContact import AddContactMethod
+from .RemoveContact import RemoveContactMethod
+from .ImportContacts import ImportContactsMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -96,4 +100,8 @@ __all__ = [
     "GetUsersMethod",
     "SearchByPhoneMethod",
     "GetSessionsMethod",
+    "AddContactMethod",
+    "RemoveContactMethod",
+    "ImportContactsMethod",
+    "GetChatIdMethod",
 ]

@@ -267,6 +267,19 @@ class SearchByPhoneRequest(CamelCaseModel):
     phone: str
 
 
+class ContactRequest(CamelCaseModel):
+    first_name: str
+
+
+class ContactActionRequest(CamelCaseModel):
+    action: Literal["ADD", "REMOVE"]
+    contact_id: int
+
+
+class ImportContactsRequest(CamelCaseModel):
+    contact_list: dict[str, ContactRequest]  # phone -> contact payload
+
+
 # --- Files Requests ---
 class CreateCellForFileRequest(CamelCaseModel):
     count: int = 1

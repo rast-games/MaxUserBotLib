@@ -210,6 +210,10 @@ class ContactContainsResponse(CamelCaseModel):
     contact: ContactMappingModel
 
 
+class ContactsContainsResponse(CamelCaseModel):
+    contacts: list[ContactMappingModel]
+
+
 class SessionsContainsResponse(CamelCaseModel):
     sessions: list[SessionMappingModel]
 

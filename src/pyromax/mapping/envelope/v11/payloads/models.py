@@ -15,6 +15,8 @@ from .....models import (
     ShareAttachment,
     BaseUserAgent,
     ControlAttachment,
+    VoiceAttachment,
+    VideoNoteAttachment,
 )
 from .shared import CamelCaseModel
 from .....utils import (
@@ -219,19 +221,6 @@ class AuthMappingModel(CamelCaseModel):
     contacts_sync: int
     presence_sync: int
     drafts_sync: int
-    # user_agent: dict[Any, Any] = {
-    #         'deviceType': 'IOS',
-    #         'locale': 'ru',
-    #         'timezone': 'Asia/Yakutsk',
-    #         'deviceLocale': 'ru',
-    #         'osVersion': '17.5',
-    #         'deviceName': 'iPhone',
-    #         'screen': '411dpi 411dpi 1080x2400',
-    #         'buildNumber': 6678,
-    #         'appVersion': '26.12.0',
-    #         'arch': 'arm64-v8a',
-    #         'pushDeviceType': 'GCM'
-    #     }
 
 
 class PasswordConfig(CamelCaseModel):
@@ -371,7 +360,7 @@ class PhotoMappingModel(BaseFileMappingModel, PhotoAttachment):
         photos = []
         photos.append(
             PhotoToPayloadRequest(
-                type="PHOTO", photo_token=self.photo_token
+                type=self.type or "PHOTO", photo_token=self.photo_token
             ).model_dump(by_alias=True)
         )
         return photos
@@ -393,7 +382,7 @@ class VideoMappingModel(BaseFileMappingModel, VideoAttachment):
 
         return [
             VideoToPayloadRequest(
-                type="VIDEO", video_id=self.video_id, token=self.token
+                type=self.type or "VIDEO", video_id=self.video_id, token=self.token
             ).model_dump(by_alias=True),
         ]
 
@@ -405,6 +394,50 @@ class VideoMappingModel(BaseFileMappingModel, VideoAttachment):
         res.update(
             {
                 "videoId": self.video_id,
+                "token": self.token,
+            }
+        )
+
+        return res
+
+
+class VideoNoteMappingModel(VideoNoteAttachment, VideoMappingModel):
+    video_type: Literal[1]
+
+    # @property
+    # def to_payload(self) -> list[dict[str, Any]]:
+    #     from .requests import VideoToPayloadRequest
+    #
+    #     return [
+    #         VideoToPayloadRequest(
+    #             type=self.type or "VIDEO", video_id=self.video_id, token=self.token
+    #         ).model_dump(by_alias=True),
+    #     ]
+
+
+class VoiceMappingModel(BaseFileMappingModel, VoiceAttachment):
+    token: str
+    audio_id: int
+    wave: str | None = None
+
+    @property
+    def to_payload(self) -> list[dict[str, Any]]:
+        from .requests import VideoToPayloadRequest
+
+        return [
+            VideoToPayloadRequest(
+                type=self.type or "AUDIO", video_id=self.video_id, token=self.token
+            ).model_dump(by_alias=True),
+        ]
+
+    @property
+    def get_payload_to_get_link(self) -> dict[str, Any] | None:
+        res = super().get_payload_to_get_link
+        if res is None:
+            raise RuntimeError("get_payload_to_get_link should return dict")
+        res.update(
+            {
+                "audioId": self.audio_id,
                 "token": self.token,
             }
         )
@@ -497,7 +530,9 @@ def validate_status(v: Any) -> Any:
 class MessageMappingModel(CamelCaseModel):
     cid: int = -round(time.time() * 1000)
     attaches: list[
-        VideoMappingModel
+        VideoNoteMappingModel
+        | VideoMappingModel
+        | VoiceMappingModel
         | PhotoMappingModel
         | FileMappingModel
         | ShareMappingModel

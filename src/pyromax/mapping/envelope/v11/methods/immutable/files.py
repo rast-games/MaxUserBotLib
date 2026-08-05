@@ -14,6 +14,8 @@ class GetUrlToUploadFileMethod(BaseMethod):
             count = int(self.args["count"])
         request.payload = CreateCellForFileRequest(
             count=count,
+            uploader_type=self.args.get("uploader_type") or 0,
+            type=self.args.get("upload_type") or 0,
         )
         request.ver = VERSION
         return request

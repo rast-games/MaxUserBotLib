@@ -14,8 +14,10 @@ from ...payloads.requests import (
 )
 
 # from ...payloads.models import BaseFilePayloadMapping, VideoPayloadMapping, PhotoPayloadMapping, FilePayloadMapping
-from ......models import (
+from ......models.Files import (
     VideoAttachment,
+    VoiceAttachment,
+    VideoNoteAttachment,
     FileAttachment,
     PhotoAttachment,
     BaseFileAttachment,
@@ -24,6 +26,8 @@ from ...constants import Opcode
 from ...payloads.models import (
     PhotoMappingModel,
     VideoMappingModel,
+    VoiceMappingModel,
+    VideoNoteMappingModel,
     FileMappingModel,
     BaseFileMappingModel,
 )
@@ -39,7 +43,10 @@ DumpReturn = TypeVar("DumpReturn", bound=BaseFileMappingModel, covariant=True)
 
 
 class BaseFileMapping(
-    BaseFileAttachment, BaseModel, Generic[BodyType, DumpReturn], ABC
+    BaseFileAttachment,
+    BaseModel,
+    Generic[BodyType, DumpReturn],
+    ABC,
 ):
     data: bytes | None = Field(repr=False)
     url: str | None = None
@@ -121,7 +128,8 @@ class BaseFileMapping(
 
 
 class PhotoMapping(
-    BaseFileMapping[Optional[dict[str, bytes]], PhotoMappingModel], PhotoAttachment
+    BaseFileMapping[Optional[dict[str, bytes]], PhotoMappingModel],
+    PhotoAttachment,
 ):
     photo_ids: list[str] = []
     photo_tokens: list[str] = []
@@ -181,7 +189,8 @@ class PhotoMapping(
 
 
 class VideoMapping(
-    BaseFileMapping[Optional[bytes], VideoMappingModel], VideoAttachment
+    BaseFileMapping[Optional[bytes], VideoMappingModel],
+    VideoAttachment,
 ):
     token: str
     video_id: int
@@ -219,7 +228,43 @@ class VideoMapping(
         ]
 
 
-class FileMapping(BaseFileMapping[Optional[bytes], FileMappingModel], FileAttachment):
+class VideoNoteMapping(
+    VideoMapping,
+    BaseFileMapping[Optional[bytes], VideoNoteMappingModel],
+    VideoNoteAttachment,
+):
+    def dump_it(self) -> list[VideoNoteMappingModel]:
+        return [
+            VideoNoteMappingModel(
+                type="VIDEO", video_id=self.video_id, token=self.token
+            )
+        ]
+
+
+class VoiceMapping(
+    VideoMapping, BaseFileMapping[Optional[bytes], VideoMappingModel], VoiceAttachment
+):
+
+    @property
+    def headers(self) -> dict[str, str] | None:
+        return {
+            "Content-Disposition": f"attachment; filename={self.file_name}",
+            "Content-Range": f"0-{self.file_size - 1}/{self.file_size}",
+            "Content-Length": str(self.file_size),
+            "Connection": "keep-alive",
+            # "Content-Type": "application/octet-stream",
+        }
+
+    def dump_it(self) -> list[VideoMappingModel]:
+        return [
+            VideoMappingModel(type="AUDIO", video_id=self.video_id, token=self.token)
+        ]
+
+
+class FileMapping(
+    BaseFileMapping[Optional[bytes], FileMappingModel],
+    FileAttachment,
+):
     token: str
     file_id: int
 
@@ -262,6 +307,8 @@ FILE_TYPES: dict[
     type[BaseFileAttachment], type[BaseFileMapping[Any, BaseFileMappingModel]]
 ] = {
     VideoAttachment: VideoMapping,
+    VoiceAttachment: VoiceMapping,
+    VideoNoteAttachment: VideoMapping,
     PhotoAttachment: PhotoMapping,
     FileAttachment: FileMapping,
 }
@@ -272,10 +319,20 @@ FALLBACK_MODEL: type[BaseFileMapping[Any, BaseFileMappingModel]] = FileMapping
 
 FILE_OPCODES: dict[type[BaseFileAttachment], int] = {
     VideoAttachment: Opcode.CREATE_VIDEO,
+    VideoNoteAttachment: Opcode.CREATE_VIDEO,
+    VoiceAttachment: Opcode.CREATE_VIDEO,
     PhotoAttachment: Opcode.CREATE_PHOTO,
     FileAttachment: Opcode.CREATE_FILE,
 }
 
+UPLOAD_TYPES: dict[type[BaseFileAttachment], int] = {
+    VideoNoteAttachment: 1,
+    VoiceAttachment: 2,
+}
+UPLOADER_TYPES: dict[type[BaseFileAttachment], int] = {
+    VideoNoteAttachment: 1,
+    VoiceAttachment: 1,
+}
 
 FALLBACK_FILE_OPCODE = Opcode.CREATE_FILE
 

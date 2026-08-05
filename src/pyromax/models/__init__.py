@@ -31,6 +31,8 @@ __all__ = [
     "PhotoAttachment",
     "VideoAttachment",
     "FileAttachment",
+    "VoiceAttachment",
+    "VideoNoteAttachment",
     "ShareAttachment",
     "ControlAttachment",
     "Contact",

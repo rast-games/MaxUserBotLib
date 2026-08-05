@@ -156,7 +156,8 @@ class MessageMixin(MixinProtocol):
                 ):
                     recv_attach = response_parsed.message.attaches[i]
                     for attr, value in recv_attach.__dict__.items():
-                        setattr(attach, attr, value)
+                        if hasattr(attach, attr):
+                            setattr(attach, attr, value)
             mapped_message = response_parsed.message
             mapped_message.chat_id = response_parsed.chat_id
             translated_message = cast(

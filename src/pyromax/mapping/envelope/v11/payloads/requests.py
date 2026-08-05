@@ -283,6 +283,8 @@ class ImportContactsRequest(CamelCaseModel):
 # --- Files Requests ---
 class CreateCellForFileRequest(CamelCaseModel):
     count: int = 1
+    type: int = 0
+    uploader_type: int = 0
 
 
 class CreateCellForProfilePhotoRequest(CreateCellForFileRequest):

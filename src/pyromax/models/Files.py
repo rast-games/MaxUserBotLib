@@ -9,6 +9,14 @@ class VideoAttachment(BaseFileAttachment):
     pass
 
 
+class VoiceAttachment(BaseFileAttachment):
+    pass
+
+
+class VideoNoteAttachment(BaseFileAttachment):
+    pass
+
+
 class PhotoAttachment(BaseFileAttachment):
     pass
 

@@ -414,6 +414,16 @@ class VideoNoteMappingModel(VideoNoteAttachment, VideoMappingModel):
     #         ).model_dump(by_alias=True),
     #     ]
 
+    @property
+    def to_payload(self) -> list[dict[str, Any]]:
+        from .requests import VideoToPayloadRequest
+
+        return [
+            VideoToPayloadRequest(
+                type=self.type or "AUDIO", video_id=self.video_id, token=self.token
+            ).model_dump(by_alias=True),
+        ]
+
 
 class VoiceMappingModel(BaseFileMappingModel, VoiceAttachment):
     token: str
@@ -426,7 +436,7 @@ class VoiceMappingModel(BaseFileMappingModel, VoiceAttachment):
 
         return [
             VideoToPayloadRequest(
-                type=self.type or "AUDIO", video_id=self.video_id, token=self.token
+                type=self.type or "AUDIO", video_id=self.audio_id, token=self.token
             ).model_dump(by_alias=True),
         ]
 

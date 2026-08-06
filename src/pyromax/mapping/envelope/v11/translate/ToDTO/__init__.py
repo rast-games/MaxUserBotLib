@@ -16,6 +16,8 @@ __all__ = [
     "get_file_url",
     "FILE_OPCODES",
     "FALLBACK_FILE_OPCODE",
+    "UPLOAD_TYPES",
+    "UPLOADER_TYPES",
     "BaseFileMapping",
     "translate_models",
 ]

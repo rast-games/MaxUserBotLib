@@ -140,6 +140,7 @@ class PhotoMapping(
             dumped.append(
                 PhotoMappingModel(
                     type="PHOTO",
+                    uploaded=self.uploaded,
                     photo_id=(
                         self.photo_ids[i]
                         if photo["photoToken"] in self.photo_tokens
@@ -218,13 +219,20 @@ class VideoMapping(
     def to_payload(self) -> list[dict[str, Any]]:
         return [
             VideoToPayloadRequest(
-                type="VIDEO", video_id=self.video_id, token=self.token
+                type="VIDEO",
+                video_id=self.video_id,
+                token=self.token,
             ).model_dump(by_alias=True),
         ]
 
     def dump_it(self) -> list[VideoMappingModel]:
         return [
-            VideoMappingModel(type="VIDEO", video_id=self.video_id, token=self.token)
+            VideoMappingModel(
+                type="VIDEO",
+                video_id=self.video_id,
+                token=self.token,
+                uploaded=self.uploaded,
+            )
         ]
 
 
@@ -236,7 +244,11 @@ class VideoNoteMapping(
     def dump_it(self) -> list[VideoNoteMappingModel]:
         return [
             VideoNoteMappingModel(
-                type="VIDEO", video_id=self.video_id, token=self.token
+                type="VIDEO",
+                video_id=self.video_id,
+                token=self.token,
+                uploaded=self.uploaded,
+                video_type=1,
             )
         ]
 
@@ -255,9 +267,14 @@ class VoiceMapping(
             # "Content-Type": "application/octet-stream",
         }
 
-    def dump_it(self) -> list[VideoMappingModel]:
+    def dump_it(self) -> list[VoiceMappingModel]:
         return [
-            VideoMappingModel(type="AUDIO", video_id=self.video_id, token=self.token)
+            VoiceMappingModel(
+                type="AUDIO",
+                audio_id=self.video_id,
+                token=self.token,
+                uploaded=self.uploaded,
+            )
         ]
 
 
@@ -298,6 +315,7 @@ class FileMapping(
             FileMappingModel(
                 type="FILE",
                 token=self.token,
+                uploaded=self.uploaded,
                 **self.to_payload[0],
             )
         ]
@@ -308,7 +326,7 @@ FILE_TYPES: dict[
 ] = {
     VideoAttachment: VideoMapping,
     VoiceAttachment: VoiceMapping,
-    VideoNoteAttachment: VideoMapping,
+    VideoNoteAttachment: VideoNoteMapping,
     PhotoAttachment: PhotoMapping,
     FileAttachment: FileMapping,
 }
@@ -358,6 +376,8 @@ MAPPING_MODEL_TO_FILE_MAPPING: dict[
     PhotoMappingModel: PhotoMapping,
     VideoMappingModel: VideoMapping,
     FileMappingModel: FileMapping,
+    # VoiceAttachment: VoiceMapping,
+    # VideoNoteAttachment: VideoMapping,
 }
 
 
@@ -366,11 +386,13 @@ async def get_file_url(
     file: BaseFileMappingModel,
     **kwargs: Any,
 ) -> str | None:
+    print(file)
     if not file.uploaded:
         raise DownloadFileError(
             "File has not been uploaded to chat, cannot download it(Most likely, you uploaded the attachment but did not send a message with it.)"
         )
 
     translate_model = MAPPING_MODEL_TO_FILE_MAPPING[type(file)]
+    print(translate_model)
 
     return await translate_model.get_url_to_download(file=file, mapper=mapper, **kwargs)

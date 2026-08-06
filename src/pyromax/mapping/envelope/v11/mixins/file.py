@@ -1,5 +1,7 @@
 from __future__ import annotations
 import logging
+import random
+from http import HTTPStatus
 
 import aiohttp
 
@@ -21,6 +23,7 @@ from ..translate.ToDTO import (
 from ....bases import BaseMapper
 from .....protocol import BaseMaxProtocol, Envelope
 from .....exceptions import DownloadFileError
+from .....config import DEFAULT_WEB_HEADER_USER_AGENT, APP_VERSIONS, ANDROID_DEVICES
 
 from .MixinProtocol import MixinProtocol
 
@@ -103,9 +106,19 @@ class FileMixin(MixinProtocol):
         if api is None:
             raise RuntimeError("max_api must be set")
         opts = api.transport_options or {}
-        user_agent_header = (
-            opts.get("user_agent_header")
-            or "Mozilla/5.0 (X11; Linux x86_64; rv:145.0) Gecko/20100101 Firefox/145.0"
+
+        random_app_version, random_build_number = random.choice(APP_VERSIONS)
+
+        _, random_android_version, *_ = random.choice(ANDROID_DEVICES)
+
+        default_useragents = {
+            "ANDROID": f"OneMe {random_android_version}",
+            "DESKTOP": f"OneMe Desktop/{random_app_version}.{random_build_number}",
+            "WEB": DEFAULT_WEB_HEADER_USER_AGENT,
+        }
+
+        user_agent_header = opts.get("user_agent_header") or default_useragents.get(
+            self.user_agent.device_type
         )
 
         headers: dict[str, str]
@@ -125,7 +138,7 @@ class FileMixin(MixinProtocol):
             cookies = cookies_to_download
         async with aiohttp.ClientSession(headers=headers, cookies=cookies) as session:
             async with session.get(url=url) as response:
-                if response.status > 299:
+                if response.status != HTTPStatus.OK:
                     self._logger.warning("Download failed for file")
                     raise DownloadFileError("Download failed for file")
                 chunks = []

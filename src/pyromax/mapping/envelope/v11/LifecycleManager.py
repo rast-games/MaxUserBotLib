@@ -166,6 +166,7 @@ class LifecycleManager:
             )
             await self._next_generation()
             self._state = _LifecycleStates.CONNECTED
+            self.mapper._protocol_connected.set()
         except Exception as e:
             try:
                 self._state = _LifecycleStates.DISCONNECTING

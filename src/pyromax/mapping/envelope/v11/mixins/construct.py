@@ -61,6 +61,7 @@ class ConstructorMixin(
         self.sms_auth = False
         self._lifecycle_manager_inited: asyncio.Event = Event()
         self._mapper_connected: asyncio.Event = Event()
+        self._protocol_connected: asyncio.Event = Event()
 
         self._lifecycle_manager: LifecycleManager | None = None
 
@@ -164,4 +165,7 @@ class ConstructorMixin(
             registration_config=registration_config,
             use_mobile_fingerprint=use_mobile_fingerprint,
         )
+
+        await self._protocol_connected.wait()
+
         self._logger.info("Mapper initialized")

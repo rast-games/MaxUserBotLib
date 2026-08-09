@@ -28,6 +28,8 @@ from ..methods import (
     RemoveReactionMethod,
     GetReactionsMethod,
     ReadMessageMethod,
+    CreatePollMethod,
+    VotePollMethod,
     CreateGroupMethod,
     InviteUsersToGroupMethod,
     RemoveUsersFromGroupMethod,
@@ -93,6 +95,8 @@ if TYPE_CHECKING:
         FolderList,
         Session,
         ContactInfo,
+        Poll,
+        PollState,
     )
     from ..auth import AuthMiddlewareManager
 
@@ -641,6 +645,40 @@ class MaxApi(AsyncInitializerMixin):
                 message_id=message_id,
                 typeof=typeof,
                 mark=mark,
+            ),
+        )
+
+    async def create_poll(
+        self,
+        poll: Poll,
+    ) -> Poll:
+        from ..models import Poll
+
+        return cast(
+            Poll,
+            await self(
+                CreatePollMethod,
+                poll=poll,
+            ),
+        )
+
+    async def vote_poll(
+        self,
+        chat_id: int,
+        message_id: int | str,
+        poll_id: int,
+        answer_ids: list[int],
+    ) -> PollState:
+        from ..models import PollState
+
+        return cast(
+            PollState,
+            await self(
+                VotePollMethod,
+                chat_id=chat_id,
+                message_id=message_id,
+                poll_id=poll_id,
+                answer_ids=answer_ids,
             ),
         )
 

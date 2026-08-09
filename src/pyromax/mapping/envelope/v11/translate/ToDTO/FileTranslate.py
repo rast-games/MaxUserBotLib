@@ -14,7 +14,7 @@ from ...payloads.requests import (
 )
 
 # from ...payloads.models import BaseFilePayloadMapping, VideoPayloadMapping, PhotoPayloadMapping, FilePayloadMapping
-from ......models.Files import (
+from ......models.Attachments import (
     VideoAttachment,
     VoiceAttachment,
     VideoNoteAttachment,
@@ -241,7 +241,7 @@ class VideoNoteMapping(
     BaseFileMapping[Optional[bytes], VideoNoteMappingModel],
     VideoNoteAttachment,
 ):
-    def dump_it(self) -> list[VideoNoteMappingModel]:
+    def dump_it(self) -> list[VideoNoteMappingModel]:  # type: ignore[override]
         return [
             VideoNoteMappingModel(
                 type="VIDEO",
@@ -254,7 +254,9 @@ class VideoNoteMapping(
 
 
 class VoiceMapping(
-    VideoMapping, BaseFileMapping[Optional[bytes], VideoMappingModel], VoiceAttachment
+    VideoMapping,
+    BaseFileMapping[Optional[bytes], VideoMappingModel],
+    VoiceAttachment,
 ):
 
     @property
@@ -267,7 +269,7 @@ class VoiceMapping(
             # "Content-Type": "application/octet-stream",
         }
 
-    def dump_it(self) -> list[VoiceMappingModel]:
+    def dump_it(self) -> list[VoiceMappingModel]:  # type: ignore[override]
         return [
             VoiceMappingModel(
                 type="AUDIO",

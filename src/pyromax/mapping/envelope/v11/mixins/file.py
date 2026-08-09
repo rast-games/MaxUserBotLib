@@ -117,12 +117,19 @@ class FileMixin(MixinProtocol):
             "WEB": DEFAULT_WEB_HEADER_USER_AGENT,
         }
 
+        if self.user_agent is None:
+            raise RuntimeError(
+                "Mapper not bound to max_api instance, because user_agent is None"
+            )
+
         user_agent_header = opts.get("user_agent_header") or default_useragents.get(
             self.user_agent.device_type
         )
 
         headers: dict[str, str]
         if headers_to_download is None:
+            if not isinstance(user_agent_header, str):
+                raise RuntimeError("user_agent_header must be str")
             headers = {
                 "User-Agent": user_agent_header,
                 "Accept": "*/*",

@@ -49,6 +49,8 @@ from .GetChatId import GetChatIdMethod
 from .AddContact import AddContactMethod
 from .RemoveContact import RemoveContactMethod
 from .ImportContacts import ImportContactsMethod
+from .CreatePoll import CreatePollMethod
+from .VotePoll import VotePollMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -104,4 +106,6 @@ __all__ = [
     "RemoveContactMethod",
     "ImportContactsMethod",
     "GetChatIdMethod",
+    "CreatePollMethod",
+    "VotePollMethod",
 ]

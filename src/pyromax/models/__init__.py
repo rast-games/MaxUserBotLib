@@ -1,7 +1,7 @@
 from .base import BaseMaxObject
 from .Message import Message, MessageLink
 from .EmojiReaction import EmojiReaction
-from .Files import *
+from .Attachments import *
 from .Contact import Contact
 from .UserAgent import BaseUserAgent
 from .Helpers import DataDict, MapperUpdateTranslator
@@ -17,10 +17,12 @@ from .RegistrationConfig import RegistrationConfig
 from .Folder import Folder, FolderUpdate, FolderList
 from .Session import Session
 from .ContactInfo import ContactInfo
+from .Poll import Poll, PollState, PollVote, PollAnswer, PollResult
 
 
 from .enum import ChannelPermissions
 from .enum import TwoFactorAction
+from .enum import PollFlags
 
 __all__ = [
     "BaseMaxObject",
@@ -55,4 +57,11 @@ __all__ = [
     "FolderList",
     "Session",
     "ContactInfo",
+    "PhotoAttachment",
+    "Poll",
+    "PollState",
+    "PollVote",
+    "PollAnswer",
+    "PollResult",
+    "PollFlags",
 ]

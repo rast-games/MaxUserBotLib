@@ -1,7 +1,7 @@
 from typing import cast
 
 from .Base import BaseMaxApiMethod
-from ..models import Session
+from ..models.Session import Session
 
 
 class GetSessionsMethod(BaseMaxApiMethod[list[Session]]):

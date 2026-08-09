@@ -395,7 +395,7 @@ class AuthMixin(MixinProtocol):
 
     async def check_2fa(self) -> bool:
         if self.max_api is None:
-            raise MapperApiError("Mapper not bound to MaxApi instance.")
+            raise RuntimeError("Mapper not bound to MaxApi instance.")
 
         if self.max_api.me is None or self.max_api.me.profile_options is None:
             return False

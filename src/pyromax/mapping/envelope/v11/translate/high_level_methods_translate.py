@@ -58,6 +58,8 @@ from .....methods import (
     AddContactMethod,
     RemoveContactMethod,
     ImportContactsMethod,
+    CreatePollMethod,
+    VotePollMethod,
 )
 
 if TYPE_CHECKING:
@@ -145,6 +147,16 @@ def get_registry(
             "WEB": mapper.read_message,
             "ANDROID": mapper.read_message,
             "DESKTOP": mapper.read_message,
+        },
+        CreatePollMethod: {
+            "WEB": mapper.create_poll,
+            "ANDROID": mapper.create_poll,
+            "DESKTOP": mapper.create_poll,
+        },
+        VotePollMethod: {
+            "WEB": mapper.vote_poll,
+            "ANDROID": mapper.vote_poll,
+            "DESKTOP": mapper.vote_poll,
         },
         CreateGroupMethod: {
             "WEB": mapper.create_group,

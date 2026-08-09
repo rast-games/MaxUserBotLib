@@ -6,7 +6,11 @@ from collections.abc import Callable, Coroutine
 import time
 import asyncio
 
-from ..payloads.models import BaseFileMappingModel, ReadStateMappingModel
+from ..payloads.models import (
+    BaseFileMappingModel,
+    ReadStateMappingModel,
+    PollMappingModel,
+)
 from .....protocol.envelope import Envelope, EnvelopeProtocol
 from ..constants import DEFAULT_BACKOFF_CONFIG
 from .....utils import clean_and_map, Backoff
@@ -21,6 +25,7 @@ from ..methods.immutable import (
     RemoveReactionMethod,
     GetReactionsMethod,
     ReadMessageMethod,
+    VotePollMethod,
 )
 from .....exceptions import (
     SendMessageFileError,
@@ -39,9 +44,11 @@ from ..payloads.responses import (
     GetChatHistoryMessagesIdsResponse,
     AddOrRemoveReactionResponse,
     GetReactionsResponse,
+    VoteStateContainsResponse,
 )
 from ..translate.ToDTO import translate_models
-from .....models import Message, EmojiReaction, ReadState
+from ..translate.FromDTO import reverse_translate_poll
+from .....models import Message, EmojiReaction, ReadState, Poll, PollState
 
 from .MixinProtocol import MixinProtocol
 
@@ -144,9 +151,10 @@ class MessageMixin(MixinProtocol):
                 raise SendMessageError("Max attempts to send message exceeded")
             response_parsed = SendMessageResponse(**response.payload)
             for attach in response_parsed.message.attaches:
-                attach.message_id = response_parsed.message.id
-                attach.chat_id = response_parsed.chat_id
-                attach.uploaded = True
+                if hasattr(attach, "is_attach") and attach.is_attach:
+                    attach.message_id = response_parsed.message.id
+                    attach.chat_id = response_parsed.chat_id
+                    attach.uploaded = True
             for i, attach in enumerate(original_attaches or []):
                 if (
                     hasattr(attach, "is_attach")
@@ -575,3 +583,29 @@ class MessageMixin(MixinProtocol):
                 message_id=message_id,
             ),
         )
+
+    async def create_poll(self, poll: Poll[None]) -> PollMappingModel:
+        return reverse_translate_poll(poll)
+
+    async def vote_poll(
+        self,
+        chat_id: int,
+        message_id: int | str,
+        poll_id: int,
+        answer_ids: list[int],
+    ) -> PollState:
+        response = await self.send(
+            method=VotePollMethod(
+                chat_id=chat_id,
+                message_id=message_id,
+                poll_id=poll_id,
+                answer_ids=answer_ids,
+            )
+        )
+
+        mapped_poll_state = VoteStateContainsResponse(**response.payload)
+        if mapped_poll_state is None:
+            raise MapperApiError("Server dont return poll state")
+
+        poll_state = cast(PollState, translate_models(mapped_poll_state))
+        return poll_state

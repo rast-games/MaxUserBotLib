@@ -1,13 +1,23 @@
+import operator
 from abc import ABC, abstractmethod
-from typing import cast, TypeVar, Generic, Any, TYPE_CHECKING, Literal
+from functools import reduce
+from typing import cast, Generic, Any, TYPE_CHECKING, Literal
+from enum import Enum
+
+from typing_extensions import TypeVar
 
 from ...payloads.responses import CreateGroupResponse
-from ...payloads.shared import CamelCaseModel
+from ...payloads.shared import (
+    CamelCaseModel,
+    PollAnswerMappingModel,
+    PollFlagsMappingModel,
+)
 from ......models import (
     Contact,
     Message,
     MessageLink,
     BaseMaxObject,
+    BaseFileAttachment,
     EmojiReaction,
     ReadState,
     Chat,
@@ -19,6 +29,12 @@ from ......models import (
     FolderUpdate,
     FolderList,
     Session,
+    Poll,
+    PollState,
+    PollResult,
+    PollVote,
+    PollAnswer,
+    PollFlags,
 )
 from ...payloads.models import (
     ContactMappingModel,
@@ -35,18 +51,25 @@ from ...payloads.models import (
     FolderUpdateMappingModel,
     FolderListMappingModel,
     SessionMappingModel,
+    PollMappingModel,
+    PollVoteMappingModel,
+    PollStateMappingModel,
+    PollResultMappingModel,
 )
 
-TranslateObj = TypeVar("TranslateObj", bound=CamelCaseModel)
+TranslateObj = TypeVar("TranslateObj", bound=CamelCaseModel | Enum)
+ReturnObj = TypeVar(
+    "ReturnObj", bound=BaseMaxObject | BaseFileAttachment | Enum, default=BaseMaxObject
+)
 
 
-class BaseTranslateMappingModel(ABC, Generic[TranslateObj]):
+class BaseTranslateMappingModel(ABC, Generic[TranslateObj, ReturnObj]):
 
     if TYPE_CHECKING:
 
         @staticmethod
         @abstractmethod
-        def translate(*args: Any, **kwargs: Any) -> BaseMaxObject:
+        def translate(*args: Any, **kwargs: Any) -> ReturnObj:
             pass
 
     else:
@@ -327,16 +350,16 @@ class TranslateFolderList(BaseTranslateMappingModel[FolderListMappingModel]):
 class TranslateSession(BaseTranslateMappingModel[SessionMappingModel]):
     @staticmethod
     def translate(session: SessionMappingModel) -> Session:
-        if ", IP" in session.location:
+        location = None
+        ip = None
+        if session.location is not None and ", IP" in session.location:
             location, ip = tuple(
                 map(
                     str.strip,
                     session.location.split(", IP"),
                 )
             )
-        else:
-            location = session.location
-            ip = None
+
         return Session(
             id=session.id,
             device_id=session.device_id,
@@ -357,8 +380,90 @@ class TranslateSession(BaseTranslateMappingModel[SessionMappingModel]):
         )
 
 
+class TranslatePollFlags(BaseTranslateMappingModel[PollFlagsMappingModel, PollFlags]):
+    @staticmethod
+    def translate(poll_flags: PollFlagsMappingModel) -> PollFlags:
+        poll_flags_map: dict[PollFlagsMappingModel, PollFlags] = {
+            PollFlagsMappingModel.FLAG_SETTINGS_QUIZ: PollFlags.FLAG_SETTINGS_QUIZ,
+            PollFlagsMappingModel.FLAG_SETTINGS_CLOSED: PollFlags.FLAG_SETTINGS_CLOSED,
+            PollFlagsMappingModel.FLAG_SETTINGS_REVOTE: PollFlags.FLAG_SETTINGS_REVOTE,
+            PollFlagsMappingModel.FLAG_SETTINGS_MULTISELECT: PollFlags.FLAG_SETTINGS_MULTISELECT,
+            PollFlagsMappingModel.FLAG_SETTINGS_CAN_FORWARD: PollFlags.FLAG_SETTINGS_CAN_FORWARD,
+            PollFlagsMappingModel.FLAG_SETTINGS_ANONYMOUS: PollFlags.FLAG_SETTINGS_ANONYMOUS,
+        }
+
+        flags = [poll_flags_map[poll_flag] for poll_flag in poll_flags]
+
+        if not flags:
+            return PollFlags(0)
+
+        return reduce(operator.or_, flags)
+
+
+class TranslatePollAnswer(BaseTranslateMappingModel[PollAnswerMappingModel]):
+    @staticmethod
+    def translate(poll_answer: PollAnswerMappingModel) -> PollAnswer:
+        return PollAnswer(
+            answer_id=poll_answer.answer_id,
+            text=poll_answer.text,
+        )
+
+
+class TranslatePollVote(BaseTranslateMappingModel[PollVoteMappingModel]):
+    @staticmethod
+    def translate(poll_vote: PollVoteMappingModel) -> PollVote:
+        return PollVote(
+            timestamp=poll_vote.timestamp,
+            user_id=poll_vote.user_id,
+        )
+
+
+class TranslatePollResult(BaseTranslateMappingModel[PollResultMappingModel]):
+    @staticmethod
+    def translate(poll_result: PollResultMappingModel) -> PollResult:
+        return PollResult(
+            votes=[TranslatePollVote.translate(vote) for vote in poll_result.votes],
+            vote_count=poll_result.vote_count,
+            rate=poll_result.rate,
+            answer_id=poll_result.answer_id,
+            options=poll_result.options,
+        )
+
+
+class TranslatePollState(BaseTranslateMappingModel[PollStateMappingModel]):
+    @staticmethod
+    def translate(poll_state: PollStateMappingModel) -> PollState:
+        poll_result = (
+            [TranslatePollResult.translate(res) for res in poll_state.result]
+            if poll_state.result is not None
+            else None
+        )
+        return PollState(
+            total=poll_state.total,
+            voter_preview_ids=poll_state.voter_preview_ids,
+            result=poll_result,
+        )
+
+
+class TranslatePoll(BaseTranslateMappingModel[PollMappingModel, Poll]):
+    @staticmethod
+    def translate(poll: PollMappingModel) -> Poll:
+        return Poll(
+            title=poll.title,
+            settings=TranslatePollFlags.translate(poll.settings),
+            answers=[TranslatePollAnswer.translate(answer) for answer in poll.answers],
+            poll_id=poll.poll_id,
+            version=poll.version,
+            state=(
+                TranslatePollState.translate(poll.state)
+                if poll.state is not None
+                else None
+            ),
+        )
+
+
 TRANSLATE_MAPPING_MODELS: dict[
-    type[CamelCaseModel], type[BaseTranslateMappingModel[Any]]
+    type[CamelCaseModel] | type[Enum], type[BaseTranslateMappingModel[Any, Any]]
 ] = {
     ContactMappingModel: TranslateContact,
     MessageMappingModel: TranslateMessage,
@@ -373,16 +478,25 @@ TRANSLATE_MAPPING_MODELS: dict[
     FolderUpdateMappingModel: TranslateFolderUpdate,
     FolderListMappingModel: TranslateFolderList,
     SessionMappingModel: TranslateSession,
+    PollAnswerMappingModel: TranslatePollAnswer,
+    PollFlagsMappingModel: TranslatePollFlags,
+    PollResultMappingModel: TranslatePollResult,
+    PollStateMappingModel: TranslatePollState,
+    PollVoteMappingModel: TranslatePollVote,
+    PollMappingModel: TranslatePoll,
 }
 
 
 def translate_models(
     mapping_obj: CamelCaseModel, *args: Any, **kwargs: Any
-) -> BaseMaxObject | CamelCaseModel:
+) -> BaseMaxObject | BaseFileAttachment | CamelCaseModel:
     translate_model = TRANSLATE_MAPPING_MODELS.get(type(mapping_obj), None)
     if translate_model is None:
         return mapping_obj
 
-    translated_obj = translate_model.translate(mapping_obj, *args, **kwargs)
+    translated_obj = cast(
+        BaseMaxObject | BaseFileAttachment | CamelCaseModel,
+        translate_model.translate(mapping_obj, *args, **kwargs),
+    )
 
     return translated_obj

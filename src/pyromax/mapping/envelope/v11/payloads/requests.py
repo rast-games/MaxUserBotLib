@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 from pydantic import Field
 
-from .shared import CamelCaseModel
+from .shared import CamelCaseModel, PollFlagsMappingModel, PollAnswerMappingModel
 from .models import (
     BaseUserAgentMappingModel,
     MessageMappingModel,
@@ -186,6 +186,13 @@ class ReadMessageRequest(CamelCaseModel):
     mark: int = Field(default_factory=lambda: int(time.time() * 1000))
 
 
+class VotePollRequest(CamelCaseModel):
+    chat_id: int
+    message_id: int | str
+    poll_id: int
+    answers_ids: list[int]
+
+
 class CreateChatRequest(CamelCaseModel):
     message: CreateGroupMessageMappingModel
     notify: bool = True
@@ -337,6 +344,12 @@ class PhotoToPayloadRequest(AnyFileRequest):
 class VideoToPayloadRequest(AnyFileRequest):
     video_id: int
     token: str
+
+
+class PollToPayloadRequest(AnyFileRequest):
+    title: str
+    answers: list[PollAnswerMappingModel]
+    settings: int
 
 
 class GetFileLinkRequest(CamelCaseModel):

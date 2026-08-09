@@ -1,7 +1,8 @@
 from typing import cast
 
 from .Base import BaseMaxApiMethod
-from ..models import Contact, ContactInfo
+from ..models.Contact import Contact
+from ..models.ContactInfo import ContactInfo
 
 
 class ImportContactsMethod(BaseMaxApiMethod[list[Contact]]):

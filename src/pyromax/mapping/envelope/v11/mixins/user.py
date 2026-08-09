@@ -185,6 +185,9 @@ class UserMixin(MixinProtocol):
         return folder_update
 
     async def close_all_sessions(self) -> bool:
+        if self.max_api is None:
+            raise RuntimeError("Mapper not bound to max_api instance")
+
         self._logger.info("closing all other sessions")
 
         response = await self.send(method=CloseAllSessionsMethod())

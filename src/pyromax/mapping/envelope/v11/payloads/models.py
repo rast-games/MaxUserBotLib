@@ -1,11 +1,19 @@
 from __future__ import annotations
-from enum import Enum
+from enum import Enum, IntFlag
 from abc import abstractmethod, ABC
 import random
 from typing import Annotated, Literal, Any, ClassVar, TYPE_CHECKING, Self
 from uuid import uuid4
 
-from pydantic import Field, BeforeValidator, AliasChoices, AliasPath, model_validator
+from pydantic import (
+    Field,
+    BeforeValidator,
+    AliasChoices,
+    AliasPath,
+    model_validator,
+    field_validator,
+    ValidationError,
+)
 
 from .....models import (
     BaseFileAttachment,
@@ -17,8 +25,9 @@ from .....models import (
     ControlAttachment,
     VoiceAttachment,
     VideoNoteAttachment,
+    Poll,
 )
-from .shared import CamelCaseModel
+from .shared import CamelCaseModel, PollFlagsMappingModel, PollAnswerMappingModel
 from .....utils import (
     get_random_device_id_numeric,
     get_random_device_id,
@@ -521,6 +530,54 @@ class ControlMappingModel(BaseFileMappingModel, ControlAttachment):
         raise TypeError("Try a download Control attachment")
 
 
+class PollVoteMappingModel(CamelCaseModel):
+    timestamp: int
+    user_id: int
+
+
+class PollResultMappingModel(CamelCaseModel):
+    answer_id: int
+    vote_count: int
+    votes: list[PollVoteMappingModel]
+    rate: int
+    options: int
+
+
+class PollStateMappingModel(CamelCaseModel):
+    total: int = 0
+    result: list[PollResultMappingModel] | None = None
+    voter_preview_ids: list[int]
+
+
+class PollMappingModel(BaseFileMappingModel, Poll):
+    # is_attach = False
+    is_downloadable = False
+
+    title: str
+    answers: list[PollAnswerMappingModel]  # type: ignore[assignment]
+    settings: PollFlagsMappingModel  # type: ignore[assignment]
+    poll_id: int | None = None
+    version: int | None = None
+    state: PollStateMappingModel | None = None  # type: ignore[assignment]
+
+    @property
+    def to_payload(self) -> list[dict[str, Any]]:
+        from .requests import PollToPayloadRequest
+
+        return [
+            PollToPayloadRequest(
+                type="POLL",
+                title=self.title,
+                answers=self.answers,
+                settings=self.settings,
+            ).model_dump(by_alias=True, exclude_none=True)
+        ]
+
+    @property
+    def get_payload_to_get_link(self) -> dict[str, Any] | None:
+        raise TypeError("Try a download Poll attachment")
+
+
 class MessageLinkMappingModel(CamelCaseModel):
     type: str | None = None
     message: MessageMappingModel | None = None
@@ -545,6 +602,7 @@ class MessageMappingModel(CamelCaseModel):
         | VoiceMappingModel
         | PhotoMappingModel
         | FileMappingModel
+        | PollMappingModel
         | ShareMappingModel
         | ControlMappingModel
         | Any
@@ -558,6 +616,39 @@ class MessageMappingModel(CamelCaseModel):
     status: Annotated[StatusType, BeforeValidator(validate_status)] = "USER"
     elements: list[dict[str, Any]] | None = None
     link: MessageLinkMappingModel | None = None
+
+    @field_validator("attaches", mode="before")
+    @classmethod
+    def validate_attaches(cls, value: Any) -> list[Any]:
+        result = []
+
+        ATTACH_TYPES: list[type[CamelCaseModel]] = [
+            VideoNoteMappingModel,
+            VideoMappingModel,
+            VoiceMappingModel,
+            PhotoMappingModel,
+            FileMappingModel,
+            PollMappingModel,
+            ShareMappingModel,
+            ControlMappingModel,
+        ]
+
+        for attach in value:
+            if not isinstance(attach, dict):
+                result.append(attach)
+                continue
+
+            for attach_type in ATTACH_TYPES:
+                try:
+                    res = attach_type.model_validate(attach)
+                    result.append(res)
+                    break
+                except ValidationError:
+                    continue
+            else:
+                result.append(attach)
+
+        return result
 
 
 class ReactionInfoMappingModel(CamelCaseModel):

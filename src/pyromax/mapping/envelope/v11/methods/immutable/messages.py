@@ -13,6 +13,7 @@ from ...payloads.requests import (
     GetReactionsRequest,
     ReactionInfoRequest,
     ReadMessageRequest,
+    VotePollRequest,
 )
 from ...translate.FromDTO import reverse_translate_message
 from ...payloads.models import MessageMappingModel, MessageLinkMappingModel
@@ -30,7 +31,7 @@ class SendMessageMethod(BaseMethod):
             message=MessageMappingModel(
                 text=self.args.get("text"),
                 cid=self.args["cid"],
-                attaches=self.args["attaches"] if self.args["attaches"] else [],
+                attaches=[],
                 elements=(
                     self.args["elements"]
                     if self.args["text"] and self.args["elements"]
@@ -47,7 +48,13 @@ class SendMessageMethod(BaseMethod):
                     else None
                 ),
             ),
-        ).model_dump(by_alias=True, exclude_none=True)
+        )
+
+        request.payload.message.attaches = (
+            self.args["attaches"] if self.args["attaches"] else []
+        )
+        request.payload = request.payload.model_dump(by_alias=True, exclude_none=True)
+
         return request
 
 
@@ -182,6 +189,20 @@ class ReadMessageMethod(BaseMethod):
         return request
 
 
+class VotePollMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.VOTE_POLL
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = VotePollRequest(
+            chat_id=self.args["chat_id"],
+            message_id=self.args["message_id"],
+            poll_id=self.args["poll_id"],
+            answers_ids=self.args["answer_ids"],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "SendMessageMethod",
     "EditMessageMethod",
@@ -193,4 +214,5 @@ __all__ = [
     "RemoveReactionMethod",
     "GetReactionsMethod",
     "ReadMessageMethod",
+    "VotePollMethod",
 ]

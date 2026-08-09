@@ -3,6 +3,7 @@ from typing import cast
 
 from .MixinProtocol import MixinProtocol
 from .....models import Contact, Session, ContactInfo
+from .....exceptions import MapperApiError
 from ..methods.immutable import (
     GetGeneralInfoAboutMemberMethod,
     SearchByPhoneMethod,
@@ -21,10 +22,14 @@ from ..translate.ToDTO import translate_models
 
 class ContactMixin(MixinProtocol):
     def _cache_user(self, user: Contact) -> Contact:
+        if self.max_api is None:
+            raise RuntimeError("Mapper not bound to max_api instance")
         self.max_api.users[user.id] = user
         return user
 
     def get_cached_user(self, user_id: int) -> Contact | None:
+        if self.max_api is None:
+            raise RuntimeError("Mapper not bound to max_api instance")
         user = self.max_api.users.get(user_id)
         self._logger.debug("get_cached_user id=%s hit=%s", user_id, bool(user))
         return user
@@ -110,6 +115,8 @@ class ContactMixin(MixinProtocol):
                 action="REMOVE",
             )
         )
+        if self.max_api is None:
+            raise RuntimeError("Mapper not bound to max_api instance")
         self.max_api.users.pop(contact_id, None)
         return None
 

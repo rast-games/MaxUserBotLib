@@ -13,6 +13,7 @@ from .models import (
     CreateGroupMessageMappingModel,
     ChatMappingModel,
     SessionMappingModel,
+    PollStateMappingModel,
 )
 
 
@@ -146,6 +147,10 @@ class ChatsContainsResponse(CamelCaseModel):
 
 class MembersContainsResponse(CamelCaseModel):
     members: list[ContactMappingModel] | None = None
+
+
+class VoteStateContainsResponse(CamelCaseModel):
+    state: PollStateMappingModel | None = None
 
 
 class ErrorMessageResponse(CamelCaseModel):

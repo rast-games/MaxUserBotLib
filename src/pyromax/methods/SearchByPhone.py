@@ -1,7 +1,7 @@
 from typing import cast
 
 from .Base import BaseMaxApiMethod
-from ..models import Contact
+from ..models.Contact import Contact
 
 
 class SearchByPhoneMethod(BaseMaxApiMethod[Contact]):

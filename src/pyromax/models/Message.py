@@ -1,8 +1,8 @@
 from __future__ import annotations
-from typing import Optional, Literal, Any
+from typing import Optional, Literal, Any, TYPE_CHECKING
 
 from .base import BaseMaxObject
-from .Files import BaseFileAttachment
+from .Attachments import BaseFileAttachment
 
 
 class MessageLink(BaseMaxObject):
@@ -21,9 +21,32 @@ class Message(BaseMaxObject):
     status: Literal["EDITED", "REPLY", "USER", "REMOVED", "SHARE", "OTHER"] = "USER"
     text: str | None
     cid: int | None
-    attaches: list[Any] | None = None
     elements: list[dict[str, Any]] | None = None
     link: MessageLink | None = None
+
+    if TYPE_CHECKING:
+        from .Attachments import (
+            VideoAttachment,
+            VoiceAttachment,
+            VideoNoteAttachment,
+            FileAttachment,
+            PhotoAttachment,
+            BaseFileAttachment,
+        )
+        from .Poll import Poll
+
+        from typing import Never
+        attaches: list[  #type: ignore[valid-type]
+            VideoAttachment
+            | VideoNoteAttachment
+            | VoiceAttachment
+            | FileAttachment
+            | PhotoAttachment
+            | Poll[Never]
+            | Any
+        ]
+    else:
+        attaches: list[Any] | None = None
 
     async def answer(
         self,

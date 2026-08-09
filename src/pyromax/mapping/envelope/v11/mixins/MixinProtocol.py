@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Protocol, TYPE_CHECKING, Any
+from typing import Protocol, TYPE_CHECKING, Any, TypeVar
 import logging
 
 if TYPE_CHECKING:
@@ -10,6 +10,10 @@ if TYPE_CHECKING:
     from .....core import MaxApi
     from ..LifecycleManager import LifecycleManager
     from .....utils import FingerprintGenerator
+    from .....models import BaseMaxObject
+
+
+T = TypeVar("T", bound=BaseMaxObject)
 
 
 class MixinProtocol(Protocol):
@@ -36,3 +40,5 @@ class MixinProtocol(Protocol):
     _lifecycle_manager: LifecycleManager | None
     _lifecycle_manager_inited: asyncio.Event
     _mapper_connected: asyncio.Event
+
+    def bind_api_instance(self, obj: T) -> T: ...

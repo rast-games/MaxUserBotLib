@@ -35,6 +35,7 @@ from ..translate.FromDTO import reverse_translate_channel_permissions
 
 class ChatMixin(MixinProtocol):
     def _cache_chat(self, chat: Chat) -> Chat:
+        chat = self.bind_api_instance(chat)
         if self.max_api is None:
             raise RuntimeError("Mapper not bound to max_api instance")
 
@@ -104,7 +105,7 @@ class ChatMixin(MixinProtocol):
 
         message = cast(Message, translate_models(mapped_create_chat_message))
         chat = cast(Chat, translate_models(mapped_chat))
-        return self._cache_chat(chat), message
+        return self._cache_chat(chat), self.bind_api_instance(message)
 
     async def invite_users_to_group(
         self,
@@ -286,7 +287,7 @@ class ChatMixin(MixinProtocol):
         msg.chat_id = chat_id
 
         self._remove_cached_chat(chat_id)
-        return cast(Message, translate_models(msg))
+        return self.bind_api_instance(cast(Message, translate_models(msg)))
 
     async def leave_channel(self, chat_id: int) -> Message | None:
         return await self.leave_group(chat_id)
@@ -315,7 +316,10 @@ class ChatMixin(MixinProtocol):
         )
 
         mapped_members = MembersContainsResponse(**response.payload).members or []
-        return [cast(Member, translate_models(member)) for member in mapped_members]
+        return [
+            self.bind_api_instance(cast(Member, translate_models(member)))
+            for member in mapped_members
+        ]
 
     async def confirm_join_requests(
         self,

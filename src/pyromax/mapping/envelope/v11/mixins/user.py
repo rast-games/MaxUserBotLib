@@ -114,7 +114,9 @@ class UserMixin(MixinProtocol):
 
         mapped_profile = ProfileContainsResponse(**response.payload)
 
-        profile = cast(Profile, translate_models(mapped_profile))
+        profile = self.bind_api_instance(
+            cast(Profile, translate_models(mapped_profile))
+        )
         self.max_api.me = profile
         self.max_api.users[profile.contact.id] = profile.contact
         return profile
@@ -139,7 +141,7 @@ class UserMixin(MixinProtocol):
 
         folder_update_mapped = FolderUpdateMappingModel(**response.payload)
         folder_update = cast(FolderUpdate, translate_models(folder_update_mapped))
-        return folder_update
+        return self.bind_api_instance(folder_update)
 
     async def get_folders(self, folder_sync: int = 0) -> FolderList:
         self._logger.info("fetching folders")
@@ -150,7 +152,7 @@ class UserMixin(MixinProtocol):
         )
         mapped_folder_list = FolderListMappingModel(**response.payload)
         folder_list = cast(FolderList, translate_models(mapped_folder_list))
-        return folder_list
+        return self.bind_api_instance(folder_list)
 
     async def update_folder(
         self,
@@ -172,7 +174,7 @@ class UserMixin(MixinProtocol):
         )
         folder_update_mapped = FolderUpdateMappingModel(**response.payload)
         folder_update = cast(FolderUpdate, translate_models(folder_update_mapped))
-        return folder_update
+        return self.bind_api_instance(folder_update)
 
     async def delete_folders(self, folder_ids: list[str]) -> FolderUpdate:
         response = await self.send(
@@ -182,7 +184,7 @@ class UserMixin(MixinProtocol):
         )
         folder_update_mapped = FolderUpdateMappingModel(**response.payload)
         folder_update = cast(FolderUpdate, translate_models(folder_update_mapped))
-        return folder_update
+        return self.bind_api_instance(folder_update)
 
     async def close_all_sessions(self) -> bool:
         if self.max_api is None:

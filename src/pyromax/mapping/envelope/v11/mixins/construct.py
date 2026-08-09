@@ -2,7 +2,7 @@ from __future__ import annotations
 import asyncio
 from asyncio import Task, Lock, Event
 import logging
-from typing import TYPE_CHECKING, Any, _ProtocolMeta
+from typing import TYPE_CHECKING, Any, _ProtocolMeta, TypeVar
 from collections.abc import Callable, Coroutine
 
 from typing import cast, Protocol
@@ -17,7 +17,10 @@ from .....utils import FingerprintGenerator, write_token, read_token
 if TYPE_CHECKING:
     from .....core import MaxApi
     from ..Mapper import Mapper
-    from .....models import RegistrationConfig
+    from .....models import RegistrationConfig, BaseMaxObject
+
+T = TypeVar("T", bound=BaseMaxObject)
+
 
 from .MixinProtocol import MixinProtocol
 
@@ -169,3 +172,10 @@ class ConstructorMixin(
         await self._protocol_connected.wait()
 
         self._logger.info("Mapper initialized")
+
+    def bind_api_instance(self, obj: T) -> T:
+        if self.max_api is None:
+            raise RuntimeError("Cannot bind api instance without max_api")
+
+        obj.as_(self.max_api)
+        return obj

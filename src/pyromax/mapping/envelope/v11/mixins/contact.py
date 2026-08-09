@@ -22,6 +22,7 @@ from ..translate.ToDTO import translate_models
 
 class ContactMixin(MixinProtocol):
     def _cache_user(self, user: Contact) -> Contact:
+        user = self.bind_api_instance(user)
         if self.max_api is None:
             raise RuntimeError("Mapper not bound to max_api instance")
         self.max_api.users[user.id] = user
@@ -32,7 +33,7 @@ class ContactMixin(MixinProtocol):
             raise RuntimeError("Mapper not bound to max_api instance")
         user = self.max_api.users.get(user_id)
         self._logger.debug("get_cached_user id=%s hit=%s", user_id, bool(user))
-        return user
+        return self.bind_api_instance(user) if user is not None else None
 
     async def get_members_by_ids(
         self, member_ids: int | list[int]
@@ -92,7 +93,8 @@ class ContactMixin(MixinProtocol):
         response = await self.send(method=GetSessionsMethod())
         mapped_sessions = SessionsContainsResponse(**response.payload).sessions
         sessions = [
-            cast(Session, translate_models(session)) for session in mapped_sessions
+            self.bind_api_instance(cast(Session, translate_models(session)))
+            for session in mapped_sessions
         ]
         return sessions
 

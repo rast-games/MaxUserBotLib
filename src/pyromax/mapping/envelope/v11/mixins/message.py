@@ -174,6 +174,8 @@ class MessageMixin(MixinProtocol):
                     mapped_message, fallback_chat_id=response_parsed.chat_id
                 ),
             )
+
+            self.bind_api_instance(translated_message)
             return translated_message
 
         except (
@@ -266,7 +268,7 @@ class MessageMixin(MixinProtocol):
         )
         edited_message.chat_id = chat_id
 
-        return edited_message
+        return self.bind_api_instance(edited_message)
 
     async def get_messages(
         self,
@@ -293,7 +295,9 @@ class MessageMixin(MixinProtocol):
             message.chat_id = mapped_messages.chat_id
         messages = [translate_models(message) for message in mapped_messages.messages]
 
-        return cast(list[Message], messages)
+        msgs = cast(list[Message], messages)
+
+        return [self.bind_api_instance(message) for message in msgs]
 
     @overload
     async def get_chat_history(
@@ -369,7 +373,9 @@ class MessageMixin(MixinProtocol):
                 for message in mapped_messages.payload.messages
             ]
 
-            return cast(list[Message], messages) or []
+            msgs = cast(list[Message], messages)
+
+            return [self.bind_api_instance(message) for message in msgs] or []
         if not isinstance(mapped_messages.payload, GetChatHistoryMessagesIdsResponse):
             raise MapperApiError(
                 "server return unknown response different from expected"
@@ -518,7 +524,7 @@ class MessageMixin(MixinProtocol):
             ),
         )
 
-        return reaction_info
+        return self.bind_api_instance(reaction_info)
 
     async def get_reactions(
         self,
@@ -538,7 +544,7 @@ class MessageMixin(MixinProtocol):
         if mapped_messages_reactions is None:
             return None
 
-        return cast(
+        res = cast(
             dict[str, EmojiReaction],
             {
                 message_id: translate_models(
@@ -547,6 +553,10 @@ class MessageMixin(MixinProtocol):
                 for message_id, reaction_info in mapped_messages_reactions.items()
             },
         )
+
+        [self.bind_api_instance(reaction) for reaction in res.values()]
+
+        return res
 
     async def read_message(
         self,
@@ -575,7 +585,7 @@ class MessageMixin(MixinProtocol):
 
         mapped_read_state = ReadStateMappingModel(**response.payload)
 
-        return cast(
+        read_state = cast(
             ReadState,
             translate_models(
                 mapped_read_state,
@@ -583,6 +593,8 @@ class MessageMixin(MixinProtocol):
                 message_id=message_id,
             ),
         )
+
+        return self.bind_api_instance(read_state)
 
     async def create_poll(self, poll: Poll[None]) -> PollMappingModel:
         return reverse_translate_poll(poll)
@@ -608,4 +620,4 @@ class MessageMixin(MixinProtocol):
             raise MapperApiError("Server dont return poll state")
 
         poll_state = cast(PollState, translate_models(mapped_poll_state))
-        return poll_state
+        return self.bind_api_instance(poll_state)

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from ..Mapper import Mapper
     from .....models import RegistrationConfig, BaseMaxObject
 
-T = TypeVar("T", bound=BaseMaxObject)
+T = TypeVar("T", bound="BaseMaxObject")
 
 
 from .MixinProtocol import MixinProtocol

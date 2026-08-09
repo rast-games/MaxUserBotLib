@@ -7,7 +7,9 @@ from ...payloads.requests import (
     GetFoldersRequest,
     UpdateFolderRequest,
     DeleteFoldersRequest,
+    ChangeProfileSettingsRequest,
 )
+from ...payloads.models import ChangeProfileSettingsMappingModel
 
 
 class ChangeProfileMethod(BaseMethod):
@@ -91,6 +93,19 @@ class LogoutMethod(CloseAllSessionsMethod):
         return request
 
 
+class ChangeProfileSettingsMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.CONFIG
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = ChangeProfileSettingsRequest(
+            settings=ChangeProfileSettingsMappingModel(
+                user=self.args["user"],
+            )
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "ChangeProfileMethod",
     "CreateFolderMethod",
@@ -99,4 +114,5 @@ __all__ = [
     "DeleteFoldersMethod",
     "CloseAllSessionsMethod",
     "LogoutMethod",
+    "ChangeProfileSettingsMethod",
 ]

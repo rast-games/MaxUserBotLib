@@ -61,6 +61,7 @@ from ..methods import (
     CloseAllSessionsMethod,
     LogoutMethod,
     SetPresenceMethod,
+    ChangeProfileSettingsMethod,
     GetUsersMethod,
     SearchByPhoneMethod,
     GetSessionsMethod,
@@ -97,6 +98,7 @@ if TYPE_CHECKING:
         ContactInfo,
         Poll,
         PollState,
+        PrivacySettings,
     )
     from ..auth import AuthMiddlewareManager
 
@@ -297,7 +299,7 @@ class MaxApi(AsyncInitializerMixin):
         self.names: list[Name] | None = None
         self.contacts: list[Contact | None] = []
         self.users: dict[int, Contact] = {}
-        self.messages: dict[int, list[Message]]
+        # self.messages: dict[int, list[Message]]
 
         self.__logger: logging.Logger | None = logger
         self.workflow_data = workflow_data
@@ -1139,6 +1141,22 @@ class MaxApi(AsyncInitializerMixin):
             await self(
                 SetPresenceMethod,
                 online=online,
+            ),
+        )
+
+    async def change_profile_settings(self, privacy_settings: PrivacySettings) -> None:
+        """
+        :param privacy_settings: PrivacySettings
+
+        :raise ValueError if updating privacy settings fails
+
+        """
+
+        return cast(
+            None,
+            await self(
+                ChangeProfileSettingsMethod,
+                privacy_settings=privacy_settings,
             ),
         )
 

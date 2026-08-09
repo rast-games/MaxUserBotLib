@@ -51,6 +51,7 @@ from .RemoveContact import RemoveContactMethod
 from .ImportContacts import ImportContactsMethod
 from .CreatePoll import CreatePollMethod
 from .VotePoll import VotePollMethod
+from .ChangeProfileSettings import ChangeProfileSettingsMethod
 
 __all__ = [
     "BaseMaxApiMethod",
@@ -98,6 +99,7 @@ __all__ = [
     "CloseAllSessionsMethod",
     "LogoutMethod",
     "SetPresenceMethod",
+    "ChangeProfileSettingsMethod",
     "GetMembersByIdsMethod",
     "GetUsersMethod",
     "SearchByPhoneMethod",

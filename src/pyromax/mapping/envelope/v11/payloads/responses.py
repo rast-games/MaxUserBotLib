@@ -62,12 +62,12 @@ class ChoiceLoginVariantResponse(CamelCaseModel):
 
 class AuthResponse(CamelCaseModel):
     chats: list[ChatMappingModel]
-    config: dict[Any, Any]
-    contacts: list[ContactMappingModel | None]
+    config: dict[Any, Any] | None = None
+    contacts: list[ContactMappingModel | None] = Field(default_factory=list)
     messages: dict[int, list[MessageMappingModel]] = Field(default_factory=dict)
-    presence: dict[Any, Any]
-    profile: ProfileMappingModel
-    time: int
+    presence: dict[Any, Any] | None = None
+    profile: ProfileMappingModel | None = None
+    time: int | None = None
     token: str | None = None
 
 
@@ -90,6 +90,10 @@ class GetTrackIdFor2FAResponse(CamelCaseModel):
 
 class ProfileContainsResponse(CamelCaseModel):
     profile: ProfileMappingModel
+
+
+class ConfigHashContainsResponse(CamelCaseModel):
+    config_hash: str | None = None
 
 
 class SendMessageResponse(CamelCaseModel):

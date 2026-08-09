@@ -13,6 +13,7 @@ from pydantic import (
     model_validator,
     field_validator,
     ValidationError,
+    BaseModel,
 )
 
 from .....models import (
@@ -70,6 +71,12 @@ class ProfileOptionsMappingModel(int, Enum):
     SECOND_FACTOR_PASSWORD_ENABLED = 2
     SECOND_FACTOR_HAS_EMAIL = 3
     SECOND_FACTOR_HAS_HINT = 4
+
+
+class PrivacyAccessMappingModel(str, Enum):
+    ALL = "ALL"
+    CONTACTS = "CONTACTS"
+    NOBODY = "_NONE_"
 
 
 class BaseUserAgentMappingModel(BaseUserAgent, CamelCaseModel, ABC):
@@ -155,7 +162,7 @@ class AppUserAgentMappingModel(BaseUserAgentMappingModel):
 
     @classmethod
     def get_random_user_agent(cls, **kwargs: Any) -> AppUserAgentMappingModel:
-        from .....config import APP_VERSIONS, LOCALE_TIMEZONES
+        from .....config import APP_VERSIONS, LOCALE_TIMEZONES, PREFERRED_VERSION
 
         app_version, build_number = random.choice(APP_VERSIONS)
         locale, timezone = random.choice(LOCALE_TIMEZONES)
@@ -301,7 +308,7 @@ class MemberMappingModel(CamelCaseModel):
     presence: PresenceMappingModel
 
 
-class ChangeGroupSettingsModel(CamelCaseModel):
+class ChangeGroupSettingsMappingModel(CamelCaseModel):
     only_owner_can_change_icon_title: bool | None = Field(
         default=None,
         serialization_alias="ONLY_OWNER_CAN_CHANGE_ICON_TITLE",
@@ -322,6 +329,37 @@ class ChangeGroupSettingsModel(CamelCaseModel):
         default=None,
         serialization_alias="MEMBERS_CAN_SEE_PRIVATE_LINK",
     )
+
+
+PrivacyAccess = Literal[
+    "ALL",
+    "CONTACTS",
+    "_NONE_",
+]
+
+
+class PrivacySettingsMappingModel(CamelCaseModel):
+    search_by_phone: PrivacyAccess | None = Field(
+        default=None, serialization_alias="SEARCH_BY_PHONE"
+    )
+    incoming_calls: PrivacyAccess | None = Field(
+        default=None, serialization_alias="INCOMING_CALL"
+    )
+    chat_invites: PrivacyAccess | None = Field(
+        default=None, serialization_alias="CHATS_INVITE"
+    )
+    phone_number_visibility: PrivacyAccess | None = Field(
+        default=None, serialization_alias="PHONE_NUMBER_PRIVACY"
+    )
+
+    hide_online_status: bool | None = Field(default=None, serialization_alias="HIDDEN")
+    safe_content_only: bool | None = Field(
+        default=None, serialization_alias="CONTENT_LEVEL_ACCESS"
+    )
+
+
+class ChangeProfileSettingsMappingModel(CamelCaseModel):
+    user: PrivacySettingsMappingModel
 
 
 class BaseFileMappingModel(BaseFileAttachment, CamelCaseModel, ABC):

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from .....models import BaseMaxObject
 
 
-T = TypeVar("T", bound=BaseMaxObject)
+T = TypeVar("T", bound="BaseMaxObject")
 
 
 class MixinProtocol(Protocol):

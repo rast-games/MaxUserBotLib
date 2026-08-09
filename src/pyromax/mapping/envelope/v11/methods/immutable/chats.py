@@ -19,7 +19,7 @@ from ...payloads.requests import (
 from ...payloads.models import (
     CreateGroupMessageMappingModel,
     CreateGroupAttachMappingModel,
-    ChangeGroupSettingsModel,
+    ChangeGroupSettingsMappingModel,
 )
 
 
@@ -71,7 +71,7 @@ class ChangeGroupSettingsMethod(BaseMethod):
         request.ver = VERSION
         request.payload = ChangeGroupSettingsRequest(
             chat_id=self.args["chat_id"],
-            options=ChangeGroupSettingsModel(
+            options=ChangeGroupSettingsMappingModel(
                 only_owner_can_change_icon_title=self.args.get(
                     "only_owner_can_change_icon_title"
                 ),

@@ -11,6 +11,8 @@ from ...payloads.models import (
     PollStateMappingModel,
     PollResultMappingModel,
     PollVoteMappingModel,
+    PrivacyAccessMappingModel,
+    PrivacySettingsMappingModel,
 )
 from ...payloads.shared import PollAnswerMappingModel, PollFlagsMappingModel
 from ......models import (
@@ -23,6 +25,8 @@ from ......models import (
     PollState,
     PollVote,
     PollResult,
+    PrivacyAccess,
+    PrivacySettings,
 )
 
 
@@ -181,4 +185,35 @@ def reverse_translate_poll(
         state=(
             reverse_translate_poll_state(poll.state) if poll.state is not None else None
         ),
+    )
+
+
+privacy_access_map = {
+    PrivacyAccess.ALL: PrivacyAccessMappingModel.ALL,
+    PrivacyAccess.CONTACTS: PrivacyAccessMappingModel.CONTACTS,
+    PrivacyAccess.NOBODY: PrivacyAccessMappingModel.NOBODY,
+}
+
+
+def reverse_translate_privacy_access(
+    privacy_access: PrivacyAccess,
+) -> PrivacyAccessMappingModel:
+    return privacy_access_map[privacy_access]
+
+
+def reverse_translate_privacy_settings(
+    privacy_settings: PrivacySettings,
+) -> PrivacySettingsMappingModel:
+    none_or_not_none = lambda value: (
+        reverse_translate_privacy_access(value) if value is not None else None
+    )
+    return PrivacySettingsMappingModel(
+        search_by_phone=none_or_not_none(privacy_settings.search_by_phone),
+        incoming_calls=none_or_not_none(privacy_settings.incoming_calls),
+        chat_invites=none_or_not_none(privacy_settings.chat_invites),
+        phone_number_visibility=none_or_not_none(
+            privacy_settings.phone_number_visibility
+        ),
+        hide_online_status=none_or_not_none(privacy_settings.hide_online_status),
+        safe_content_only=none_or_not_none(privacy_settings.safe_content_only),
     )

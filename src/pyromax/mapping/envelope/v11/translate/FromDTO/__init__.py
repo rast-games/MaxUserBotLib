@@ -8,6 +8,7 @@ from .ModelsTranslate import (
     reverse_translate_poll_answer,
     reverse_translate_poll_result,
     reverse_translate_poll_vote,
+    reverse_translate_privacy_settings,
 )
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "reverse_translate_poll_result",
     "reverse_translate_poll_state",
     "reverse_translate_poll_answer",
+    "reverse_translate_privacy_settings",
 ]

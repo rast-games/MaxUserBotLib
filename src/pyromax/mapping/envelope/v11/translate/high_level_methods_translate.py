@@ -50,6 +50,7 @@ from .....methods import (
     CloseAllSessionsMethod,
     LogoutMethod,
     SetPresenceMethod,
+    ChangeProfileSettingsMethod,
     GetMembersByIdsMethod,
     GetUsersMethod,
     SearchByPhoneMethod,
@@ -312,6 +313,11 @@ def get_registry(
             "WEB": mapper.set_presence,
             "ANDROID": mapper.set_presence,
             "DESKTOP": mapper.set_presence,
+        },
+        ChangeProfileSettingsMethod: {
+            "WEB": mapper.change_profile_settings,
+            "ANDROID": mapper.change_profile_settings,
+            "DESKTOP": mapper.change_profile_settings,
         },
         GetUsersMethod: {
             "WEB": mapper.get_users,

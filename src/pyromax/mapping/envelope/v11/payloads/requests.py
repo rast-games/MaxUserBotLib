@@ -16,8 +16,9 @@ from .models import (
     FileMappingModel,
     ShareMappingModel,
     CreateGroupMessageMappingModel,
-    ChangeGroupSettingsModel,
+    ChangeGroupSettingsMappingModel,
     TwoFactorActionMappingModel,
+    ChangeProfileSettingsMappingModel,
 )
 
 
@@ -208,7 +209,7 @@ class ChatMemberOperationRequest(CamelCaseModel):
 
 class ChangeGroupSettingsRequest(CamelCaseModel):
     chat_id: int
-    options: ChangeGroupSettingsModel
+    options: ChangeGroupSettingsMappingModel
 
 
 class ChangeGroupProfileRequest(CamelCaseModel):
@@ -327,6 +328,10 @@ class UpdateFolderRequest(CamelCaseModel):
 
 class DeleteFoldersRequest(CamelCaseModel):
     folder_ids: list[str]
+
+
+class ChangeProfileSettingsRequest(CamelCaseModel):
+    settings: ChangeProfileSettingsMappingModel
 
 
 class AnyFileRequest(CamelCaseModel):

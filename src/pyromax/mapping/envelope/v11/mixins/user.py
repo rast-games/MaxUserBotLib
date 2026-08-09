@@ -2,13 +2,21 @@ import uuid
 from collections.abc import Sequence, Coroutine, Callable
 from typing import cast, Any
 
-from .....models import Contact, PhotoAttachment, Profile, FolderUpdate, FolderList
+from .....models import (
+    Contact,
+    PhotoAttachment,
+    Profile,
+    FolderUpdate,
+    FolderList,
+    PrivacySettings,
+)
 from .....protocol.envelope import Envelope
 from ..payloads.shared import CamelCaseModel
 from ..payloads.responses import (
     ResponseWithUrl,
     ProfileContainsResponse,
     CloseAllSessionsResponse,
+    ConfigHashContainsResponse,
 )
 from ..methods.immutable import (
     CreateCellForProfilePhotoMethod,
@@ -19,6 +27,7 @@ from ..methods.immutable import (
     DeleteFoldersMethod,
     CloseAllSessionsMethod,
     LogoutMethod,
+    ChangeProfileSettingsMethod,
 )
 from ..payloads.models import (
     PhotoMappingModel,
@@ -32,6 +41,7 @@ from ..translate.ToDTO import (
     upload_file,
 )
 from ..constants import Opcode
+from ..translate.FromDTO import reverse_translate_privacy_settings
 
 from .MixinProtocol import MixinProtocol
 
@@ -214,3 +224,17 @@ class UserMixin(MixinProtocol):
     async def set_presence(self, online: bool) -> None:
         self._logger.info("setting presence to %s", "online" if online else "offline")
         self.keep_alive_interactive = online
+
+    async def change_profile_settings(self, privacy_settings: PrivacySettings) -> None:
+
+        mapped_privacy_settings = reverse_translate_privacy_settings(privacy_settings)
+
+        response = await self.send(
+            method=ChangeProfileSettingsMethod(
+                user=mapped_privacy_settings,
+            )
+        )
+        config_hash = ConfigHashContainsResponse(**response.payload).config_hash
+        if config_hash is None:
+            raise ValueError("Server not send a config hash")
+        return None

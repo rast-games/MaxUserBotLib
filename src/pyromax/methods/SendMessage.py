@@ -15,6 +15,7 @@ class SendMessageMethod(BaseMaxApiMethod[Optional[Message]]):
         chat_id: int,
         text: str | None = None,
         attaches: list[BaseFileAttachment] | None = None,
+        notify: bool = True,
         **kwargs: Any,
     ) -> Message | None:
         if not attaches:
@@ -23,7 +24,11 @@ class SendMessageMethod(BaseMaxApiMethod[Optional[Message]]):
         if not self._max_api:
             raise RuntimeError("SendMessage method not bound to MaxApi instance")
         return await self._max_api.mapper.send_message(
-            chat_id=chat_id, text=text, attaches=attaches, **kwargs
+            chat_id=chat_id,
+            text=text,
+            attaches=attaches,
+            notify=notify,
+            **kwargs,
         )
 
         # return await self._max_api.mapper.call_method(

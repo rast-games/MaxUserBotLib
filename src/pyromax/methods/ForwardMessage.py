@@ -10,6 +10,7 @@ class ForwardMessageMethod(BaseMaxApiMethod[Optional[Message]]):
         message_id: int | str,
         from_chat_id: int,
         to_chat_id: int,
+        notify: bool = True,
     ) -> Message | None:
         if not self._max_api:
             raise RuntimeError("ForwardMessage method not bound to MaxApi instance")
@@ -20,5 +21,6 @@ class ForwardMessageMethod(BaseMaxApiMethod[Optional[Message]]):
                 message_id=message_id,
                 from_chat_id=from_chat_id,
                 to_chat_id=to_chat_id,
+                notify=notify,
             ),
         )

@@ -24,7 +24,7 @@ class AuthFlow(BaseMaxObject, Generic[M, P, T]):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     token: str | None = None
-    max_api: MaxApi
+    # max_api: MaxApi
     mapper: M
     protocol: P
     transport: T

@@ -113,6 +113,7 @@ class ApproveQrLoginRequest(CamelCaseModel):
 class SendMessageRequest(CamelCaseModel):
     chat_id: int
     message: MessageMappingModel
+    notify: bool = True
 
 
 class EditMessageRequest(CamelCaseModel):

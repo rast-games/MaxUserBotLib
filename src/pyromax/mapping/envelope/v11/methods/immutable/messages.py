@@ -48,6 +48,7 @@ class SendMessageMethod(BaseMethod):
                     else None
                 ),
             ),
+            notify=self.args.get("notify") or True,
         )
 
         request.payload.message.attaches = (

@@ -14,7 +14,6 @@ class ContextController(BaseModel):
 
     _max_api: MaxApi | None = PrivateAttr()
 
-
     def model_post_init(self, __context: Any) -> None:
         """Store the bot instance from Pydantic context if present."""
         self._max_api = __context.get("max_api") if __context else None
@@ -38,4 +37,12 @@ class ContextController(BaseModel):
     @property
     def bot(self) -> MaxApi | None:
         """Return the bound bot instance."""
+        return self._max_api
+
+    @property
+    def max_api(self) -> MaxApi:
+        if self._max_api is None:
+            raise RuntimeError(
+                f"MaxApi instance has not been bound to {self.__class__.__name__} object."
+            )
         return self._max_api

@@ -66,6 +66,7 @@ class MessageMixin(MixinProtocol):
         attaches: Sequence[BaseFileMappingModel] | None = None,
         link: MessageLink | None = None,
         parse_tags: bool = True,
+        notify: bool = True,
         **kwargs: Any,
     ) -> Message | None:
         """
@@ -102,6 +103,7 @@ class MessageMixin(MixinProtocol):
                     attaches=attachments,
                     elements=elements,
                     link=link,
+                    notify=notify,
                 ),
             )
 
@@ -193,6 +195,7 @@ class MessageMixin(MixinProtocol):
         message_id: int | str,
         to_chat_id: int,
         from_chat_id: int,
+        notify: bool = True,
     ) -> Message | None:
         """
         Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
@@ -213,6 +216,7 @@ class MessageMixin(MixinProtocol):
         return await self.send_message(
             chat_id=to_chat_id,
             link=link,
+            notify=notify,
         )
 
     async def edit_message(

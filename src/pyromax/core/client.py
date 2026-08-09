@@ -233,11 +233,12 @@ class MaxApi(AsyncInitializerMixin):
             # auth_constructor.model_rebuild()
 
             flow = auth_alias(
-                max_api=self,
+                # max_api=self,
                 mapper=self.mapper,
                 protocol=self.protocol,
                 transport=self.transport,
             )
+            flow.as_(self)
 
             data = {
                 type(self): self,
@@ -366,6 +367,7 @@ class MaxApi(AsyncInitializerMixin):
         text: str = "",
         attaches: list[BaseFileAttachment] | None = None,
         link: MessageLink | None = None,
+        notify: bool = True,
     ) -> Message | None:
         """Send a message to a chat.
 
@@ -401,6 +403,7 @@ class MaxApi(AsyncInitializerMixin):
                     chat_id=chat_id,
                     attaches=attaches,
                     link=link,
+                    notify=notify,
                 ),
             )
         except SendMessageError as e:
@@ -414,6 +417,7 @@ class MaxApi(AsyncInitializerMixin):
         message_id: int | str,
         to_chat_id: int,
         from_chat_id: int,
+        notify: bool = True,
     ) -> Message | None:
         try:
             from ..models import Message
@@ -425,6 +429,7 @@ class MaxApi(AsyncInitializerMixin):
                     message_id=message_id,
                     to_chat_id=to_chat_id,
                     from_chat_id=from_chat_id,
+                    notify=notify,
                 ),
             )
         except SendMessageError as e:

@@ -21,7 +21,6 @@ from .base import (
     StorageKey,
 )
 
-
 DEFAULT_REDIS_LOCK_KWARGS = {"timeout": 60}
 _JsonLoads = Callable[..., Any]
 _JsonDumps = Callable[..., str]
@@ -78,7 +77,9 @@ class RedisStorage(BaseStorage):
         return cls(redis=redis, **kwargs)
 
     def create_isolation(self, **kwargs: Any) -> "RedisEventIsolation":
-        return RedisEventIsolation(redis=self.redis, key_builder=self.key_builder, **kwargs)
+        return RedisEventIsolation(
+            redis=self.redis, key_builder=self.key_builder, **kwargs
+        )
 
     async def close(self) -> None:
         await self.redis.aclose(close_connection_pool=True)

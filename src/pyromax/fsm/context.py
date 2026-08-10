@@ -29,7 +29,9 @@ class FSMContext:
     async def get_value(self, key: str, default: Any) -> Any: ...
 
     async def get_value(self, key: str, default: Any | None = None) -> Any | None:
-        return await self.storage.get_value(storage_key=self.key, dict_key=key, default=default)
+        return await self.storage.get_value(
+            storage_key=self.key, dict_key=key, default=default
+        )
 
     async def update_data(
         self,

@@ -11,16 +11,15 @@ class BaseMethod(abc.ABC, BaseMaxProtocolMethod[Envelope]):
     def __init__(self, **kwargs: Any) -> None:
         self.args = kwargs
 
-
     @abc.abstractmethod
     async def __call__(self, request: Envelope) -> Envelope:
         pass
 
 
 __all__ = [
-    'BaseMethod',
-    'Opcode',
-    'Cmd',
-    'VERSION',
-    'Envelope'
+    "BaseMethod",
+    "Opcode",
+    "Cmd",
+    "VERSION",
+    "Envelope",
 ]

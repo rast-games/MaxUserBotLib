@@ -1,5 +1,6 @@
 from .BaseMaxApiException import BaseMaxApiException
 
+
 class SendMessageError(BaseMaxApiException):
     """Raised when sending a message fails."""
 

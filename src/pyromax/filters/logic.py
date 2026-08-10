@@ -16,8 +16,6 @@ if TYPE_CHECKING:
     from ..dispatcher.event import Update, ResolvedUpdate
 
 
-
-
 class _LogicFilter(Filter, ABC):
     pass
 
@@ -28,18 +26,15 @@ class _InvertFilter(_LogicFilter):
         self._SKIP_CHECK_PREPARATIONS = target.filter._SKIP_CHECK_PREPARATIONS
         self.target = target
 
-
     @property
     def work_with(self) -> tuple[type[BaseMaxObject], ...]:
         return self.target.filter.work_with
 
-
     async def _check(self, update: ResolvedUpdate, data: DataDict) -> bool:
         return not await self.target(update, data)
 
-
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.target})'
+        return f"{self.__class__.__name__}({self.target})"
 
 
 class _AndFilter(_LogicFilter):
@@ -59,8 +54,9 @@ class _AndFilter(_LogicFilter):
                     t.append(work_type)
         return tuple(t)
 
-
-    async def _check(self, update: ResolvedUpdate, data: DataDict) -> bool | dict[Any, Any]:
+    async def _check(
+        self, update: ResolvedUpdate, data: DataDict
+    ) -> bool | dict[Any, Any]:
         final_result = {}
         for target in self.targets:
             result = await target(update, data)
@@ -91,8 +87,9 @@ class _OrFilter(_LogicFilter):
                     t.append(work_type)
         return tuple(t)
 
-
-    async def _check(self, update: ResolvedUpdate, data: DataDict) -> bool | dict[str, Any]:
+    async def _check(
+        self, update: ResolvedUpdate, data: DataDict
+    ) -> bool | dict[str, Any]:
         for target in self.targets:
             result = await target(update, data)
             if not result:

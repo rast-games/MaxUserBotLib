@@ -13,11 +13,9 @@ class StreamTransport(BaseTransport):
     async def recv(self) -> Any:
         pass
 
-
     @abstractmethod
     async def close(self) -> None:
         pass
-
 
     @abstractmethod
     async def connect(self, **kwargs: Any) -> None:

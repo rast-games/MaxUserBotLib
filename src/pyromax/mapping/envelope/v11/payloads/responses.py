@@ -111,7 +111,7 @@ class GetChatHistoryMessagesResponse(CamelCaseModel):
 
 
 class GetChatHistoryMessagesIdsResponse(CamelCaseModel):
-    message_ids: list[str]
+    message_ids: list[str | int]
 
 
 class GetChatHistoryResponse(CamelCaseModel):

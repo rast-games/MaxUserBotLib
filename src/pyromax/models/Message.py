@@ -38,7 +38,8 @@ class Message(BaseMaxObject):
         from .Poll import Poll
 
         from typing import Never
-        attaches: list[  #type: ignore[valid-type]
+
+        attaches: list[  # type: ignore[valid-type]
             VideoAttachment
             | VideoNoteAttachment
             | VoiceAttachment
@@ -57,7 +58,6 @@ class Message(BaseMaxObject):
         link: MessageLink | None = None,
     ) -> Any:
         from ..methods import SendMessageMethod
-
 
         return await self.max_api(
             class_of_method=SendMessageMethod,
@@ -83,15 +83,18 @@ class Message(BaseMaxObject):
             link=link,
         )
 
-
-    async def forward(self, chat_id: int, *, notify: bool = True,) -> Message | None:
+    async def forward(
+        self,
+        chat_id: int,
+        *,
+        notify: bool = True,
+    ) -> Message | None:
         return await self.max_api.forward_message(
             from_chat_id=self.chat_id,
             to_chat_id=chat_id,
             message_id=self.message_id,
             notify=notify,
         )
-
 
     async def pin(self, notify_pin: bool = True) -> None:
         return await self.max_api.pin_message(
@@ -100,15 +103,17 @@ class Message(BaseMaxObject):
             notify=notify_pin,
         )
 
-
-    async def edit(self, text: str | None = None, attachments: list[BaseFileAttachment] | None = None) -> Message:
+    async def edit(
+        self,
+        text: str | None = None,
+        attachments: list[BaseFileAttachment] | None = None,
+    ) -> Message:
         return await self.max_api.edit_message(
             chat_id=self.chat_id,
             message_id=self.message_id,
             text=text,
             attachments=attachments,
         )
-
 
     async def delete(self, for_me: bool = False) -> None:
         return await self.max_api.delete_messages(
@@ -117,13 +122,11 @@ class Message(BaseMaxObject):
             for_me=for_me,
         )
 
-
     async def read(self) -> ReadState:
         return await self.max_api.read_message(
             chat_id=self.chat_id,
             message_id=self.message_id,
         )
-
 
     async def react(self, reaction: str) -> EmojiReaction | None:
         return await self.max_api.add_reaction(
@@ -132,13 +135,11 @@ class Message(BaseMaxObject):
             reaction_id=reaction,
         )
 
-
     async def unreact(self) -> EmojiReaction | None:
         return await self.max_api.remove_reaction(
             chat_id=self.chat_id,
             message_id=self.message_id,
         )
-
 
     async def get_reactions(self) -> dict[str, EmojiReaction] | None:
         return await self.max_api.get_reactions(

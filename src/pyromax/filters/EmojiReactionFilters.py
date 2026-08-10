@@ -12,7 +12,7 @@ class EmojiReactionAddFilter(Filter):
         return (EmojiReaction,)
 
     async def _check(self, emoji_reaction: EmojiReaction) -> bool | dict[str, Any]:
-        return emoji_reaction.status == 'ADD'
+        return emoji_reaction.status == "ADD"
 
 
 class EmojiReactionRemoveFilter(Filter):
@@ -23,4 +23,4 @@ class EmojiReactionRemoveFilter(Filter):
         return (EmojiReaction,)
 
     async def _check(self, emoji_reaction: EmojiReaction) -> bool | dict[str, Any]:
-        return emoji_reaction.status == 'REMOVE'
+        return emoji_reaction.status == "REMOVE"

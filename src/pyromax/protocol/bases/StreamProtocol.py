@@ -9,14 +9,14 @@ from ...transport import StreamTransport
 class StreamMaxProtocol(BaseMaxProtocol[T, R], Generic[T, R]):
 
     @abstractmethod
-    async def connect(self, gen: int) -> None: pass
-
+    async def connect(self, gen: int) -> None:
+        pass
 
     @abstractmethod
-    async def close(self) -> None: pass
-
+    async def close(self) -> None:
+        pass
 
     @property
     @abstractmethod
-    def transport(self) -> StreamTransport: pass
-
+    def transport(self) -> StreamTransport:
+        pass

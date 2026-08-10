@@ -10,10 +10,11 @@ if TYPE_CHECKING:
     from .....core import MaxApi
     from ..LifecycleManager import LifecycleManager
     from .....utils import FingerprintGenerator
-    from .....models import BaseMaxObject
-
+    from .....models import BaseMaxObject, Chat, Contact
 
 T = TypeVar("T", bound="BaseMaxObject")
+T_CHAT = TypeVar("T_CHAT", bound="Chat")
+T_USER = TypeVar("T_USER", bound="Contact")
 
 
 class MixinProtocol(Protocol):
@@ -42,3 +43,7 @@ class MixinProtocol(Protocol):
     _mapper_connected: asyncio.Event
 
     def bind_api_instance(self, obj: T) -> T: ...
+
+    def _cache_chat(self, chat: T_CHAT) -> T_CHAT: ...
+
+    def _cache_user(self, user: T_USER) -> T_USER: ...

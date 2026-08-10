@@ -6,7 +6,6 @@ class Correlator:
         self._counter = 0
         self._counter_lock = asyncio.Lock()
 
-
     async def next_counter(self) -> int:
         async with self._counter_lock:
             counter = self._counter

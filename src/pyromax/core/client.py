@@ -473,6 +473,10 @@ class MaxApi(AsyncInitializerMixin):
             ),
         )
 
+    async def get_message(self, chat_id: int, message_id: int | str) -> Message | None:
+        msgs = await self.get_messages(chat_id=chat_id, message_ids=[message_id])
+        return msgs[0] if msgs else None
+
     @overload
     async def get_chat_history(
         self,
@@ -504,6 +508,21 @@ class MaxApi(AsyncInitializerMixin):
         interactive: bool = ...,
     ) -> list[str]:
         pass
+
+    @overload
+    async def get_chat_history(
+        self,
+        chat_id: int,
+        forward: int = ...,
+        backward: int = ...,
+        backward_time: int = ...,
+        forward_time: int = ...,
+        from_time: int | None = ...,
+        item_type: Literal["DELAYED", "REGULAR"] = ...,
+        get_chat: bool = ...,
+        get_messages: bool = ...,
+        interactive: bool = ...,
+    ) -> list[Message] | list[str]: ...
 
     async def get_chat_history(
         self,
@@ -756,7 +775,7 @@ class MaxApi(AsyncInitializerMixin):
         only_owner_can_change_icon_title: bool | None = None,
         only_admin_can_add_member: bool | None = None,
         only_admin_can_call: bool | None = None,
-        member_can_see_private_link: bool | None = None,
+        members_can_see_private_link: bool | None = None,
     ) -> Chat | None:
         from ..models import Chat
 
@@ -769,7 +788,7 @@ class MaxApi(AsyncInitializerMixin):
                 only_owner_can_change_icon_title=only_owner_can_change_icon_title,
                 only_admin_can_add_member=only_admin_can_add_member,
                 only_admin_can_call=only_admin_can_call,
-                member_can_see_private_link=member_can_see_private_link,
+                members_can_see_private_link=members_can_see_private_link,
             ),
         )
 

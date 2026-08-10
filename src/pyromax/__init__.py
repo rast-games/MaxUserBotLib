@@ -4,6 +4,7 @@ from .transport import *
 from .protocol import *
 from .mapping import *
 from .filters import F
+
 # from .models import *
 # from .mixins import *
 # from .methods import *
@@ -11,9 +12,4 @@ from .filters import F
 # from .filters import *
 
 
-__all__ = [
-    'MaxApi',
-    'Router',
-    'Dispatcher',
-    'F'
-]
+__all__ = ["MaxApi", "Router", "Dispatcher", "F"]

@@ -8,7 +8,6 @@ from .enum import PollFlags
 from .Attachments import BaseFileAttachment
 
 
-
 class PollVote(BaseMaxObject):
     timestamp: int
     user_id: int
@@ -28,7 +27,7 @@ class PollState(BaseMaxObject):
     voter_preview_ids: list[int]
 
 
-NoneOrNever = TypeVar('NoneOrNever', default=None)
+NoneOrNever = TypeVar("NoneOrNever", default=None)
 
 
 default = cast(int, None)
@@ -60,4 +59,3 @@ class Poll(BaseFileAttachment, Generic[NoneOrNever]):
 #         version: int | NoneOrNever
 #         state: PollState | NoneOrNever
 # else:
-

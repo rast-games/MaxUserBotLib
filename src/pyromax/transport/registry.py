@@ -11,9 +11,13 @@ if TYPE_CHECKING:
 TRANSPORTS = {}
 
 
-def register_transport(transport: str) -> Callable[[type[BaseTransport]], type[BaseTransport]]:
+def register_transport(
+    transport: str,
+) -> Callable[[type[BaseTransport]], type[BaseTransport]]:
     global TRANSPORTS
+
     def wrapper(cls: type[BaseTransport]) -> type[BaseTransport]:
         TRANSPORTS[transport] = cls
         return cls
+
     return wrapper

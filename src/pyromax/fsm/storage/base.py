@@ -151,7 +151,9 @@ class BaseStorage(ABC):
         """
 
     @overload
-    async def get_value(self, storage_key: StorageKey, dict_key: str, default: Any) -> Any:
+    async def get_value(
+        self, storage_key: StorageKey, dict_key: str, default: Any
+    ) -> Any:
         """
         Get single value from data by key
 
@@ -170,7 +172,9 @@ class BaseStorage(ABC):
         data = await self.get_data(storage_key)
         return data.get(dict_key, default)
 
-    async def update_data(self, key: StorageKey, data: Mapping[str, Any]) -> dict[str, Any]:
+    async def update_data(
+        self, key: StorageKey, data: Mapping[str, Any]
+    ) -> dict[str, Any]:
         """
         Update date in the storage for key (like dict.update)
 

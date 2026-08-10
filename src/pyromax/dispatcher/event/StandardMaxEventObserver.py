@@ -18,9 +18,6 @@ if TYPE_CHECKING:
     from ...filters.magic import MagicFilter
 
 
-
-
-
 class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
     """Event observer that stores handlers for a specific update type.
 
@@ -28,7 +25,9 @@ class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
     stops propagation when one handler successfully processes the update.
     """
 
-    def __init__(self, router: Router, event_name: str, type_of_update: type[ResolvedUpdate]) -> None:
+    def __init__(
+        self, router: Router, event_name: str, type_of_update: type[ResolvedUpdate]
+    ) -> None:
         """Create an event observer.
 
         Parameters
@@ -52,15 +51,23 @@ class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
         # with dummy callback which never will be used
         async def handler_dummy() -> bool:
             return True
-        self._handler: Handler[MaxObject] = Handler(pattern=lambda _: True, filters=[], function=handler_dummy)
 
-    def register(self, callback: Callable[..., Awaitable[Any]], *filters: Filter | MagicFilter, pattern: Callable[[ResolvedUpdate], Any] | None = None) -> None:
+        self._handler: Handler[MaxObject] = Handler(
+            pattern=lambda _: True, filters=[], function=handler_dummy
+        )
+
+    def register(
+        self,
+        callback: Callable[..., Awaitable[Any]],
+        *filters: Filter | MagicFilter,
+        pattern: Callable[[ResolvedUpdate], Any] | None = None,
+    ) -> None:
         """Register a new handler with this observer."""
         self.handlers.append(
             Handler(
                 function=callback,
                 filters=[FilterObject(filter_) for filter_ in filters],
-                pattern=pattern
+                pattern=pattern,
             )
         )
 
@@ -74,8 +81,6 @@ class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
             self._handler.filters = []
         self._handler.filters.extend([FilterObject(filter_) for filter_ in filters])
 
-
-
     def _resolve_middlewares(self) -> list[MiddlewareType[MaxObject]]:
         middlewares: list[MiddlewareType[MaxObject]] = []
         for router in reversed(tuple(self.router.chain_head)):
@@ -85,13 +90,9 @@ class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
 
         return middlewares
 
-    async def is_my_update(
-            self,
-            update: ResolvedUpdate
-    ) -> bool:
+    async def is_my_update(self, update: ResolvedUpdate) -> bool:
         """Check whether the update belongs to this observer."""
         return type(update) is self.type_of_update
-
 
     def wrap_outer_middleware(
         self,
@@ -105,27 +106,22 @@ class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
         )
         return wrapped_outer(event, data)
 
-
     async def check_root_filters(self, event: MaxObject, data: dict[Any, Any]) -> Any:
         return await self._handler.check(event, data)
 
-
-    async def update(self, update: ResolvedUpdate, data: dict[Any, Any] | None = None) -> Any:
+    async def update(
+        self, update: ResolvedUpdate, data: dict[Any, Any] | None = None
+    ) -> Any:
         """Pass an update through registered handlers."""
         if data is None:
-            raise ValueError('data cannot be None')
+            raise ValueError("data cannot be None")
         for handler in self.handlers:
             if await handler.check(update, data=data):
-                data.update(
-                    {
-                        Handler: handler
-                    }
-                )
+                data.update({Handler: handler})
 
                 try:
                     wrapped_inner = MiddlewareManager.wrap_middlewares(
-                        self._resolve_middlewares(),
-                        handler.update
+                        self._resolve_middlewares(), handler.update
                     )
 
                     return await wrapped_inner(update, data)
@@ -133,23 +129,23 @@ class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
                     continue
         return UNHANDLED
 
-
     def include_event(self, event: StandardMaxEventObserver[ResolvedUpdate]) -> None:
         """Merge handlers from another event observer."""
         self.handlers += event.handlers
 
-
-    def include_events(self, events: Iterable[StandardMaxEventObserver[ResolvedUpdate]]) -> None:
+    def include_events(
+        self, events: Iterable[StandardMaxEventObserver[ResolvedUpdate]]
+    ) -> None:
         """Merge handlers from multiple event observers."""
         for event in events:
             self.include_event(event)
 
-
-    def __call__(self, *filters: Any, pattern: Callable[[ResolvedUpdate], Any] | None = None)\
-            -> Callable[[Callable[..., Any]], None]:
+    def __call__(
+        self, *filters: Any, pattern: Callable[[ResolvedUpdate], Any] | None = None
+    ) -> Callable[[Callable[..., Any]], None]:
         """Register a handler decorator for this observer."""
+
         def decorator(func: Callable[..., Any]) -> None:
             self.register(func, *filters, pattern=pattern)
+
         return decorator
-
-

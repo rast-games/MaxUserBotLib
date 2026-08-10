@@ -15,6 +15,7 @@ from .base import (
 from ..state import State
 from ...exceptions import DataNotDictLikeError
 
+
 @dataclass
 class MemoryStorageRecord:
     data: dict[str, Any] = field(default_factory=dict)
@@ -59,7 +60,9 @@ class MemoryStorage(BaseStorage):
     async def get_value(self, storage_key: StorageKey, dict_key: str) -> Any | None: ...
 
     @overload
-    async def get_value(self, storage_key: StorageKey, dict_key: str, default: Any) -> Any: ...
+    async def get_value(
+        self, storage_key: StorageKey, dict_key: str, default: Any
+    ) -> Any: ...
 
     async def get_value(
         self,

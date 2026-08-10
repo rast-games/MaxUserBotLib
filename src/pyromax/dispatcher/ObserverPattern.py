@@ -10,8 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 class Observer(ABC):
     @abstractmethod
-    async def update(self, update: Any, data: dict[Any, Any] | None = None) -> bool:
-        ...
+    async def update(self, update: Any, data: dict[Any, Any] | None = None) -> bool: ...
 
 
 class Subject(ABC):
@@ -22,14 +21,9 @@ class Subject(ABC):
         if observer not in self._observers:
             self._observers.append(observer)
 
-
     async def detach(self, observer: Observer) -> None:
         if observer in self._observers:
             self._observers.remove(observer)
 
-
     @abstractmethod
-    async def notify(self, update: Any, data: Any) -> bool:
-        ...
-
-
+    async def notify(self, update: Any, data: Any) -> bool: ...

@@ -3,6 +3,6 @@ from .context import *
 from .MaxApiContextController import ContextController
 
 __all__ = [
-    'MaxApi',
-    'ContextController',
+    "MaxApi",
+    "ContextController",
 ]

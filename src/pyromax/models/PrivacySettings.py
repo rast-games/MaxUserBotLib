@@ -3,6 +3,7 @@ from typing import Literal
 from .base import BaseMaxObject
 from .enum import PrivacyAccess
 
+
 class PrivacySettings(BaseMaxObject):
     search_by_phone: PrivacyAccess | None = None
     incoming_calls: PrivacyAccess | None = None

@@ -9,10 +9,11 @@ from ..utils import return_self_after_method
 
 class AsyncConstructorABC(ABC):
     @abstractmethod
-    async def _async_init(self, *args: Any, **kwargs: Any) -> Any: pass
+    async def _async_init(self, *args: Any, **kwargs: Any) -> Any:
+        pass
 
 
-T = TypeVar('T', bound=AsyncConstructorABC)
+T = TypeVar("T", bound=AsyncConstructorABC)
 
 
 class NewMethod(Protocol[T]):
@@ -34,9 +35,8 @@ class AsyncConstructorMeta(ABCMeta):
         __init = return_self_after_method(cls._async_init)
         return await __init(__instance, *args, **kwargs)
 
-
     # mypy doesn't support generic __call__ on metaclasses
-    def __call__(cls: type[T], *args: Any, **kwargs: Any) -> Awaitable[T]: # type: ignore[misc]
+    def __call__(cls: type[T], *args: Any, **kwargs: Any) -> Awaitable[T]:  # type: ignore[misc]
         return AsyncConstructorMeta._call_wrapper(cls, *args, **kwargs)
 
 
@@ -80,8 +80,9 @@ class AsyncInitializerMixin(AsyncConstructorABC, metaclass=AsyncConstructorMeta)
             another return
     """
 
-T_co = TypeVar('T_co', covariant=True)
+
+T_co = TypeVar("T_co", covariant=True)
+
 
 class AsyncConstructorType(Protocol[T_co]):
-    def __call__(self, *args: Any, **kwargs: Any) -> Awaitable[T_co]:
-        ...
+    def __call__(self, *args: Any, **kwargs: Any) -> Awaitable[T_co]: ...

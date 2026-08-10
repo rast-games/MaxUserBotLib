@@ -1,13 +1,14 @@
 from collections.abc import Callable, Coroutine
 from typing import Any, TypeVar, cast
 
-T = TypeVar('T')
+T = TypeVar("T")
 
-R = TypeVar('R')
+R = TypeVar("R")
 
 
-def return_self_after_method(initializer: Callable[..., Coroutine[Any, Any, R]])\
-        -> Callable[..., Coroutine[Any, Any, T]]:
+def return_self_after_method(
+    initializer: Callable[..., Coroutine[Any, Any, R]],
+) -> Callable[..., Coroutine[Any, Any, T]]:
     """
     Need use to async initializer in __new__ method
     Args:
@@ -52,8 +53,10 @@ def return_self_after_method(initializer: Callable[..., Coroutine[Any, Any, R]])
             ExampleClass1
             init_return_another
     """
+
     # @wraps
     async def initializer_wrapper(self: T, *args: Any, **kwargs: Any) -> T:
         result = await initializer(self, *args, **kwargs)
         return cast(T, result if result is not None else self)
+
     return initializer_wrapper

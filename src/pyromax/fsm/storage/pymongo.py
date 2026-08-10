@@ -126,7 +126,9 @@ class PyMongoStorage(BaseStorage):
             return {}
         return cast(dict[str, Any], document["data"])
 
-    async def update_data(self, key: StorageKey, data: Mapping[str, Any]) -> dict[str, Any]:
+    async def update_data(
+        self, key: StorageKey, data: Mapping[str, Any]
+    ) -> dict[str, Any]:
         document_id = self._key_builder.build(key)
         update_with = {f"data.{key}": value for key, value in data.items()}
         update_result = await self._collection.find_one_and_update(

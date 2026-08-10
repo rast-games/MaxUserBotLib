@@ -6,15 +6,15 @@ from ..models import Message, BaseFileAttachment
 
 class EditMessageMethod(BaseMaxApiMethod[Message]):
     async def __call__(
-            self,
-            chat_id: int,
-            message_id: int | str,
-            text: str | None = None,
-            attaches: list[BaseFileAttachment] | None = None,
-            **kwargs: Any
+        self,
+        chat_id: int,
+        message_id: int | str,
+        text: str | None = None,
+        attaches: list[BaseFileAttachment] | None = None,
+        **kwargs: Any,
     ) -> Message:
         if not self._max_api:
-            raise RuntimeError('EditMessage method not bound to MaxApi instance')
+            raise RuntimeError("EditMessage method not bound to MaxApi instance")
 
         return cast(
             Message,
@@ -25,5 +25,5 @@ class EditMessageMethod(BaseMaxApiMethod[Message]):
                 text=text,
                 attaches=attaches,
                 **kwargs,
-            )
+            ),
         )

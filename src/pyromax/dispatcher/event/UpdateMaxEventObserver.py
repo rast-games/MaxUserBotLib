@@ -14,13 +14,14 @@ if TYPE_CHECKING:
 
 class UpdateMaxEventObserver(StandardMaxEventObserver[Response]):
 
-    def __init__(self, router: Router, event_name: str, type_of_update: type[MaxObject] | types.UnionType) -> None:
+    def __init__(
+        self,
+        router: Router,
+        event_name: str,
+        type_of_update: type[MaxObject] | types.UnionType,
+    ) -> None:
         super().__init__(router, event_name, Response)
         self.really_type_of_update: type[MaxObject] | types.UnionType = type_of_update
 
-
-    async def is_my_update(
-            self,
-            update: Update
-    ) -> bool:
+    async def is_my_update(self, update: Update) -> bool:
         return isinstance(update, self.really_type_of_update)

@@ -158,7 +158,7 @@ class ChatMixin(MixinProtocol):
         only_owner_can_change_icon_title: bool | None = None,
         only_admin_can_add_member: bool | None = None,
         only_admin_can_call: bool | None = None,
-        member_can_see_private_link: bool | None = None,
+        members_can_see_private_link: bool | None = None,
     ) -> Chat | None:
         response = await self.send(
             method=ChangeGroupSettingsMethod(
@@ -167,7 +167,7 @@ class ChatMixin(MixinProtocol):
                 only_owner_can_change_icon_title=only_owner_can_change_icon_title,
                 only_admin_can_add_member=only_admin_can_add_member,
                 only_admin_can_call=only_admin_can_call,
-                member_can_see_private_link=member_can_see_private_link,
+                members_can_see_private_link=members_can_see_private_link,
             )
         )
 

@@ -5,7 +5,7 @@ from .MessageFilters import (
     MessageForwardFromFilter,
     MessageRemovedFilter,
     FromChatFilter,
-    HaveAttachFilter
+    HaveAttachFilter,
 )
 from .EmojiReactionFilters import EmojiReactionAddFilter, EmojiReactionRemoveFilter
 from .Command import Command, CommandStart, CommandObject
@@ -15,20 +15,20 @@ from .magic import F
 # from magic_filter import F
 
 __all__ = [
-    'Filter',
-    'FromMeFilter',
-    'ReplyToMessageFilter',
-    'MessageForwardFromFilter',
-    'EmojiReactionAddFilter',
-    'EmojiReactionRemoveFilter',
-    'MessageRemovedFilter',
-    'Command',
-    'CommandStart',
-    'CommandObject',
-    'FromChatFilter',
-    'HaveAttachFilter',
-    'invert_f',
-    'and_f',
-    'or_f',
-    'F'
+    "Filter",
+    "FromMeFilter",
+    "ReplyToMessageFilter",
+    "MessageForwardFromFilter",
+    "EmojiReactionAddFilter",
+    "EmojiReactionRemoveFilter",
+    "MessageRemovedFilter",
+    "Command",
+    "CommandStart",
+    "CommandObject",
+    "FromChatFilter",
+    "HaveAttachFilter",
+    "invert_f",
+    "and_f",
+    "or_f",
+    "F",
 ]

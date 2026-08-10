@@ -1,5 +1,6 @@
 from typing import Any
 
+
 class DataDict(dict[Any, Any]):
     """Just helper class for data in notify method"""
 

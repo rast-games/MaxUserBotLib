@@ -10,17 +10,21 @@ from magic_filter import MagicFilter as _MagicFilter
 if TYPE_CHECKING:
     from ..dispatcher.event import ResolvedUpdate
 
+
 class AlwaysEqual:
     def __eq__(self, other: Any) -> bool:
         return True
 
-class MagicFilter(_MagicFilter, Filter): #type: ignore[misc]
+
+class MagicFilter(_MagicFilter, Filter):  # type: ignore[misc]
     _SKIP_CHECK_PREPARATIONS: bool = True
 
     @property
-    def work_with(self) -> tuple[type[BaseMaxObject]]: return cast(tuple[type[BaseMaxObject]], (AlwaysEqual(),))
+    def work_with(self) -> tuple[type[BaseMaxObject]]:
+        return cast(tuple[type[BaseMaxObject]], (AlwaysEqual(),))
 
-    async def _check(self, update: ResolvedUpdate, *args: Any, **kwargs: Any) -> Any: return self.resolve(update)
+    async def _check(self, update: ResolvedUpdate, *args: Any, **kwargs: Any) -> Any:
+        return self.resolve(update)
 
 
 F = MagicFilter()

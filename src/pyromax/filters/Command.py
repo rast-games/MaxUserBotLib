@@ -12,8 +12,10 @@ if TYPE_CHECKING:
 
 CommandPatternType = str | Pattern[str]
 
+
 class CommandException(Exception):
     """Raised when command parsing fails."""
+
 
 @dataclass(frozen=True)
 class CommandObject:
@@ -103,9 +105,7 @@ class Command(Filter):
             commands = [commands]
 
         if not isinstance(commands, Iterable):
-            msg = (
-                "Command filter only supports str, re.Pattern, BotCommand object or their Iterable"
-            )
+            msg = "Command filter only supports str, re.Pattern, BotCommand object or their Iterable"
             raise ValueError(msg)
 
         items = []
@@ -142,11 +142,8 @@ class Command(Filter):
         except CommandException as e:
             return False
 
-        result = {
-            type(command): command
-        }
+        result = {type(command): command}
         return result
-
 
     @classmethod
     def extract_command(cls, text: str) -> CommandObject:
@@ -216,9 +213,9 @@ class Command(Filter):
 
 class CommandStart(Command):
     def __init__(
-            self,
-            ignore_case: bool = False,
-            ignore_mention: bool = False,
+        self,
+        ignore_case: bool = False,
+        ignore_mention: bool = False,
     ):
         super().__init__(
             "start",

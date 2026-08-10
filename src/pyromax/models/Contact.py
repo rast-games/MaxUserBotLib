@@ -26,3 +26,22 @@ class Contact(BaseMaxObject):
     web_app: dict[str, Any] | str | None = None
     menu_button: dict[str, Any] | None = None
     options: list[str] = Field(default_factory=list)
+
+
+    async def add_contact(self) -> "Contact":
+        return await self.max_api.add_contact(
+            contact_id=self.id,
+        )
+
+
+    async def remove_contact(self) -> None:
+        return await self.max_api.remove_contact(
+            contact_id=self.id,
+        )
+
+
+    async def get_chat_id(self, contact_id: int) -> int:
+        return await self.max_api.get_chat_id(
+            first_user_id=contact_id,
+            second_user_id=self.id,
+        )

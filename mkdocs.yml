@@ -73,14 +73,14 @@ plugins:
               - media: "(prefers-color-scheme: light)"
                 scheme: default
                 primary: indigo
-                accent: indigo
+                accent: pink
                 toggle:
                   icon: material/weather-night
                   name: Включить тёмную тему
               - media: "(prefers-color-scheme: dark)"
                 scheme: slate
-                primary: indigo
-                accent: blue
+                primary: red
+                accent: yellow
                 toggle:
                   icon: material/weather-sunny
                   name: Включить светлую тему

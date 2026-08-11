@@ -346,6 +346,9 @@ async def lyric(msg: Message):
 ```
 ---
 
+### [Полная документация](https://rast-games.github.io/pyromax/0.8/)
+
+
 # 📚 Roadmap
 
 ## Уже реализовано
@@ -363,11 +366,14 @@ async def lyric(msg: Message):
 * ✅ Redis Storage
 * ✅ Memory Storage
 * ✅ Memory Storage
+* ✅ покрытие MAX API
+* ✅ Документация
 
 ## В разработке
 
-* 🚧 Полное покрытие MAX API
-* 🚧 Документация
+* 🚧 telemetry
+* 🚧 Стабилизация работы, устойчивость, аптайм
+* 🚧 Рефакторинг плохого кода
 
 ---
 
@@ -380,7 +386,7 @@ Pull Requests приветствуются.
 ---
 
 ## 📞 Контакты
-Telegram разработчика: [ТЫК](https://t.me/Nonamegodman)
+Telegram разработчика: [ТЫК](https://t.me/PyroDeveloper)
 
 
 # 📄 License

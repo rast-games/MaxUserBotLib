@@ -26,8 +26,8 @@ dependencies = [
     "websockets==16.0",
 ]
 [project.urls]
-"Homepage" = "https://github.com/rast-games/MaxUserBotLib"
-"Bug Tracker" = "https://github.com/rast-games/MaxUserBotLib/issues"
+"Homepage" = "https://github.com/rast-games/pyromax"
+"Bug Tracker" = "https://github.com/rast-games/pyromax/issues"
 
 [dependency-groups]
 dev = [

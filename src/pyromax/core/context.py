@@ -12,7 +12,6 @@ from ..protocol import BaseMaxProtocol
 from ..transport import BaseTransport
 from ..mapping import BaseMapper
 
-
 PROTOCOLS = cast(dict[str, AsyncConstructorType[BaseMaxProtocol[Any, Any]]], _PROTOCOLS)
 TRANSPORTS = cast(dict[str, AsyncConstructorType[BaseTransport]], _TRANSPORTS)
 MAPPERS = cast(dict[str, AsyncConstructorType[BaseMapper[Any, Any]]], _MAPPERS)

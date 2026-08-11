@@ -12,29 +12,54 @@ from ...payloads.responses import PushUpdateResponse, EmojiReactionUpdateRespons
 from ...payloads.models import MessageMappingModel
 
 
-
-
 class TranslateModel(BaseModel, ABC):
     payload: BaseModel
 
-
     @abstractmethod
-    def translate(self, context: Any) -> BaseMaxObject: pass
+    def translate(self, context: Any) -> BaseMaxObject:
+        """Translate translate between mapping and public models.
+
+        :param context: Runtime context used while processing the request.
+        :type context: Any
+        :returns: The translated BaseMaxObject instance.
+        :rtype: BaseMaxObject
+        """
+        pass
 
 
 class PushTranslateModel(TranslateModel):
     payload: PushUpdateResponse
 
-
     def translate(self, context: Any) -> Message:
+        """Translate the mapping payload into Message.
+
+        :param context: Runtime context used while processing the request.
+        :type context: Any
+        :returns: The resulting Message value.
+        :rtype: Message
+        :raises RuntimeError: If self.payload.message is None.
+        :raises MapperApiError: If translated_message is None (UpdateTranslate.PushTranslateModel), message: %s.
+        :raises RuntimeError: If message.id must be int.
+        """
         self.payload.message.chat_id = self.payload.chat_id
 
+        def translate_message(
+            message: MessageMappingModel, chat_id: int | None = None
+        ) -> Message | None:
+            """Translate message.
 
-        def translate_message(message: MessageMappingModel, chat_id: int | None = None) -> Message | None:
+            :param message: MessageMappingModel instance to process.
+            :type message: MessageMappingModel
+            :param chat_id: Identifier of the chat.
+            :type chat_id: int | None
+            :returns: The resulting Message | None value.
+            :rtype: Message | None
+            :raises RuntimeError: If message.id must be int.
+            """
             message_link = message.link
             message.chat_id = chat_id
             for attach in message.attaches:
-                if hasattr(attach, 'is_attach') and attach.is_attach:
+                if hasattr(attach, "is_attach") and attach.is_attach:
                     attach.uploaded = True
                     attach.chat_id = chat_id
                     attach.message_id = message.id
@@ -47,20 +72,19 @@ class PushTranslateModel(TranslateModel):
             elif type(raw_message_id) is str:
                 message_id = int(raw_message_id)
             else:
-                raise RuntimeError('message.id must be int')
-
+                raise RuntimeError("message.id must be int")
 
             data: dict[str, Any] = {
-                'chat_id': chat_id,
-                'text': message.text,
-                'message_id': message_id,
-                'status': message.status,
-                'time': message.time,
-                'cid': message.cid,
-                'type': message.type,
-                'attaches': message.attaches,
-                'elements': message.elements,
-                'sender_id': message.sender,
+                "chat_id": chat_id,
+                "text": message.text,
+                "message_id": message_id,
+                "status": message.status,
+                "time": message.time,
+                "cid": message.cid,
+                "type": message.type,
+                "attaches": message.attaches,
+                "elements": message.elements,
+                "sender_id": message.sender,
             }
             if not message_link or message_link.message is None:
                 try:
@@ -73,7 +97,7 @@ class PushTranslateModel(TranslateModel):
 
             msg_of_link = translate_message(message_link.message, chat_id)
             if msg_of_link:
-                data['link'] = MessageLink(
+                data["link"] = MessageLink(
                     type=message_link.type,
                     message=msg_of_link,
                 )
@@ -84,12 +108,17 @@ class PushTranslateModel(TranslateModel):
             )
 
         if self.payload.message is None:
-            raise RuntimeError('self.payload.message is None')
+            raise RuntimeError("self.payload.message is None")
 
-        translated_message = translate_message(self.payload.message, self.payload.chat_id)
+        translated_message = translate_message(
+            self.payload.message, self.payload.chat_id
+        )
 
         if translated_message is None:
-            raise MapperApiError('translated_message is None (UpdateTranslate.PushTranslateModel), message: %s', self.payload.message)
+            raise MapperApiError(
+                "translated_message is None (UpdateTranslate.PushTranslateModel), message: %s",
+                self.payload.message,
+            )
 
         return translated_message
 
@@ -97,23 +126,32 @@ class PushTranslateModel(TranslateModel):
 class EmojiReactionModel(TranslateModel):
     payload: EmojiReactionUpdateResponse
 
-
     def translate(self, context: Any) -> EmojiReaction:
 
-        status = 'REMOVE'\
+        """Translate the mapping payload into EmojiReaction.
+
+        :param context: Runtime context used while processing the request.
+        :type context: Any
+        :returns: The resulting EmojiReaction value.
+        :rtype: EmojiReaction
+        """
+        status = (
+            "REMOVE"
             if not (
-                self.payload.reaction_info.counters or
-                self.payload.reaction_info.your_reaction or
-                self.payload.reaction_info.total_count
-        ) else 'ADD'
+                self.payload.reaction_info.counters
+                or self.payload.reaction_info.your_reaction
+                or self.payload.reaction_info.total_count
+            )
+            else "ADD"
+        )
 
         data = {
-            'chat_id': self.payload.chat_id,
-            'message_id': str(self.payload.message_id),
-            'counters': self.payload.reaction_info.counters,
-            'total_count': self.payload.reaction_info.total_count,
-            'your_reaction': self.payload.reaction_info.your_reaction,
-            'status': status,
+            "chat_id": self.payload.chat_id,
+            "message_id": str(self.payload.message_id),
+            "counters": self.payload.reaction_info.counters,
+            "total_count": self.payload.reaction_info.total_count,
+            "your_reaction": self.payload.reaction_info.your_reaction,
+            "status": status,
         }
 
         return EmojiReaction.model_validate(
@@ -129,6 +167,15 @@ TRANSLATE_MODELS: dict[int, type[TranslateModel]] = {
 
 
 def translate(update: Envelope, context: Any) -> BaseMaxObject | Envelope:
+    """Translate the mapping payload into BaseMaxObject | Envelope.
+
+    :param update: Incoming update to process.
+    :type update: Envelope
+    :param context: Runtime context used while processing the request.
+    :type context: Any
+    :returns: The envelope populated with the request opcode and payload.
+    :rtype: BaseMaxObject | Envelope
+    """
     if update.opcode is None or not isinstance(update.opcode, int):
         return update
 

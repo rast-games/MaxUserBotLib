@@ -1,6 +1,11 @@
-## Dispatcher
+# Dispatcher and Router
 
-::: pyromax.dispatcher.Dispatcher
+::: pyromax.dispatcher.Dispatcher.Dispatcher
     options:
+      members: true
       show_root_heading: false
-      show_root_full_path: false
+
+::: pyromax.dispatcher.Router.Router
+    options:
+      members: true
+      show_root_heading: false

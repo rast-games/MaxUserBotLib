@@ -1,5 +1,6 @@
 from .BaseMaxApiException import BaseMaxApiException
 
+
 class RoutingError(BaseMaxApiException):
     pass
 

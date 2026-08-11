@@ -7,22 +7,23 @@ from .get_random_creeds import *
 from .backoff import Backoff, BackoffConfig
 from .html_parser import DeepestTagScanner
 from .clean_and_map import clean_and_map
-
+from .fingerpint import FingerprintGenerator
 
 __all__ = [
-    'Correlator',
-    'debug_tasks',
-    'return_self_after_method',
-    'inspect_and_form',
-    'write_token',
-    'read_token',
-    'get_random_string',
-    'get_random_device_id',
-    'Backoff',
-    'BackoffConfig',
-    'clean_and_map',
-    'get_random_device_id_numeric',
-    'get_random_app_version_and_build_number',
-    'get_caller_info',
-    'EventFake'
+    "Correlator",
+    "debug_tasks",
+    "return_self_after_method",
+    "inspect_and_form",
+    "write_token",
+    "read_token",
+    "get_random_string",
+    "get_random_device_id",
+    "Backoff",
+    "BackoffConfig",
+    "clean_and_map",
+    "get_random_device_id_numeric",
+    "get_random_app_version_and_build_number",
+    "get_caller_info",
+    "EventFake",
+    "FingerprintGenerator",
 ]

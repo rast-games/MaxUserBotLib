@@ -9,8 +9,14 @@ ROOT_DIR = Path().resolve()
 JSON_FILE = ROOT_DIR / "tokens.json"
 
 
-async def write_token(token: str, name_of_token: str = 'max_token') -> None:
-    """Write or overwriting token from json file."""
+async def write_token(token: str, name_of_token: str = "max_token") -> None:
+    """Write or overwriting token from json file.
+
+    :param token: Authentication token.
+    :type token: str
+    :param name_of_token: The name of token value.
+    :type name_of_token: str
+    """
     # Читаем существующие данные
     existing_data = {}
     if JSON_FILE.exists():
@@ -29,8 +35,15 @@ async def write_token(token: str, name_of_token: str = 'max_token') -> None:
     async with aiofiles.open(JSON_FILE, mode="w", encoding="utf-8") as f:
         await f.write(json.dumps(existing_data, indent=4, ensure_ascii=False))
 
-async def read_token(name_of_token: str = 'max_token') -> str | None:
-    """Read token from json file."""
+
+async def read_token(name_of_token: str = "max_token") -> str | None:
+    """Read token from json file.
+
+    :param name_of_token: The name of token value.
+    :type name_of_token: str
+    :returns: The resulting str | None value.
+    :rtype: str | None
+    """
     if not JSON_FILE.exists():
         return None
     async with aiofiles.open(JSON_FILE, mode="r") as f:
@@ -43,11 +56,15 @@ async def read_token(name_of_token: str = 'max_token') -> str | None:
         except json.JSONDecodeError:
             return None
 
+
 async def main() -> None:
+    """Main.
+    """
     await write_token("test")
 
     token = await read_token()
     print(token)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

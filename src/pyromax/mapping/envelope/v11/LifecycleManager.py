@@ -8,7 +8,13 @@ from enum import Enum
 
 from ....utils import Backoff
 from .constants import DEFAULT_BACKOFF_CONFIG
-from ....exceptions import RestartMapperError, AlreadyFailedError, BackoffError, MapperCancelledError, MapperLifecycleError
+from ....exceptions import (
+    RestartMapperError,
+    AlreadyFailedError,
+    BackoffError,
+    MapperCancelledError,
+    MapperLifecycleError,
+)
 
 if TYPE_CHECKING:
     from .Mapper import Mapper
@@ -20,33 +26,66 @@ class _LifecycleStates(Enum):
     DISCONNECTED = 3
     DISCONNECTING = 4
 
+
 class LifecycleFailure:
     def __init__(self, exception: Exception, source: str, generation: int):
+        """Initialize the lifecycle failure.
+
+        :param exception: Exception instance to process.
+        :type exception: Exception
+        :param source: The source value.
+        :type source: str
+        :param generation: The generation value.
+        :type generation: int
+        """
         self.exception = exception
         self.source = source
         self.generation: int = generation
 
-
     def __repr__(self) -> str:
-        return f'exception: {self.exception}, source: {self.source}, generation: {self.generation}'
+        """Return the developer representation of the lifecycle failure.
+
+        :returns: The resulting str value.
+        :rtype: str
+        """
+        return f"exception: {self.exception}, source: {self.source}, generation: {self.generation}"
+
 
 class LifecycleManager:
     def __init__(self, mapper: Mapper, connect_timeout: int | None = 15):
+        """Initialize the lifecycle manager.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: Mapper
+        :param connect_timeout: The connect timeout value.
+        :type connect_timeout: int | None
+        """
         if connect_timeout is None:
             connect_timeout = 5
         self.mapper = mapper
-        self._logger = logging.getLogger('LifecycleManagerEnvelopeMapperV11')
+        self._logger = logging.getLogger("LifecycleManagerEnvelopeMapperV11")
         self._manage_lifecycle_task: asyncio.Task[Any] | None = None
         self.connect_timeout = connect_timeout
 
-
-        self._lifecycle_queue: asyncio.Queue[LifecycleFailure] = asyncio.Queue(maxsize=1)
+        self._lifecycle_queue: asyncio.Queue[LifecycleFailure] = asyncio.Queue(
+            maxsize=1
+        )
         self._generation: int = 0
         self._generation_lock: asyncio.Lock = asyncio.Lock()
         self._state: _LifecycleStates = _LifecycleStates.DISCONNECTED
 
+    def notify_about_exception(
+        self, exception: Exception, generation: int, source: str
+    ) -> None:
+        """Notify about exception.
 
-    def notify_about_exception(self, exception: Exception, generation: int, source: str) -> None:
+        :param exception: Exception instance to process.
+        :type exception: Exception
+        :param generation: The generation value.
+        :type generation: int
+        :param source: The source value.
+        :type source: str
+        """
         try:
             while True:
                 try:
@@ -63,16 +102,25 @@ class LifecycleManager:
             )
         except asyncio.QueueFull:
             self._logger.debug(
-                'failure already queued, dropping duplicate from %s',
+                "failure already queued, dropping duplicate from %s",
                 source,
             )
-            self._logger.debug(LifecycleFailure(
+            self._logger.debug(
+                LifecycleFailure(
                     generation=generation,
                     exception=exception,
                     source=source,
-                ))
+                )
+            )
 
     def start(self, auth_params: dict[str, Any] | None = None, **kwargs: Any) -> None:
+        """Start.
+
+        :param auth_params: dict[str, Any] instance to process.
+        :type auth_params: dict[str, Any] | None
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        """
         task = self._manage_lifecycle_task
 
         if task is not None and not task.done():
@@ -85,21 +133,45 @@ class LifecycleManager:
             self._manage_lifecycle(auth_params=auth_params, **kwargs)
         )
 
-
     async def _close(self) -> None:
+        """Close.
+        """
         try:
             await self.mapper.close()
         except Exception:
-            self._logger.exception('close failed')
+            self._logger.exception("close failed")
 
+    async def _connect(
+        self,
+        manage_lifecycle_backoff: Backoff,
+        auth_params: dict[str, Any] | None = None,
+        url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Connect.
 
-    async def _connect(self, manage_lifecycle_backoff: Backoff, auth_params: dict[str, Any] | None = None, url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None = None, **kwargs: Any) -> None:
+        :param manage_lifecycle_backoff: Backoff instance to process.
+        :type manage_lifecycle_backoff: Backoff
+        :param auth_params: dict[str, Any] instance to process.
+        :type auth_params: dict[str, Any] | None
+        :param url_callback: Callable to invoke.
+        :type url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        """
         if auth_params is None:
             auth_params = {}
         await self.mapper.connect()
+        send_user_agent = True
         if not self.mapper.logged or not self.mapper.token:
-            await self.mapper.login(url_callback=url_callback, login_backoff=manage_lifecycle_backoff)
+            resp = await self.mapper.login(
+                url_callback=url_callback,
+                login_backoff=manage_lifecycle_backoff,
+                **kwargs,
+            )
             self.mapper.logged = True
+            if resp is not None:
+                send_user_agent = False
 
         token = self.mapper.token
         user_agent = self.mapper.user_agent
@@ -110,13 +182,19 @@ class LifecycleManager:
         await self.mapper._auth(
             token=token,
             user_agent=user_agent,
-            **auth_params
+            send_user_agent=send_user_agent,
+            **auth_params,
         )
         self.mapper._authorized.set()
-        self._logger.debug('auth token sent')
+        self._logger.debug("auth token sent")
 
-
-    async def _establish_connection(self, manage_lifecycle_backoff: Backoff, auth_params: dict[str, Any] | None = None, close_firstly: bool = True, **kwargs: Any) -> None:
+    async def _establish_connection(
+        self,
+        manage_lifecycle_backoff: Backoff,
+        auth_params: dict[str, Any] | None = None,
+        close_firstly: bool = True,
+        **kwargs: Any,
+    ) -> None:
         # from random import random
         #
         # rnd = random()
@@ -125,15 +203,31 @@ class LifecycleManager:
         #     print('sleeping')
         #     await asyncio.sleep(20)
 
+        """Establish connection.
+
+        :param manage_lifecycle_backoff: Backoff instance to process.
+        :type manage_lifecycle_backoff: Backoff
+        :param auth_params: dict[str, Any] instance to process.
+        :type auth_params: dict[str, Any] | None
+        :param close_firstly: The close firstly value.
+        :type close_firstly: bool
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        """
         try:
             if close_firstly:
                 self._state = _LifecycleStates.DISCONNECTING
                 await self._close()
                 self._state = _LifecycleStates.DISCONNECTED
             self._state = _LifecycleStates.CONNECTING
-            await self._connect(manage_lifecycle_backoff=manage_lifecycle_backoff, auth_params=auth_params, **kwargs)
+            await self._connect(
+                manage_lifecycle_backoff=manage_lifecycle_backoff,
+                auth_params=auth_params,
+                **kwargs,
+            )
             await self._next_generation()
             self._state = _LifecycleStates.CONNECTED
+            self.mapper._protocol_connected.set()
         except Exception as e:
             try:
                 self._state = _LifecycleStates.DISCONNECTING
@@ -141,7 +235,7 @@ class LifecycleManager:
             finally:
                 self._state = _LifecycleStates.DISCONNECTED
 
-            self._logger.warning('connection failed', exc_info=True)
+            self._logger.warning("connection failed", exc_info=True)
             raise
         except asyncio.CancelledError:
             try:
@@ -149,10 +243,14 @@ class LifecycleManager:
                 await self._close()
             finally:
                 self._state = _LifecycleStates.DISCONNECTED
-            self._logger.warning('connection cancelled')
+            self._logger.warning("connection cancelled")
             raise
 
     async def _observe_auth_error(self) -> None:
+        """Observe auth error.
+
+        :raises MapperLifecycleError: If _observe_error.
+        """
         while True:
             gen = await self.get_next_generation()
             if not self.mapper._authorized.is_set():
@@ -162,20 +260,29 @@ class LifecycleManager:
             if error_state and error_state.generation != gen:
                 continue
             if not self.mapper._authorized.is_set():
-                raise MapperLifecycleError('_observe_error')
+                raise MapperLifecycleError("_observe_error")
             elif self.mapper._authorized.is_set():
                 try:
                     self._lifecycle_queue.put_nowait(error_state)
                 except asyncio.QueueFull:
                     pass
 
-
     async def _observe_task(
-            self,
-            observer_coroutine: Coroutine[Any, Any, None],
-            first_observe_coroutine: Coroutine[Any, Any, Any],
-            *other_coroutines: Coroutine[Any, Any, Any],
+        self,
+        observer_coroutine: Coroutine[Any, Any, None],
+        first_observe_coroutine: Coroutine[Any, Any, Any],
+        *other_coroutines: Coroutine[Any, Any, Any],
     ) -> None:
+        """Observe task.
+
+        :param observer_coroutine: Coroutine[Any, Any, None] instance to process.
+        :type observer_coroutine: Coroutine[Any, Any, None]
+        :param first_observe_coroutine: Coroutine[Any, Any, Any] instance to process.
+        :type first_observe_coroutine: Coroutine[Any, Any, Any]
+        :param other_coroutines: Coroutine[Any, Any, Any] instance to process.
+        :type other_coroutines: Coroutine[Any, Any, Any]
+        :raises MapperLifecycleError: If observe task failed.
+        """
         try:
             all_tasks = [first_observe_coroutine, *other_coroutines]
             async with asyncio.TaskGroup() as tg:
@@ -186,107 +293,168 @@ class LifecycleManager:
                 await asyncio.gather(*main_tasks)
                 observe_task.cancel()
 
-
         except* Exception as eg:
             original_error = eg.exceptions[0] if eg.exceptions else eg
-            self._logger.exception(f'Exception occurred while observing tasks: {[first_observe_coroutine, *other_coroutines]}', exc_info=True)
-            raise MapperLifecycleError('observe task failed') from original_error
+            self._logger.exception(
+                f"Exception occurred while observing tasks: {[first_observe_coroutine, *other_coroutines]}",
+                exc_info=True,
+            )
+            raise MapperLifecycleError("observe task failed") from original_error
 
+    async def _authorize(
+        self,
+        auth_params: dict[str, Any] | None,
+        manage_lifecycle_backoff: Backoff,
+        **kwargs: Any,
+    ) -> None:
 
-    async def _authorize(self, auth_params: dict[str, Any] | None, manage_lifecycle_backoff: Backoff, **kwargs: Any) -> None:
+        """Authorize.
 
+        :param auth_params: dict[str, Any] instance to process.
+        :type auth_params: dict[str, Any] | None
+        :param manage_lifecycle_backoff: Backoff instance to process.
+        :type manage_lifecycle_backoff: Backoff
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        """
         need_login = not self.mapper.token
 
         conn_coroutine: Coroutine[Any, Any, None]
         if need_login:
             conn_coroutine = self._establish_connection(
-                    auth_params=auth_params,
-                    manage_lifecycle_backoff=manage_lifecycle_backoff,
-                    close_firstly=True,
-                    **kwargs
-                )
+                auth_params=auth_params,
+                manage_lifecycle_backoff=manage_lifecycle_backoff,
+                close_firstly=True,
+                **kwargs,
+            )
         else:
             conn_coroutine = wait_for(
                 self._establish_connection(
                     auth_params=auth_params,
                     manage_lifecycle_backoff=manage_lifecycle_backoff,
                     close_firstly=True,
-                    **kwargs
+                    **kwargs,
                 ),
-                timeout=self.connect_timeout
+                timeout=self.connect_timeout,
             )
 
         self.mapper._authorized.clear()
         await self._observe_task(
             observer_coroutine=self._observe_auth_error(),
             first_observe_coroutine=conn_coroutine,
-            )
+        )
 
+    async def _authorize_cycle(
+        self,
+        auth_params: dict[str, Any] | None,
+        manage_lifecycle_backoff: Backoff,
+        **kwargs: Any,
+    ) -> None:
+        """Authorize cycle.
 
-    async def _authorize_cycle(self, auth_params: dict[str, Any] | None, manage_lifecycle_backoff: Backoff, **kwargs: Any) -> None:
+        :param auth_params: dict[str, Any] instance to process.
+        :type auth_params: dict[str, Any] | None
+        :param manage_lifecycle_backoff: Backoff instance to process.
+        :type manage_lifecycle_backoff: Backoff
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        """
         while True:
             try:
                 try:
 
-                    await self._authorize(auth_params=auth_params,
-                                          manage_lifecycle_backoff=manage_lifecycle_backoff, **kwargs)
+                    await self._authorize(
+                        auth_params=auth_params,
+                        manage_lifecycle_backoff=manage_lifecycle_backoff,
+                        **kwargs,
+                    )
                     manage_lifecycle_backoff.reset()
                     break
                 except asyncio.TimeoutError:
-                    self._logger.warning('timeout while waiting for connection after error')
+                    self._logger.warning(
+                        "timeout while waiting for connection after error"
+                    )
                     await manage_lifecycle_backoff.asleep()
                     continue
                 except Exception as e:
-                    self._logger.exception('establish connection failed')
+                    self._logger.exception("establish connection failed")
                     await self._close()
                     await manage_lifecycle_backoff.asleep()
                     continue
             except BackoffError:
-                self._logger.warning('backoff timeout while waiting for connection after error')
+                self._logger.warning(
+                    "backoff timeout while waiting for connection after error"
+                )
                 manage_lifecycle_backoff.reset()
 
-    async def _manage_lifecycle(self, auth_params: dict[str, Any] | None = None, **kwargs: Any) -> None:
+    async def _manage_lifecycle(
+        self, auth_params: dict[str, Any] | None = None, **kwargs: Any
+    ) -> None:
+        """Manage lifecycle.
+
+        :param auth_params: dict[str, Any] instance to process.
+        :type auth_params: dict[str, Any] | None
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        """
         manage_lifecycle_backoff = Backoff(DEFAULT_BACKOFF_CONFIG)
         while True:
             if self._state in (
                 _LifecycleStates.DISCONNECTED,
-                _LifecycleStates.DISCONNECTING
+                _LifecycleStates.DISCONNECTING,
             ):
-                await self._authorize_cycle(auth_params=auth_params, manage_lifecycle_backoff=manage_lifecycle_backoff,
-                                           **kwargs)
+                await self._authorize_cycle(
+                    auth_params=auth_params,
+                    manage_lifecycle_backoff=manage_lifecycle_backoff,
+                    **kwargs,
+                )
             current_error_state = await self._lifecycle_queue.get()
-            self._logger.warning('catch protocol failed')
-            self._logger.error(
-f'''
+            self._logger.warning("catch protocol failed")
+            self._logger.error(f"""
 
 error: {current_error_state.exception}
 source: {current_error_state.source},
 gen: {current_error_state.generation},
-'''
-            )
+""")
             if current_error_state.generation != await self.get_generation():
                 continue
 
-            await self._authorize_cycle(auth_params=auth_params, manage_lifecycle_backoff=manage_lifecycle_backoff,**kwargs)
-
-
+            await self._authorize_cycle(
+                auth_params=auth_params,
+                manage_lifecycle_backoff=manage_lifecycle_backoff,
+                **kwargs,
+            )
 
     async def get_generation(self) -> int:
+        """Retrieve generation.
+
+        :returns: The resulting int value.
+        :rtype: int
+        """
         async with self._generation_lock:
             return self._generation
 
-
     async def get_next_generation(self) -> int:
+        """Retrieve next generation.
+
+        :returns: The resulting int value.
+        :rtype: int
+        """
         return await self.get_generation() + 1
 
-
     async def _next_generation(self) -> int:
+        """Next generation.
+
+        :returns: The resulting int value.
+        :rtype: int
+        """
         async with self._generation_lock:
             self._generation += 1
             return self._generation
 
-
     async def _drain_failures(self) -> None:
+        """Drain failures.
+        """
         while True:
             try:
                 failure = self._lifecycle_queue.get_nowait()
@@ -296,6 +464,6 @@ gen: {current_error_state.generation},
                 return
 
             self._logger.debug(
-                'dropping duplicated failure from %s',
+                "dropping duplicated failure from %s",
                 failure.source,
             )

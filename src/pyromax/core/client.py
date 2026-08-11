@@ -1,83 +1,94 @@
 from __future__ import annotations
 import asyncio
 import logging
-from typing import Any, TYPE_CHECKING, AsyncGenerator
-from collections.abc import Sequence, Callable
+from typing import (
+    TYPE_CHECKING,
+    AsyncGenerator,
+)
+from collections.abc import Callable
 
 from ..mixins import AsyncInitializerMixin
-from ..methods import SendMessageMethod
-from ..exceptions import SendMessageError
 
 if TYPE_CHECKING:
-    from ..dispatcher.event import Update, MaxObject
-    from ..protocol import Response
-    from ..methods import BaseMaxApiMethod
-    from ..models import BaseFileAttachment, MessageLink
-
-from .context import *
-
-
-
-if TYPE_CHECKING:
-    from ..protocol import BaseMaxProtocol
+    from ..dispatcher.event import MaxObject
+    from ..protocol import Response, BaseMaxProtocol
     from ..transport import BaseTransport
     from ..mapping import BaseMapper
-    from ..models import Contact
+    from ..methods import BaseMaxApiMethod
+    from ..models import (
+        Chat,
+        Profile,
+        Name,
+        Contact,
+        RegistrationConfig,
+    )
+    from ..auth import AuthMiddlewareManager
+
+from .context import *
+from .CoreMixins import FullMixin, AsyncConstructorProtocolMeta
 
 
-class MaxApi(AsyncInitializerMixin):
+class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtocolMeta):
     """Asynchronous client for MAX Messenger.
 
     The client initializes a transport, protocol, and mapper from the
     project registry. Initialization is asynchronous and requires the
     selected backend names to be available in the corresponding registries.
 
-    Raises
-    ------
-    RuntimeError
-        If a transport, protocol, or mapper name is not supported.
+    :raises RuntimeError: If a transport, protocol, or mapper name is not supported.
     """
 
     async def _async_init(
-            self,
-            device_type: str = 'WEB',
-            password: str | None = None,
-            token: str | None = None,
-            transport: str = 'websocket',
-            protocol: str = 'EnvelopeProtocol',
-            mapper: str = 'EnvelopeV11',
-            transport_options: dict[str, Any] | None = None,
-            workflow_data: dict[Any, Any] | None = None,
-            user_agent_params: dict[str, Any] | None = None,
-            **kwargs: Any
+        self,
+        device_type: str = "WEB",
+        password: str | None = None,
+        token: str | None = None,
+        transport: str = "websocket",
+        protocol: str = "EnvelopeProtocol",
+        mapper: str = "EnvelopeV11",
+        transport_options: dict[str, Any] | None = None,
+        workflow_data: dict[Any, Any] | None = None,
+        user_agent_params: dict[str, Any] | None = None,
+        auth_middleware_manager: AuthMiddlewareManager | None = None,
+        registration_config: RegistrationConfig | None = None,
+        token_suffix: str | None = None,
+        **kwargs: Any,
     ) -> None:
+        """Asynchronously initialize transport, protocol, and mapper.
+
+        :param device_type: Device type reported to the API.
+        :type device_type: str
+        :param password: Optional account password.
+        :type password: str | None
+        :param token: Optional auth token.
+        :type token: str | None
+        :param transport: Transport backend name.
+        :type transport: str
+        :param protocol: Protocol backend name.
+        :type protocol: str
+        :param mapper: Mapper backend name.
+        :type mapper: str
+        :param transport_options: Keyword arguments passed to the transport constructor.
+        :type transport_options: dict[str, Any] | None
+        :param kwargs: Extra keyword arguments passed to mapper initialization.
+        :type kwargs: Any
+
+        :param workflow_data: dict[Any, Any] global workflow data.
+        :type workflow_data: dict[Any, Any] | None
+        :param user_agent_params: dict[str, Any] params of user agent.
+        :type user_agent_params: dict[str, Any] | None
+        :param auth_middleware_manager: AuthMiddlewareManager instance of auth middleware manager.
+        :type auth_middleware_manager: AuthMiddlewareManager | None
+        :param registration_config: instance of RegistrationConfig for register account.
+        :type registration_config: RegistrationConfig | None
+        :param token_suffix: The token suffix value.
+        :type token_suffix: str | None
+        :raises RuntimeError: If transport or protocol or mapper cannot be None.
+        """
         if workflow_data is None:
             workflow_data = {}
 
-
-        """Asynchronously initialize transport, protocol, and mapper.
-
-        Parameters
-        ----------
-        device_type
-            Device type reported to the API.
-        password
-            Optional account password.
-        token
-            Optional auth token.
-        transport
-            Transport backend name.
-        protocol
-            Protocol backend name.
-        mapper
-            Mapper backend name.
-        transport_options
-            Keyword arguments passed to the transport constructor.
-        kwargs
-            Extra keyword arguments passed to mapper initialization.
-        """
-
-        logger = logging.getLogger('MaxApi')
+        logger = logging.getLogger("MaxApi")
 
         if transport not in TRANSPORTS:
             raise RuntimeError(f"transport {transport} is not supported")
@@ -88,27 +99,27 @@ class MaxApi(AsyncInitializerMixin):
         if mapper not in MAPPERS:
             raise RuntimeError(f"mapper {mapper} is not supported")
 
+        logger.info("Start initialization...")
 
-
-        logger.info('Start initialization...')
-        logger.info('Initializing transport...')
+        logger.info("Initializing transport...")
         if transport_options:
             max_transport = await TRANSPORTS[transport](**transport_options)
         else:
             max_transport = await TRANSPORTS[transport]()
-        logger.info('Transport initialized.')
-        logger.info('Initializing protocol...')
+        logger.info("Transport initialized.")
+
+        logger.info("Initializing protocol...")
         protocol_res: Any = await PROTOCOLS[protocol](transport=max_transport)
         max_protocol: BaseMaxProtocol[Any, Any] = protocol_res
+        logger.info("Protocol initialized.")
 
-        # max_protocol: BaseMaxProtocol[Any, Any] = await PROTOCOLS[protocol](transport=max_transport) # type: ignore
-        logger.info('Protocol initialized.')
-        logger.info('Initializing mapper...')
+        logger.info("Initializing mapper...")
         map_class = MAPPERS[mapper]
         max_mapper = await map_class(self, protocol=max_protocol)
-        logger.info('Mapper initialized.')
+        logger.info("Mapper initialized.")
+
         await asyncio.to_thread(
-            self.__init__, # type: ignore[misc]
+            self.__init__,  # type: ignore[misc]
             protocol=max_protocol,
             password=password,
             transport=max_transport,
@@ -118,40 +129,130 @@ class MaxApi(AsyncInitializerMixin):
             logger=logger,
             workflow_data=workflow_data,
             device_type=device_type,
+            auth_middleware_manager=auth_middleware_manager,
         )
+
+        if token is None and self.auth_middleware_manager is not None:
+            from ..models.AuthFlow import AuthFlow
+
+            mapper_type = type(self.mapper)
+            protocol_type = type(self.protocol)
+            transport_type = type(self.transport)
+
+            auth_alias = AuthFlow[
+                mapper_type,  # type: ignore[valid-type]
+                protocol_type,  # type: ignore[valid-type]
+                transport_type,  # type: ignore[valid-type]
+            ]
+
+            async def auth_wrapped(
+                auth_flow: AuthFlow[Any, Any, Any],
+                _: dict[Any, Any],
+            ) -> AuthFlow[Any, Any, Any]:
+                """Auth wrapped.
+
+                :param auth_flow: AuthFlow[Any, Any, Any] instance to process.
+                :type auth_flow: AuthFlow[Any, Any, Any]
+                :param _: dict[Any, Any] instance to process.
+                :type _: dict[Any, Any]
+                :returns: The resulting AuthFlow[Any, Any, Any] value.
+                :rtype: AuthFlow[Any, Any, Any]
+                """
+                return auth_flow
+
+            wrapped = self.auth_middleware_manager.wrap_middlewares(
+                self.auth_middleware_manager,
+                auth_wrapped,
+            )
+
+            auth_alias.model_rebuild(
+                _types_namespace={
+                    "MaxApi": type(self),
+                }
+            )
+
+            flow = auth_alias(
+                mapper=self.mapper,
+                protocol=self.protocol,
+                transport=self.transport,
+            )
+            flow.as_(self)
+
+            data = {
+                type(self): self,
+                mapper_type: self.mapper,
+                protocol_type: self.protocol,
+                transport_type: self.transport,
+            }
+
+            resolved_flow = await wrapped(flow, cast(dict[Any, Any], data))
+            token = resolved_flow.token
 
         await self.mapper.initialize_client(
             token=token,
             device_type=device_type,
             password=password,
             user_agent_params=user_agent_params,
-            **kwargs
+            registration_config=registration_config,
+            token_suffix=token_suffix,
+            **kwargs,
         )
 
-
     def __init__(
-            self,
-            device_type: str = 'WEB',
-            password: str | None = None,
-            transport: str | BaseTransport | None = None,
-            protocol: str | BaseMaxProtocol[Any, Any] | None = None,
-            mapper: BaseMapper[Any, Any] | None = None,
-            transport_options: dict[str, Any] | None = None,
-            token: str | None = None,
-            logger: logging.Logger | None = None,
-            workflow_data: dict[Any, Any] | None = None,
-            **kwargs: Any
-
+        self,
+        device_type: str = "WEB",
+        password: str | None = None,
+        transport: BaseTransport | None = None,
+        protocol: BaseMaxProtocol[Any, Any] | None = None,
+        mapper: BaseMapper[Any, Any] | None = None,
+        transport_options: dict[str, Any] | None = None,
+        token: str | None = None,
+        logger: logging.Logger | None = None,
+        workflow_data: dict[Any, Any] | None = None,
+        auth_middleware_manager: AuthMiddlewareManager | None = None,
+        registration_config: RegistrationConfig | None = None,
+        token_suffix: str | None = None,
+        **kwargs: Any,
     ) -> None:
+        """Initialize the max api.
 
+        :param device_type: Device type reported to the API.
+        :type device_type: str
+        :param password: Optional account password.
+        :type password: str | None
+        :param token: Optional auth token.
+        :type token: str | None
+        :param transport: Transport backend name.
+        :type transport: str
+        :param protocol: Protocol backend name.
+        :type protocol: str
+        :param mapper: Mapper backend name.
+        :type mapper: str
+        :param transport_options: Keyword arguments passed to the transport constructor.
+        :type transport_options: dict[str, Any] | None
+        :param kwargs: Extra keyword arguments passed to mapper initialization.
+        :type kwargs: Any
+
+        :param workflow_data: dict[Any, Any] global workflow data.
+        :type workflow_data: dict[Any, Any] | None
+        :param user_agent_params: dict[str, Any] params of user agent.
+        :type user_agent_params: dict[str, Any] | None
+        :param auth_middleware_manager: AuthMiddlewareManager instance of auth middleware manager.
+        :type auth_middleware_manager: AuthMiddlewareManager | None
+        :param registration_config: instance of RegistrationConfig for register account.
+        :type registration_config: RegistrationConfig | None
+        :param token_suffix: The token suffix value.
+        :type token_suffix: str | None
+        :raises RuntimeError: If transport or protocol or mapper cannot be None.
+        """
         if workflow_data is None:
             workflow_data = {}
 
         if logger is None:
-            logger = logging.getLogger('MaxApi')
+            logger = logging.getLogger("MaxApi")
 
         if transport is None or protocol is None or mapper is None:
-            raise RuntimeError('transport or protocol or mapper cannot be None')
+            raise RuntimeError("transport or protocol or mapper cannot be None")
 
         self.transport = transport
         self.transport_options = transport_options
@@ -161,96 +262,50 @@ class MaxApi(AsyncInitializerMixin):
         self.password = password
         self.id: int | None = None
         self.phone: str | None = None
-        self.names: Any | list[dict[str, Any]] | None = None
-        self.__logger: logging.Logger | None = logger
+
+        self.me: Profile | None = None
+        self.chats: list[Chat] | None = None
+        self.names: list[Name] | None = None
+        self.contacts: list[Contact | None] = []
+        self.users: dict[int, Contact] = {}
+
+        self._logger: logging.Logger | None = logger
         self.workflow_data = workflow_data
-
-
+        self.auth_middleware_manager = auth_middleware_manager
 
     async def __call__(
-            self,
-            class_of_method: type[BaseMaxApiMethod[Any]],
-            *args: Any,
-            **kwargs: Any
+        self, class_of_method: type[BaseMaxApiMethod[Any]], *args: Any, **kwargs: Any
     ) -> Any:
-        if self.__logger is None:
-            raise RuntimeError('Try a call method before initialization, because logger has not been initialized')
-        self.__logger.debug('Calling MaxApi method: %s', class_of_method.__name__)
+        """Invoke the max api.
+
+        :param class_of_method: MAX API method class to instantiate and execute.
+        :type class_of_method: type[BaseMaxApiMethod[Any]]
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        :raises RuntimeError: If try a call method before initialization, because logger has not been initialized.
+        """
+        if self._logger is None:
+            raise RuntimeError(
+                "Try a call method before initialization, because logger has not been initialized"
+            )
+        self._logger.debug("Calling MaxApi method: %s", class_of_method.__name__)
         method = class_of_method().as_(self)
 
-        return await method(
-            *args,
-            **kwargs
-        )
+        return await method(*args, **kwargs)
 
-
-    def listen_updates(self, context: Any) -> tuple[Callable[[Response], MaxObject], AsyncGenerator[Response, None]]:
+    def listen_updates(
+        self, context: Any
+    ) -> tuple[Callable[[Response], MaxObject], AsyncGenerator[Response, None]]:
         """Yield incoming updates forever.
 
-        Parameters
-        ----------
-        context
-            Runtime context passed to the mapper.
+        :param context: Runtime context passed to the mapper.
+        :type context: Any
 
-        Returns
-        -------
-        AsyncGenerator[Update, None]
-            Stream of incoming updates.
+        :returns: Stream of incoming updates.
+        :rtype: tuple[Callable[[Response], MaxObject], AsyncGenerator[Response, None]]
         """
         return self.mapper.listen_updates(context=context)
-
-
-    async def send_message(
-            self,
-            chat_id: int,
-            text: str = '',
-            attaches: list[BaseFileAttachment] | None = None,
-            link: MessageLink | None = None,
-    ) -> Any:
-        """Send a message to a chat.
-
-                Parameters
-                ----------
-                chat_id
-                    Target chat identifier.
-                text
-                    Message text.
-                attaches
-                    Optional list of attachments.
-                link
-                    Optional message link object.
-
-                Returns
-                -------
-                Any
-                    API response returned by the mapper.
-
-                Raises
-                ------
-                SendMessageError
-                    If message sending fails.
-                """
-        try:
-            return await self(
-                SendMessageMethod,
-                text=text,
-                chat_id=chat_id,
-                attaches=attaches,
-                link=link,
-            )
-        except SendMessageError as e:
-            if self.__logger is None:
-                raise AttributeError('logger not initialized in MaxApi instance')
-            self.__logger.warning('Failed to send message: %s', e)
-            raise e
-
-
-    async def download_file(
-            self,
-            file: BaseFileAttachment
-    ) -> tuple[bytes, dict[str, str]] | tuple[None, None]:
-        return await self.mapper.download_file(file)
-
-
-    async def get_member_by_id(self, member_id: int) -> Sequence[Contact | Any]:
-        return await self.mapper.get_member_by_id(member_id)

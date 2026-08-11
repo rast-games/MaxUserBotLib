@@ -6,19 +6,25 @@ from ..config import APP_VERSIONS
 
 
 def get_random_string(length: int, chars: str) -> str:
-    """
-    Generate a random string of specified length using characters from the provided set.
-    
+    """Generate a random string of specified length using characters from the provided set.
+
     This function creates a random string by selecting characters randomly
     from the provided character set. Each character in the result is chosen
     independently and uniformly from the chars string.
-    
+
     Args:
         length: The desired length of the random string
         chars: String containing the set of characters to choose from
-        
+
     Returns:
         A random string of the specified length containing only characters from chars
+
+    :param length: The length value.
+    :type length: int
+    :param chars: The chars value.
+    :type chars: str
+    :returns: The resulting str value.
+    :rtype: str
     """
     random_string = ""
     for i in range(length):
@@ -27,28 +33,44 @@ def get_random_string(length: int, chars: str) -> str:
 
 
 def get_random_device_id() -> str:
+    """Retrieve random device id.
+
+    :returns: The resulting str value.
+    :rtype: str
+    """
     random_string = list(get_random_string(32, string.ascii_lowercase + string.digits))
 
     for inx in [8, 13, 18, 23]:
-        random_string.insert(inx, '-')
+        random_string.insert(inx, "-")
 
-    return ''.join(random_string)
+    return "".join(random_string)
 
 
 def get_random_device_id_numeric() -> str:
-    random_string = ''
+    """Retrieve random device id numeric.
+
+    :returns: The resulting str value.
+    :rtype: str
+    """
+    random_string = ""
     for _ in range(18):
         random_string += random.choice(string.digits)
 
-    random_string += '00'
+    random_string += "00"
     return random_string
 
 
 def get_random_app_version_and_build_number() -> tuple[str, int]:
 
+    """Retrieve random app version and build number.
+
+    :returns: The resulting tuple[str, int] value.
+    :rtype: tuple[str, int]
+    """
     app_version, build_number = random.choice(APP_VERSIONS)
 
     return app_version, build_number
+
 
 # def get_app_version_by_build_number(build_num: int) -> str:
 #     for app_version, build_number in APP_VERSIONS:

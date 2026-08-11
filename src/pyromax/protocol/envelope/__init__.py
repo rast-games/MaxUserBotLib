@@ -1,7 +1,3 @@
 from .envelope import *
 
-
-__all__ = [
-    'Envelope',
-    'EnvelopeProtocol'
-]
+__all__ = ["Envelope", "EnvelopeProtocol"]

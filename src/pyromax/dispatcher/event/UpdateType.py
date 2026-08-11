@@ -11,18 +11,20 @@ from ...mixins import SingletonMeta
 class UnhandledObject(metaclass=SingletonMeta):
     """Just unhandled marker"""
 
+
 UNHANDLED = UnhandledObject()
 
 
 class UnknownUpdateType(metaclass=SingletonMeta):
     """Just unknown update marker"""
 
+
 UNKNOWN_UPDATE = UnknownUpdateType()
 
 
-MaxObject: TypeAlias = 'BaseMaxObject | Response'
+MaxObject: TypeAlias = "BaseMaxObject | Response"
 
 
-Update = TypeVar('Update', bound='Response')
+Update = TypeVar("Update", bound="Response")
 
-ResolvedUpdate = TypeVar('ResolvedUpdate', bound=MaxObject)
+ResolvedUpdate = TypeVar("ResolvedUpdate", bound=MaxObject)

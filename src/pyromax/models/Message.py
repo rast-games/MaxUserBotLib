@@ -1,57 +1,99 @@
 from __future__ import annotations
-from typing import Optional, Literal, Any
+from typing import Optional, Literal, Any, TYPE_CHECKING
 
 from .base import BaseMaxObject
-from .Files import BaseFileAttachment
+from .ReadState import ReadState
+from .EmojiReaction import EmojiReaction
+from .Attachments import BaseFileAttachment
 
 
 class MessageLink(BaseMaxObject):
     type: str | None = None
     message: Message | None = None
-    message_id: int | None = None
+    message_id: int | str | None = None
+    chat_id: int | None = None
 
 
 class Message(BaseMaxObject):
-    message_id: int
+    message_id: int | str
     chat_id: int
     time: int
     type: str | None
     sender_id: int | None = None
-    status: Literal['EDITED', 'REPLY', 'USER', 'REMOVED', 'SHARE', 'OTHER'] = 'USER'
+    status: Literal["EDITED", "REPLY", "USER", "REMOVED", "SHARE", "OTHER"] = "USER"
     text: str | None
     cid: int | None
-    attaches: list[Any] | None = None
     elements: list[dict[str, Any]] | None = None
     link: MessageLink | None = None
 
+    if TYPE_CHECKING:
+        from .Attachments import (
+            VideoAttachment,
+            VoiceAttachment,
+            VideoNoteAttachment,
+            FileAttachment,
+            PhotoAttachment,
+            BaseFileAttachment,
+        )
+        from .Poll import Poll
+
+        from typing import Never
+
+        attaches: list[  # type: ignore[valid-type]
+            VideoAttachment
+            | VideoNoteAttachment
+            | VoiceAttachment
+            | FileAttachment
+            | PhotoAttachment
+            | Poll[Never]
+            | Any
+        ]
+    else:
+        attaches: list[Any] | None = None
 
     async def answer(
-            self,
-            text: str | None = None,
-            attaches: list[BaseFileAttachment] | None = None,
-            link: MessageLink | None= None,
+        self,
+        text: str | None = None,
+        attaches: list[BaseFileAttachment] | None = None,
+        link: MessageLink | None = None,
     ) -> Any:
+        """Answer.
+
+        :param text: Message or textual content.
+        :type text: str | None
+        :param attaches: Attachments associated with the message.
+        :type attaches: list[BaseFileAttachment] | None
+        :param link: Invite, message, or resource link.
+        :type link: MessageLink | None
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        """
         from ..methods import SendMessageMethod
 
-        if self._max_api is None:
-            raise RuntimeError('Message Model not linked to MaxApi instance')
-
-        return await self._max_api(
+        return await self.max_api(
             class_of_method=SendMessageMethod,
             text=text,
             chat_id=self.chat_id,
             attaches=attaches,
-            link=link
+            link=link,
         )
 
-
     async def reply(
-            self,
-            text: str | None = None,
-            attaches: list[BaseFileAttachment] | None = None,
+        self,
+        text: str | None = None,
+        attaches: list[BaseFileAttachment] | None = None,
     ) -> Any:
+        """Reply.
+
+        :param text: Message or textual content.
+        :type text: str | None
+        :param attaches: Attachments associated with the message.
+        :type attaches: list[BaseFileAttachment] | None
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        """
         link = MessageLink(
-            type='REPLY',
+            type="REPLY",
             message_id=self.message_id,
         )
 
@@ -59,4 +101,118 @@ class Message(BaseMaxObject):
             text=text,
             attaches=attaches,
             link=link,
+        )
+
+    async def forward(
+        self,
+        chat_id: int,
+        *,
+        notify: bool = True,
+    ) -> Message | None:
+        """Forward.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param notify: Whether MAX should notify affected users.
+        :type notify: bool
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
+        """
+        return await self.max_api.forward_message(
+            from_chat_id=self.chat_id,
+            to_chat_id=chat_id,
+            message_id=self.message_id,
+            notify=notify,
+        )
+
+    async def pin(self, notify_pin: bool = True) -> None:
+        """Pin.
+
+        :param notify_pin: Whether MAX should notify affected users.
+        :type notify_pin: bool
+        """
+        return await self.max_api.pin_message(
+            chat_id=self.chat_id,
+            message_id=self.message_id,
+            notify=notify_pin,
+        )
+
+    async def edit(
+        self,
+        text: str | None = None,
+        attachments: list[BaseFileAttachment] | None = None,
+    ) -> Message:
+        """Edit.
+
+        :param text: Message or textual content.
+        :type text: str | None
+        :param attachments: Attachments associated with the message.
+        :type attachments: list[BaseFileAttachment] | None
+        :returns: The resulting Message value.
+        :rtype: Message
+        """
+        return await self.max_api.edit_message(
+            chat_id=self.chat_id,
+            message_id=self.message_id,
+            text=text,
+            attachments=attachments,
+        )
+
+    async def delete(self, for_me: bool = False) -> None:
+        """Delete.
+
+        :param for_me: Delete only for the current account.
+        :type for_me: bool
+        """
+        return await self.max_api.delete_messages(
+            chat_id=self.chat_id,
+            message_ids=[self.message_id],
+            for_me=for_me,
+        )
+
+    async def read(self) -> ReadState:
+        """Read.
+
+        :returns: The resulting ReadState value.
+        :rtype: ReadState
+        """
+        return await self.max_api.read_message(
+            chat_id=self.chat_id,
+            message_id=self.message_id,
+        )
+
+    async def react(self, reaction: str) -> EmojiReaction | None:
+        """React.
+
+        :param reaction: The reaction value.
+        :type reaction: str
+        :returns: The resulting EmojiReaction | None value.
+        :rtype: EmojiReaction | None
+        """
+        return await self.max_api.add_reaction(
+            chat_id=self.chat_id,
+            message_id=self.message_id,
+            reaction_id=reaction,
+        )
+
+    async def unreact(self) -> EmojiReaction | None:
+        """Unreact.
+
+        :returns: The resulting EmojiReaction | None value.
+        :rtype: EmojiReaction | None
+        """
+        return await self.max_api.remove_reaction(
+            chat_id=self.chat_id,
+            message_id=self.message_id,
+        )
+
+    async def get_reactions(self) -> dict[str, EmojiReaction] | None:
+        """Retrieve reactions.
+
+        :returns: The resulting dict[str, EmojiReaction] | None value.
+        :rtype: dict[str, EmojiReaction] | None
+        """
+        return await self.max_api.get_reactions(
+            chat_id=self.chat_id,
+            message_ids=[self.message_id],
         )

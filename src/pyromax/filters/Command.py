@@ -12,8 +12,10 @@ if TYPE_CHECKING:
 
 CommandPatternType = str | Pattern[str]
 
+
 class CommandException(Exception):
     """Raised when command parsing fails."""
+
 
 @dataclass(frozen=True)
 class CommandObject:
@@ -37,15 +39,19 @@ class CommandObject:
 
     @property
     def mentioned(self) -> bool:
-        """
-        This command has mention?
+        """This command has mention?
+
+        :returns: ``True`` when the requested condition is satisfied; otherwise ``False``.
+        :rtype: bool
         """
         return bool(self.mention)
 
     @property
     def text(self) -> str:
-        """
-        Generate original text from object
+        """Generate original text from object
+
+        :returns: The resulting str value.
+        :rtype: str
         """
         line = self.prefix + self.command
         if self.mention:
@@ -64,6 +70,11 @@ class Command(Filter):
 
     @property
     def work_with(self) -> tuple[type[Message]]:
+        """Work with.
+
+        :returns: The resulting tuple[type[Message]] value.
+        :rtype: tuple[type[Message]]
+        """
         return (Message,)
 
     __slots__ = (
@@ -83,10 +94,7 @@ class Command(Filter):
         ignore_mention: bool = False,
         magic: None = None,
     ) -> None:
-
-        super().__init__()
-        """
-        List of commands (string or compiled regexp patterns)
+        """List of commands (string or compiled regexp patterns)
 
         :param prefix: Prefix for command.
             Prefix is always a single char but here you can pass all of allowed prefixes,
@@ -96,16 +104,25 @@ class Command(Filter):
         :param ignore_mention: Ignore bot mention. By default,
             bot can not handle commands intended for other bots
         :param magic: Validate command object via Magic filter after all checks done
+
+        :param values: Values to validate or transform.
+        :type values: Any
+        :param commands: Collection of commands.
+        :type commands: list[str] | None
+        :type prefix: str
+        :type ignore_case: bool
+        :type ignore_mention: bool
+        :type magic: None
+        :raises ValueError: If the requested action cannot be completed.
         """
+        super().__init__()
         if commands is None:
             commands = []
         if isinstance(commands, (str, Pattern)):
             commands = [commands]
 
         if not isinstance(commands, Iterable):
-            msg = (
-                "Command filter only supports str, re.Pattern, BotCommand object or their Iterable"
-            )
+            msg = "Command filter only supports str, re.Pattern, BotCommand object or their Iterable"
             raise ValueError(msg)
 
         items = []
@@ -133,6 +150,15 @@ class Command(Filter):
         self.magic = magic
 
     async def _check(self, message: Message, max_api: MaxApi) -> bool | dict[Any, Any]:
+        """Check.
+
+        :param message: Message instance to process.
+        :type message: Message
+        :param max_api: MAX client to bind or use.
+        :type max_api: MaxApi
+        :returns: The resulting bool | dict[Any, Any] value.
+        :rtype: bool | dict[Any, Any]
+        """
         text = message.text
         if not text:
             return False
@@ -142,16 +168,21 @@ class Command(Filter):
         except CommandException as e:
             return False
 
-        result = {
-            type(command): command
-        }
+        result = {type(command): command}
         return result
-
 
     @classmethod
     def extract_command(cls, text: str) -> CommandObject:
         # First step: separate command with arguments
         # "/command@mention arg1 arg2" -> "/command@mention", ["arg1 arg2"]
+        """Extract command.
+
+        :param text: Message or textual content.
+        :type text: str
+        :returns: The resulting CommandObject value.
+        :rtype: CommandObject
+        :raises CommandException: If the requested action cannot be completed.
+        """
         try:
             full_command, *args = text.split(maxsplit=1)
         except ValueError as e:
@@ -169,6 +200,12 @@ class Command(Filter):
         )
 
     def validate_prefix(self, command: CommandObject) -> None:
+        """Validate prefix.
+
+        :param command: CommandObject instance to process.
+        :type command: CommandObject
+        :raises CommandException: If the requested action cannot be completed.
+        """
         if command.prefix not in self.prefix:
             msg = "Invalid command prefix"
             raise CommandException(msg)
@@ -181,6 +218,14 @@ class Command(Filter):
     #             raise CommandException(msg)
 
     def validate_command(self, command: CommandObject) -> CommandObject:
+        """Validate command.
+
+        :param command: CommandObject instance to process.
+        :type command: CommandObject
+        :returns: The resulting CommandObject value.
+        :rtype: CommandObject
+        :raises CommandException: If the requested action cannot be completed.
+        """
         for allowed_command in cast(Sequence[CommandPatternType], self.commands):
             # Command can be presented as regexp pattern or raw string
             # then need to validate that in different ways
@@ -199,12 +244,16 @@ class Command(Filter):
         raise CommandException(msg)
 
     async def parse_command(self, text: str, max_api: MaxApi) -> CommandObject:
-        """
-        Extract command from the text and validate
+        """Extract command from the text and validate
 
         :param text:
         :param max_api:
         :return:
+
+        :type text: str
+        :type max_api: MaxApi
+        :returns: The resulting CommandObject value.
+        :rtype: CommandObject
         """
         command = self.extract_command(text)
         self.validate_prefix(command=command)
@@ -216,10 +265,17 @@ class Command(Filter):
 
 class CommandStart(Command):
     def __init__(
-            self,
-            ignore_case: bool = False,
-            ignore_mention: bool = False,
+        self,
+        ignore_case: bool = False,
+        ignore_mention: bool = False,
     ):
+        """Initialize the command start.
+
+        :param ignore_case: The ignore case value.
+        :type ignore_case: bool
+        :param ignore_mention: The ignore mention value.
+        :type ignore_mention: bool
+        """
         super().__init__(
             "start",
             prefix="/",

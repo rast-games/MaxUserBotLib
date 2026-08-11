@@ -10,8 +10,8 @@ class Counters(TypedDict):
 
 class EmojiReaction(BaseMaxObject):
     chat_id: int
-    message_id: str
+    message_id: str | int
     counters: list[Counters] | None
     total_count: int | None
     your_reaction: str | None
-    status: Literal['ADD', 'REMOVE'] = 'ADD'
+    status: Literal["ADD", "REMOVE"] = "ADD"

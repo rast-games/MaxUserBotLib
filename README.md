@@ -6,7 +6,7 @@
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![PyPI](https://img.shields.io/pypi/v/pyromax)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Status](https://img.shields.io/badge/status-Alpha-orange)
+![Status](https://img.shields.io/badge/status-Beta-blue)
 
 Pyromax — современный фреймворк, вдохновлённый **aiogram 3.x**, который переносит привычную архитектуру Telegram-ботов в экосистему **MAX Messenger**.
 
@@ -346,6 +346,9 @@ async def lyric(msg: Message):
 ```
 ---
 
+### [Полная документация](https://rast-games.github.io/pyromax/0.8/)
+
+
 # 📚 Roadmap
 
 ## Уже реализовано
@@ -363,11 +366,14 @@ async def lyric(msg: Message):
 * ✅ Redis Storage
 * ✅ Memory Storage
 * ✅ Memory Storage
+* ✅ покрытие MAX API
+* ✅ Документация
 
 ## В разработке
 
-* 🚧 Полное покрытие MAX API
-* 🚧 Документация
+* 🚧 telemetry
+* 🚧 Стабилизация работы, устойчивость, аптайм
+* 🚧 Рефакторинг плохого кода
 
 ---
 
@@ -380,7 +386,7 @@ Pull Requests приветствуются.
 ---
 
 ## 📞 Контакты
-Telegram разработчика: [ТЫК](https://t.me/Nonamegodman)
+Telegram разработчика: [ТЫК](https://t.me/PyroDeveloper)
 
 
 # 📄 License

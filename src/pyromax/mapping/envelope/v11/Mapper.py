@@ -8,44 +8,56 @@ from ....exceptions import MapperApiError
 from .payloads.responses import ErrorMessageResponse
 from .translate.ToDTO import update_translate
 from ...registry import register_mapper
+from .LifecycleManager import LifecycleManager
 
 
 from .mixins import FullMixin
 from ....models import BaseMaxObject
 
 
-@register_mapper('EnvelopeV11')
+@register_mapper("EnvelopeV11")
 class Mapper(FullMixin):
     async def _listen_updates(
-            self,
-            context: Any,
+        self,
+        context: Any,
     ) -> AsyncGenerator[Response, None]:
-        """Endless updates reader"""
+        """Endless updates reader
+
+        :param context: Runtime context used while processing the request.
+        :type context: Any
+        :yields: Items produced by the iterator.
+        :ytype: AsyncGenerator[Response, None]
+        :raises RuntimeError: If lifecycle manager not set.
+        :raises MapperApiError: If the requested action cannot be completed.
+        """
         async with self._update_listener_lock:
 
             while True:
                 try:
                     await self._mapper_connected.wait()
                     if self._lifecycle_manager is None:
-                        raise RuntimeError('Lifecycle manager not set')
+                        raise RuntimeError("Lifecycle manager not set")
                     gen = await self._lifecycle_manager.get_generation()
                     updates = await self.protocol.get_updates()
                 except RuntimeError as e:
                     if self._lifecycle_manager is None:
-                        self._logger.warning('lifecycle manager not available, wait init')
+                        self._logger.warning(
+                            "lifecycle manager not available, wait init"
+                        )
                         await self._lifecycle_manager_inited.wait()
-                    self._logger.error('get_updates failed: %s', e)
-                    self._lifecycle_manager.notify_about_exception( #type: ignore[union-attr]
+                        self._lifecycle_manager: LifecycleManager
+                        gen = await self._lifecycle_manager.get_generation()
+                    self._logger.error("get_updates failed: %s", e)
+                    self._lifecycle_manager.notify_about_exception(
                         e,
                         generation=gen,
-                        source='Mapper.listen_updates',
+                        source="Mapper.listen_updates",
                     )
                     continue
                 for update in updates:
-                    if update.model_dump().get('error'):
+                    if update.model_dump().get("error"):
                         error = ErrorMessageResponse(**update.model_dump(by_alias=True))
-                        error_msg = \
-                            f"""
+                        error_msg = f"""
                             error: {error.error},
                             title: {error.title},
                             localized_message: {error.localized_message},
@@ -55,6 +67,18 @@ class Mapper(FullMixin):
                     # yield cast(Update, update_translate(update, context=context))
                     yield update
 
+    def listen_updates(
+        self, context: Any
+    ) -> tuple[
+        Callable[[Response], Response | BaseMaxObject], AsyncGenerator[Response, None]
+    ]:
+        """Listen for updates.
 
-    def listen_updates(self, context: Any) -> tuple[Callable[[Response], Response | BaseMaxObject], AsyncGenerator[Response, None]]:
-        return partial(update_translate, context=context), self._listen_updates(context=context)
+        :param context: Runtime context used while processing the request.
+        :type context: Any
+        :returns: Items produced by the iterator.
+        :rtype: tuple[Callable[[Response], Response | BaseMaxObject], AsyncGenerator[Response, None]]
+        """
+        return partial(update_translate, context=context), self._listen_updates(
+            context=context
+        )

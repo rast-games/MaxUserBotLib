@@ -28,11 +28,17 @@ class PyMongoStorage(BaseStorage):
         db_name: str = "aiogram_fsm",
         collection_name: str = "states_and_data",
     ) -> None:
-        """
+        """Initialize MongoDB-backed FSM storage.
+
         :param client: instance of AsyncMongoClient
         :param key_builder: builder that helps to convert contextual key to string
         :param db_name: name of the MongoDB database for FSM
         :param collection_name: name of the collection for storing FSM states and data
+
+        :type client: AsyncMongoClient[Any]
+        :type key_builder: KeyBuilder | None
+        :type db_name: str
+        :type collection_name: str
         """
         if key_builder is None:
             key_builder = DefaultKeyBuilder()
@@ -48,13 +54,18 @@ class PyMongoStorage(BaseStorage):
         connection_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> "PyMongoStorage":
-        """
-        Create an instance of :class:`PyMongoStorage` with the specified connection url
+        """Create an instance of :class:`PyMongoStorage` with the specified connection url
 
         :param url: the connection url (i.e. :code:`mongodb://user:password@host:port`)
         :param connection_kwargs: see :code:`pymongo` docs
         :param kwargs: arguments passed to :class:`PyMongoStorage`
         :return: an instance of :class:`PyMongoStorage`
+
+        :type url: str
+        :type connection_kwargs: dict[str, Any] | None
+        :type kwargs: Any
+        :returns: The resulting 'PyMongoStorage' value.
+        :rtype: 'PyMongoStorage'
         """
         if connection_kwargs is None:
             connection_kwargs = {}
@@ -62,10 +73,18 @@ class PyMongoStorage(BaseStorage):
         return cls(client=client, **kwargs)
 
     async def close(self) -> None:
-        """Cleanup client resources and disconnect from MongoDB."""
-        return await self._client.close()
+        """Cleanup client resources and disconnect from MongoDB.
+        """
+        return cast(None, await self._client.close())
 
     def resolve_state(self, value: StateType) -> str | None:
+        """Resolve state.
+
+        :param value: Value to validate or transform.
+        :type value: StateType
+        :returns: The resulting str | None value.
+        :rtype: str | None
+        """
         if value is None:
             return None
         if isinstance(value, State):
@@ -73,6 +92,13 @@ class PyMongoStorage(BaseStorage):
         return str(value)
 
     async def set_state(self, key: StorageKey, state: StateType = None) -> None:
+        """Set state.
+
+        :param key: Storage key.
+        :type key: StorageKey
+        :param state: FSM state.
+        :type state: StateType
+        """
         document_id = self._key_builder.build(key)
         if state is None:
             updated = await self._collection.find_one_and_update(
@@ -91,6 +117,13 @@ class PyMongoStorage(BaseStorage):
             )
 
     async def get_state(self, key: StorageKey) -> str | None:
+        """Retrieve state.
+
+        :param key: Storage key.
+        :type key: StorageKey
+        :returns: The resulting str | None value.
+        :rtype: str | None
+        """
         document_id = self._key_builder.build(key)
         document = await self._collection.find_one({"_id": document_id})
         if document is None:
@@ -98,6 +131,14 @@ class PyMongoStorage(BaseStorage):
         return cast(str | None, document.get("state"))
 
     async def set_data(self, key: StorageKey, data: Mapping[str, Any]) -> None:
+        """Set data.
+
+        :param key: Storage key.
+        :type key: StorageKey
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: Mapping[str, Any]
+        :raises DataNotDictLikeError: If the requested action cannot be completed.
+        """
         if not isinstance(data, dict):
             msg = f"Data must be a dict or dict-like object, got {type(data).__name__}"
             raise DataNotDictLikeError(msg)
@@ -120,13 +161,31 @@ class PyMongoStorage(BaseStorage):
             )
 
     async def get_data(self, key: StorageKey) -> dict[str, Any]:
+        """Retrieve data.
+
+        :param key: Storage key.
+        :type key: StorageKey
+        :returns: The resulting dict[str, Any] value.
+        :rtype: dict[str, Any]
+        """
         document_id = self._key_builder.build(key)
         document = await self._collection.find_one({"_id": document_id})
         if document is None or not document.get("data"):
             return {}
         return cast(dict[str, Any], document["data"])
 
-    async def update_data(self, key: StorageKey, data: Mapping[str, Any]) -> dict[str, Any]:
+    async def update_data(
+        self, key: StorageKey, data: Mapping[str, Any]
+    ) -> dict[str, Any]:
+        """Update data.
+
+        :param key: Storage key.
+        :type key: StorageKey
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: Mapping[str, Any]
+        :returns: The resulting dict[str, Any] value.
+        :rtype: dict[str, Any]
+        """
         document_id = self._key_builder.build(key)
         update_with = {f"data.{key}": value for key, value in data.items()}
         update_result = await self._collection.find_one_and_update(

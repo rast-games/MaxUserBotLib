@@ -7,18 +7,32 @@ from .base import BaseTransport
 class StreamTransport(BaseTransport):
     @abstractmethod
     async def send(self, request: Any) -> None:
+        """Send.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Any
+        """
         pass
 
     @abstractmethod
     async def recv(self) -> Any:
-        pass
+        """Recv.
 
+        :returns: The value returned by the backend.
+        :rtype: Any
+        """
+        pass
 
     @abstractmethod
     async def close(self) -> None:
+        """Close."""
         pass
-
 
     @abstractmethod
     async def connect(self, **kwargs: Any) -> None:
+        """Connect.
+
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        """
         pass

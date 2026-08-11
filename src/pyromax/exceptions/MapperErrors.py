@@ -12,8 +12,10 @@ class RestartMapperError(BaseMapperError):
 class GetQRError(BaseMapperError):
     """Raised when QR code retrieval fails."""
 
+
 class MapperApiError(BaseMapperError):
     """Raised when the remote API returns an error response."""
+
     title: str | None = None
     localized_message: str | None = None
     message: str | None = None
@@ -22,6 +24,7 @@ class MapperApiError(BaseMapperError):
 
 class AlreadyFailedError(BaseMapperError):
     """Raised when a send is attempted after mapper failure."""
+
 
 class MapperCancelledError(MapperApiError):
     """Raised when a send was cancelled."""
@@ -37,3 +40,19 @@ class MapperConnectError(BaseMapperError):
 
 class MapperLifecycleError(BaseMapperError):
     pass
+
+
+class MapperNotImplementedError(BaseMapperError, NotImplementedError):
+    pass
+
+
+class MapperNotImplementedMethodError(MapperNotImplementedError):
+    pass
+
+
+class MapperTransportNotSupportedForMethodError(MapperNotImplementedError):
+    pass
+
+
+class ReactionMapperError(MapperApiError):
+    """Raised when the operations with reactions fails."""

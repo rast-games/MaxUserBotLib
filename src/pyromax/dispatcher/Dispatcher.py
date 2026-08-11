@@ -3,7 +3,15 @@ import logging
 from typing import cast, AsyncGenerator, Any, TYPE_CHECKING, TypeVar
 
 from .Router import Router
-from .event import UpdateMaxEventObserver, UNHANDLED, Update, UNKNOWN_UPDATE, skip, MaxObject, ResolvedUpdate
+from .event import (
+    UpdateMaxEventObserver,
+    UNHANDLED,
+    Update,
+    UNKNOWN_UPDATE,
+    skip,
+    MaxObject,
+    ResolvedUpdate,
+)
 from ..fsm.storage.memory import MemoryStorage, DisabledEventIsolation
 from ..fsm.middleware import FSMContextMiddleware
 from ..fsm.storage.base import BaseEventIsolation, BaseStorage
@@ -29,27 +37,50 @@ class Dispatcher(Router):
     Dispatcher extends Router and is intended to be the root object
     that receives updates from MaxApi and dispatches them to handlers.
     """
+
     def __init__(
-            self,
-            *,
-            storage: BaseStorage | None = None,
-            fsm_strategy: FSMStrategy = FSMStrategy.USER_IN_CHAT,
-            events_isolation: BaseEventIsolation | None = None,
-            disable_fsm: bool = False,
-            name: str | None = None,
-            **kwargs: Any,
+        self,
+        *,
+        storage: BaseStorage | None = None,
+        fsm_strategy: FSMStrategy = FSMStrategy.USER_IN_CHAT,
+        events_isolation: BaseEventIsolation | None = None,
+        disable_fsm: bool = False,
+        name: str | None = None,
+        **kwargs: Any,
     ) -> None:
-        super().__init__(
-            name=name
-        )
+        """Initialize the dispatcher.
+
+        :param storage: BaseStorage instance to process.
+        :type storage: BaseStorage | None
+        :param fsm_strategy: FSMStrategy instance to process.
+        :type fsm_strategy: FSMStrategy
+        :param events_isolation: BaseEventIsolation instance to process.
+        :type events_isolation: BaseEventIsolation | None
+        :param disable_fsm: The disable fsm value.
+        :type disable_fsm: bool
+        :param name: The name value.
+        :type name: str | None
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        """
+        super().__init__(name=name)
 
         self.update = UpdateMaxEventObserver(
-            router=self,
-            event_name="UPDATE",
-            type_of_update=MaxObject
+            router=self, event_name="UPDATE", type_of_update=MaxObject
         )
 
-        async def notify_wrapper(resolved_update: ResolvedUpdate, data: DataDict) -> Any:
+        async def notify_wrapper(
+            resolved_update: ResolvedUpdate, data: DataDict
+        ) -> Any:
+            """Notify wrapper.
+
+            :param resolved_update: ResolvedUpdate instance to process.
+            :type resolved_update: ResolvedUpdate
+            :param data: Contextual data passed through the processing pipeline.
+            :type data: DataDict
+            :returns: The value returned by the wrapped callable or backend.
+            :rtype: Any
+            """
             data.update(
                 {
                     type(resolved_update): resolved_update,
@@ -62,13 +93,9 @@ class Dispatcher(Router):
 
         self.update.register(notify_wrapper)
 
-        self.update.outer_middleware(
-            ErrorsMiddleware(self)
-        )
+        self.update.outer_middleware(ErrorsMiddleware(self))
 
-        self.update.outer_middleware(
-            UserContextMiddleware()
-        )
+        self.update.outer_middleware(UserContextMiddleware())
 
         self.fsm = FSMContextMiddleware(
             storage=storage or MemoryStorage(),
@@ -79,28 +106,22 @@ class Dispatcher(Router):
         if not disable_fsm:
             self.update.outer_middleware(self.fsm)
 
-        self.__logger = logging.getLogger('MaxDispatcher')
-
-
+        self.__logger = logging.getLogger("MaxDispatcher")
 
     async def start_polling(self, max_api: MaxApi) -> None:
         """Start reading updates and dispatch them to handlers.
 
-        Parameters
-        ----------
-        max_api
-            Initialized MaxApi instance.
+        :param max_api: Initialized MaxApi instance.
+        :type max_api: MaxApi
         """
 
-        context = {
-            'max_api': max_api
-        }
+        context = {"max_api": max_api}
 
         update_translator, updates = max_api.listen_updates(context=context)
         try:
             async for update in updates:
 
-                self.__logger.debug('Received update: %s', update)
+                self.__logger.debug("Received update: %s", update)
 
                 resolved_update = update_translator(update)
 
@@ -117,16 +138,15 @@ class Dispatcher(Router):
                 data[DataDict] = data
 
                 response = await update_observer.wrap_outer_middleware(
-                    update_observer.update,
-                    update,
-                    data=data
+                    update_observer.update, update, data=data
                 )
 
                 handled = response is not UNHANDLED and response is not UNKNOWN_UPDATE
 
-                self.__logger.debug(f'update %s was{"" if handled is not UNHANDLED else "n`t"} handled: %s', update, handled)
+                self.__logger.debug(
+                    f'update %s was{"" if handled else "n`t"} handled: %s',
+                    update,
+                    handled,
+                )
         finally:
             await self.fsm.close()
-
-
-

@@ -1,4 +1,4 @@
-# Dispatcher and Router
+# Dispatcher и Router
 
 ::: pyromax.dispatcher.Dispatcher.Dispatcher
     options:

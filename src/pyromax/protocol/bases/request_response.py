@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from ...models import BaseMaxObject
+# from ...models import BaseMaxObject
 
 
 class Response(ABC):

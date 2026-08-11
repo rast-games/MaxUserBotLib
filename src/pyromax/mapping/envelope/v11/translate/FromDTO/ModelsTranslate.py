@@ -31,6 +31,14 @@ from ......models import (
 
 
 def reverse_translate_message(message: Message) -> MessageMappingModel | None:
+    """Reverse translate message.
+
+    :param message: Message instance to process.
+    :type message: Message
+    :returns: The resulting MessageMappingModel | None value.
+    :rtype: MessageMappingModel | None
+    :raises RuntimeError: If in message link exists, but not bound to another message.
+    """
     if not message:
         return None
     message_link = message.link
@@ -88,6 +96,13 @@ channel_permissions_map: dict[ChannelPermissions, ChannelPermissionsMappingModel
 def reverse_translate_channel_permissions(
     channel_permission: ChannelPermissions,
 ) -> ChannelPermissionsMappingModel:
+    """Reverse translate channel permissions.
+
+    :param channel_permission: ChannelPermissions instance to process.
+    :type channel_permission: ChannelPermissions
+    :returns: The resulting ChannelPermissionsMappingModel value.
+    :rtype: ChannelPermissionsMappingModel
+    """
     return channel_permissions_map[channel_permission]
 
 
@@ -104,6 +119,13 @@ two_factor_action_map: dict[TwoFactorAction, TwoFactorActionMappingModel] = {
 def reverse_translate_two_factor_actions(
     two_factor_action: TwoFactorAction,
 ) -> TwoFactorActionMappingModel:
+    """Reverse translate two factor actions.
+
+    :param two_factor_action: TwoFactorAction instance to process.
+    :type two_factor_action: TwoFactorAction
+    :returns: The resulting TwoFactorActionMappingModel value.
+    :rtype: TwoFactorActionMappingModel
+    """
     return two_factor_action_map[two_factor_action]
 
 
@@ -120,6 +142,13 @@ poll_flags_map: dict[PollFlags, PollFlagsMappingModel] = {
 def reverse_translate_poll_flags(
     poll_flags: PollFlags,
 ) -> PollFlagsMappingModel:
+    """Reverse translate poll flags.
+
+    :param poll_flags: PollFlags instance to process.
+    :type poll_flags: PollFlags
+    :returns: The resulting PollFlagsMappingModel value.
+    :rtype: PollFlagsMappingModel
+    """
     flags = [poll_flags_map[poll_flag] for poll_flag in poll_flags]
 
     if not flags:
@@ -131,6 +160,13 @@ def reverse_translate_poll_flags(
 def reverse_translate_poll_vote(
     poll_vote: PollVote,
 ) -> PollVoteMappingModel:
+    """Reverse translate poll vote.
+
+    :param poll_vote: PollVote instance to process.
+    :type poll_vote: PollVote
+    :returns: The resulting PollVoteMappingModel value.
+    :rtype: PollVoteMappingModel
+    """
     return PollVoteMappingModel(
         timestamp=poll_vote.timestamp,
         user_id=poll_vote.user_id,
@@ -140,6 +176,13 @@ def reverse_translate_poll_vote(
 def reverse_translate_poll_result(
     poll_result: PollResult,
 ) -> PollResultMappingModel:
+    """Reverse translate poll result.
+
+    :param poll_result: PollResult instance to process.
+    :type poll_result: PollResult
+    :returns: The resulting PollResultMappingModel value.
+    :rtype: PollResultMappingModel
+    """
     return PollResultMappingModel(
         answer_id=poll_result.answer_id,
         vote_count=poll_result.vote_count,
@@ -152,6 +195,13 @@ def reverse_translate_poll_result(
 def reverse_translate_poll_state(
     poll_state: PollState,
 ) -> PollStateMappingModel:
+    """Reverse translate poll state.
+
+    :param poll_state: PollState instance to process.
+    :type poll_state: PollState
+    :returns: The resulting PollStateMappingModel value.
+    :rtype: PollStateMappingModel
+    """
     return PollStateMappingModel(
         total=poll_state.total,
         voter_preview_ids=poll_state.voter_preview_ids,
@@ -166,6 +216,13 @@ def reverse_translate_poll_state(
 def reverse_translate_poll_answer(
     poll_answer: PollAnswer,
 ) -> PollAnswerMappingModel:
+    """Reverse translate poll answer.
+
+    :param poll_answer: PollAnswer instance to process.
+    :type poll_answer: PollAnswer
+    :returns: The resulting PollAnswerMappingModel value.
+    :rtype: PollAnswerMappingModel
+    """
     return PollAnswerMappingModel(
         text=poll_answer.text,
         answer_id=poll_answer.answer_id,
@@ -175,6 +232,13 @@ def reverse_translate_poll_answer(
 def reverse_translate_poll(
     poll: Poll,
 ) -> PollMappingModel:
+    """Reverse translate poll.
+
+    :param poll: Poll instance to process.
+    :type poll: Poll
+    :returns: The resulting PollMappingModel value.
+    :rtype: PollMappingModel
+    """
     return PollMappingModel(
         type="POLL",
         title=poll.title,
@@ -198,12 +262,26 @@ privacy_access_map = {
 def reverse_translate_privacy_access(
     privacy_access: PrivacyAccess,
 ) -> PrivacyAccessMappingModel:
+    """Reverse translate privacy access.
+
+    :param privacy_access: PrivacyAccess instance to process.
+    :type privacy_access: PrivacyAccess
+    :returns: The resulting PrivacyAccessMappingModel value.
+    :rtype: PrivacyAccessMappingModel
+    """
     return privacy_access_map[privacy_access]
 
 
 def reverse_translate_privacy_settings(
     privacy_settings: PrivacySettings,
 ) -> PrivacySettingsMappingModel:
+    """Reverse translate privacy settings.
+
+    :param privacy_settings: PrivacySettings instance to process.
+    :type privacy_settings: PrivacySettings
+    :returns: The resulting PrivacySettingsMappingModel value.
+    :rtype: PrivacySettingsMappingModel
+    """
     none_or_not_none = lambda value: (
         reverse_translate_privacy_access(value) if value is not None else None
     )

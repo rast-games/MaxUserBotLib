@@ -12,6 +12,18 @@ class ChangeGroupProfileMethod(BaseMaxApiMethod[Union[Chat, None]]):
         name: str | None = None,
         description: str | None = None,
     ) -> Chat | None:
+        """Execute the change group profile MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param name: The name value.
+        :type name: str | None
+        :param description: The description value.
+        :type description: str | None
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        :raises RuntimeError: If changeGroupProfile method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("ChangeGroupProfile method not bound to MaxApi instance")
 

@@ -70,7 +70,7 @@ from ..methods import (
     RemoveContactMethod,
     ImportContactsMethod,
 )
-from ..exceptions import SendMessageError
+from ..exceptions import SendMessageError, MapperApiError, ReactionError
 
 if TYPE_CHECKING:
     from ..dispatcher.event import Update, MaxObject
@@ -112,10 +112,7 @@ class MaxApi(AsyncInitializerMixin):
     project registry. Initialization is asynchronous and requires the
     selected backend names to be available in the corresponding registries.
 
-    Raises
-    ------
-    RuntimeError
-        If a transport, protocol, or mapper name is not supported.
+    :raises RuntimeError: If a transport, protocol, or mapper name is not supported.
     """
 
     async def _async_init(
@@ -134,30 +131,39 @@ class MaxApi(AsyncInitializerMixin):
         token_suffix: str | None = None,
         **kwargs: Any,
     ) -> None:
-        if workflow_data is None:
-            workflow_data = {}
-
         """Asynchronously initialize transport, protocol, and mapper.
 
-        Parameters
-        ----------
-        device_type
-            Device type reported to the API.
-        password
-            Optional account password.
-        token
-            Optional auth token.
-        transport
-            Transport backend name.
-        protocol
-            Protocol backend name.
-        mapper
-            Mapper backend name.
-        transport_options
-            Keyword arguments passed to the transport constructor.
-        kwargs
-            Extra keyword arguments passed to mapper initialization.
+        :param device_type: Device type reported to the API.
+        :type device_type: str
+        :param password: Optional account password.
+        :type password: str | None
+        :param token: Optional auth token.
+        :type token: str | None
+        :param transport: Transport backend name.
+        :type transport: str
+        :param protocol: Protocol backend name.
+        :type protocol: str
+        :param mapper: Mapper backend name.
+        :type mapper: str
+        :param transport_options: Keyword arguments passed to the transport constructor.
+        :type transport_options: dict[str, Any] | None
+        :param kwargs: Extra keyword arguments passed to mapper initialization.
+        :type kwargs: Any
+
+        :param workflow_data: dict[Any, Any] global workflow data.
+        :type workflow_data: dict[Any, Any] | None
+        :param user_agent_params: dict[str, Any] params of user agent.
+        :type user_agent_params: dict[str, Any] | None
+        :param auth_middleware_manager: AuthMiddlewareManager instance of auth middleware manager.
+        :type auth_middleware_manager: AuthMiddlewareManager | None
+        :param registration_config: instance of RegistrationConfig for register account.
+        :type registration_config: RegistrationConfig | None
+        :param token_suffix: The token suffix value.
+        :type token_suffix: str | None
+        :raises RuntimeError: If the requested action cannot be completed.
         """
+        if workflow_data is None:
+            workflow_data = {}
 
         logger = logging.getLogger("MaxApi")
 
@@ -171,22 +177,24 @@ class MaxApi(AsyncInitializerMixin):
             raise RuntimeError(f"mapper {mapper} is not supported")
 
         logger.info("Start initialization...")
+
         logger.info("Initializing transport...")
         if transport_options:
             max_transport = await TRANSPORTS[transport](**transport_options)
         else:
             max_transport = await TRANSPORTS[transport]()
         logger.info("Transport initialized.")
+
         logger.info("Initializing protocol...")
         protocol_res: Any = await PROTOCOLS[protocol](transport=max_transport)
         max_protocol: BaseMaxProtocol[Any, Any] = protocol_res
-
-        # max_protocol: BaseMaxProtocol[Any, Any] = await PROTOCOLS[protocol](transport=max_transport) # type: ignore
         logger.info("Protocol initialized.")
+
         logger.info("Initializing mapper...")
         map_class = MAPPERS[mapper]
         max_mapper = await map_class(self, protocol=max_protocol)
         logger.info("Mapper initialized.")
+
         await asyncio.to_thread(
             self.__init__,  # type: ignore[misc]
             protocol=max_protocol,
@@ -218,6 +226,15 @@ class MaxApi(AsyncInitializerMixin):
                 auth_flow: AuthFlow[Any, Any, Any],
                 _: dict[Any, Any],
             ) -> AuthFlow[Any, Any, Any]:
+                """Auth wrapped.
+
+                :param auth_flow: AuthFlow[Any, Any, Any] instance to process.
+                :type auth_flow: AuthFlow[Any, Any, Any]
+                :param _: dict[Any, Any] instance to process.
+                :type _: dict[Any, Any]
+                :returns: The resulting AuthFlow[Any, Any, Any] value.
+                :rtype: AuthFlow[Any, Any, Any]
+                """
                 return auth_flow
 
             wrapped = self.auth_middleware_manager.wrap_middlewares(
@@ -230,10 +247,8 @@ class MaxApi(AsyncInitializerMixin):
                     "MaxApi": type(self),
                 }
             )
-            # auth_constructor.model_rebuild()
 
             flow = auth_alias(
-                # max_api=self,
                 mapper=self.mapper,
                 protocol=self.protocol,
                 transport=self.transport,
@@ -276,7 +291,36 @@ class MaxApi(AsyncInitializerMixin):
         token_suffix: str | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the max api.
 
+        :param device_type: The device type value.
+        :type device_type: str
+        :param password: Account password.
+        :type password: str | None
+        :param transport: Transport backend or transport instance.
+        :type transport: BaseTransport | None
+        :param protocol: Protocol backend or protocol instance.
+        :type protocol: BaseMaxProtocol[Any, Any] | None
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: BaseMapper[Any, Any] | None
+        :param transport_options: dict[str, Any] instance to process.
+        :type transport_options: dict[str, Any] | None
+        :param token: Authentication token.
+        :type token: str | None
+        :param logger: Logger used for diagnostic messages.
+        :type logger: logging.Logger | None
+        :param workflow_data: dict[Any, Any] instance to process.
+        :type workflow_data: dict[Any, Any] | None
+        :param auth_middleware_manager: AuthMiddlewareManager instance to process.
+        :type auth_middleware_manager: AuthMiddlewareManager | None
+        :param registration_config: RegistrationConfig instance to process.
+        :type registration_config: RegistrationConfig | None
+        :param token_suffix: The token suffix value.
+        :type token_suffix: str | None
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :raises RuntimeError: If transport or protocol or mapper cannot be None.
+        """
         if workflow_data is None:
             workflow_data = {}
 
@@ -300,7 +344,6 @@ class MaxApi(AsyncInitializerMixin):
         self.names: list[Name] | None = None
         self.contacts: list[Contact | None] = []
         self.users: dict[int, Contact] = {}
-        # self.messages: dict[int, list[Message]]
 
         self.__logger: logging.Logger | None = logger
         self.workflow_data = workflow_data
@@ -309,6 +352,18 @@ class MaxApi(AsyncInitializerMixin):
     async def __call__(
         self, class_of_method: type[BaseMaxApiMethod[Any]], *args: Any, **kwargs: Any
     ) -> Any:
+        """Invoke the max api.
+
+        :param class_of_method: MAX API method class to instantiate and execute.
+        :type class_of_method: type[BaseMaxApiMethod[Any]]
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        :raises RuntimeError: If try a call method before initialization, because logger has not been initialized.
+        """
         if self.__logger is None:
             raise RuntimeError(
                 "Try a call method before initialization, because logger has not been initialized"
@@ -323,21 +378,24 @@ class MaxApi(AsyncInitializerMixin):
     ) -> tuple[Callable[[Response], MaxObject], AsyncGenerator[Response, None]]:
         """Yield incoming updates forever.
 
-        Parameters
-        ----------
-        context
-            Runtime context passed to the mapper.
+        :param context: Runtime context passed to the mapper.
+        :type context: Any
 
-        Returns
-        -------
-        AsyncGenerator[Update, None]
-            Stream of incoming updates.
+        :returns: Stream of incoming updates.
+        :rtype: tuple[Callable[[Response], MaxObject], AsyncGenerator[Response, None]]
         """
         return self.mapper.listen_updates(context=context)
 
     async def download_file(
         self, file: BaseFileAttachment
     ) -> tuple[bytes, dict[str, str]] | tuple[None, None]:
+        """Download file.
+
+        :param file: File attachment to process.
+        :type file: BaseFileAttachment
+        :returns: The resulting tuple[bytes, dict[str, str]] | tuple[None, None] value is request headers | None semantic.
+        :rtype: tuple[bytes, dict[str, str]] | tuple[None, None]
+        """
         return cast(
             tuple[bytes, dict[str, str]] | tuple[None, None],
             await self(
@@ -349,6 +407,17 @@ class MaxApi(AsyncInitializerMixin):
     async def upload_file(
         self, data: bytes | None, typeof: type[BaseFileAttachment], **kwargs: Any
     ) -> list[BaseFileAttachment | Any]:
+        """Upload file.
+
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: bytes | None
+        :param typeof: Attachment class that determines the upload type.
+        :type typeof: type[BaseFileAttachment]
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting collection.
+        :rtype: list[BaseFileAttachment | Any]
+        """
         from ..models import BaseFileAttachment
 
         return cast(
@@ -371,26 +440,23 @@ class MaxApi(AsyncInitializerMixin):
     ) -> Message | None:
         """Send a message to a chat.
 
-        Parameters
-        ----------
-        chat_id
-            Target chat identifier.
-        text
-            Message text.
-        attaches
-            Optional list of attachments.
-        link
-            Optional message link object.
+        :param chat_id: Target chat identifier.
+        :type chat_id: int
+        :param text: Message text.
+        :type text: str
+        :param attaches: Optional list of attachments.
+        :type attaches: list[BaseFileAttachment] | None
+        :param link: Optional message link object.
+        :type link: MessageLink | None
 
-        Returns
-        -------
-        Any
-            API response returned by the mapper.
+        :returns: API response returned by the mapper.
+        :rtype: Message | None
 
-        Raises
-        ------
-        SendMessageError
-            If message sending fails.
+        :raises SendMessageError: If message sending fails.
+
+        :param notify: Whether MAX should notify affected users.
+        :type notify: bool
+        :raises AttributeError: If logger not initialized in MaxApi instance.
         """
         from ..models import Message
 
@@ -419,6 +485,20 @@ class MaxApi(AsyncInitializerMixin):
         from_chat_id: int,
         notify: bool = True,
     ) -> Message | None:
+        """Forward message.
+
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param to_chat_id: Identifier of the destination chat.
+        :type to_chat_id: int
+        :param from_chat_id: Identifier of the source chat.
+        :type from_chat_id: int
+        :param notify: Whether MAX should notify affected users.
+        :type notify: bool
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
+        :raises AttributeError: If logger not initialized in MaxApi instance.
+        """
         try:
             from ..models import Message
 
@@ -446,6 +526,21 @@ class MaxApi(AsyncInitializerMixin):
         attaches: list[BaseFileAttachment] | None = None,
         **kwargs: Any,
     ) -> Message:
+        """Edit message.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param text: Message or textual content.
+        :type text: str | None
+        :param attaches: Attachments associated with the message.
+        :type attaches: list[BaseFileAttachment] | None
+        # :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        # :type kwargs: Any
+        :returns: The resulting Message value.
+        :rtype: Message
+        """
         from ..models import Message
 
         return cast(
@@ -462,6 +557,15 @@ class MaxApi(AsyncInitializerMixin):
     async def get_messages(
         self, chat_id: int, message_ids: Iterable[str] | Iterable[int]
     ) -> list[Message]:
+        """Retrieve messages.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_ids: Identifiers of the messages.
+        :type message_ids: Iterable[str] | Iterable[int]
+        :returns: The resulting collection.
+        :rtype: list[Message]
+        """
         from ..models import Message
 
         return cast(
@@ -474,6 +578,15 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def get_message(self, chat_id: int, message_id: int | str) -> Message | None:
+        """Retrieve message.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
+        """
         msgs = await self.get_messages(chat_id=chat_id, message_ids=[message_id])
         return msgs[0] if msgs else None
 
@@ -537,7 +650,31 @@ class MaxApi(AsyncInitializerMixin):
         get_messages: bool = True,
         interactive: bool = False,
     ) -> list[Message] | list[str]:
+        """Retrieve chat history.
 
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param forward: How many messages to load ahead from ``from_time``.
+        :type forward: int
+        :param backward: How many messages to load back from ``from_time``.
+        :type backward: int
+        :param backward_time: Look-back time window in milliseconds.
+        :type backward_time: int
+        :param forward_time: Forward time window in milliseconds.
+        :type forward_time: int
+        :param from_time: The reference point in Unix time (milliseconds). If ``None``, the current moment is used.
+        :type from_time: int | None
+        :param item_type: History item type.
+        :type item_type: Literal['DELAYED', 'REGULAR']
+        :param get_chat: Request chat data along with the history.
+        :type get_chat: bool
+        :param get_messages: The get messages value.
+        :type get_messages: bool
+        :param interactive: Request the messages themselves.
+        :type interactive: bool
+        :returns: Message collection if get_messages is True else message ids collection.
+        :rtype: list[Message] | list[str]
+        """
         from ..models import Message
 
         return cast(
@@ -563,6 +700,15 @@ class MaxApi(AsyncInitializerMixin):
         message_ids: list[str] | list[int],
         for_me: bool = False,
     ) -> None:
+        """Delete messages.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_ids: Identifiers of the messages.
+        :type message_ids: list[str] | list[int]
+        :param for_me: Delete only for the current account.
+        :type for_me: bool
+        """
         return cast(
             None,
             await self(
@@ -576,7 +722,15 @@ class MaxApi(AsyncInitializerMixin):
     async def pin_message(
         self, chat_id: int, message_id: int | str, notify: bool = True
     ) -> None:
+        """Pin message.
 
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param notify: Whether MAX should notify affected users.
+        :type notify: bool
+        """
         return cast(
             None,
             await self(
@@ -594,47 +748,53 @@ class MaxApi(AsyncInitializerMixin):
         reaction_id: str,
         reaction_type: str = "EMOJI",
     ) -> EmojiReaction | None:
-        """
-        Parameters
-        ----------
-        chat_id
-            int
-        message_id
-            int | str
-        reaction_id
-            str
-        reaction_type
-            str
+        """Add an emoji reaction to a message.
 
-        Returns
-        -------
-        EmojiReaction | None
-            info about reaction or None if cannot get this info
+        :param chat_id: Identifier of the chat containing the message.
+        :type chat_id: int
+        :param message_id: int | str
+        :type message_id: int | str
+        :param reaction_id: str
+        :type reaction_id: str
+        :param reaction_type: str
+        :type reaction_type: str
 
-        Raises
-        -------
-            ReactionMapperError
-                if adding reaction failed
+        :returns: info about reaction or None if cannot get this info
+        :rtype: EmojiReaction | None
+
+        :raises ReactionError: if adding reaction failed
         """
 
         from ..models import EmojiReaction
 
-        return cast(
-            EmojiReaction | None,
-            await self(
-                AddReactionMethod,
-                chat_id=chat_id,
-                message_id=message_id,
-                reaction_id=reaction_id,
-                reaction_type=reaction_type,
-            ),
-        )
+        try:
+            return cast(
+                EmojiReaction | None,
+                await self(
+                    AddReactionMethod,
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    reaction_id=reaction_id,
+                    reaction_type=reaction_type,
+                ),
+            )
+        except MapperApiError as e:
+            raise ReactionError("add reaction failed") from e
 
     async def remove_reaction(
         self,
         chat_id: int,
         message_id: int | str,
     ) -> EmojiReaction | None:
+        """Remove reaction.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :returns: The resulting EmojiReaction | None value.
+        :rtype: EmojiReaction | None
+        """
         from ..models import EmojiReaction
 
         return cast(
@@ -647,6 +807,15 @@ class MaxApi(AsyncInitializerMixin):
         chat_id: int,
         message_ids: list[str] | list[int],
     ) -> dict[str, EmojiReaction] | None:
+        """Retrieve reactions.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_ids: Identifiers of the messages.
+        :type message_ids: list[str] | list[int]
+        :returns: The resulting dict[<message_id>, <EmojiReaction for this message>] | None value.
+        :rtype: dict[str, EmojiReaction] | None
+        """
         from ..models import EmojiReaction
 
         return cast(
@@ -661,6 +830,19 @@ class MaxApi(AsyncInitializerMixin):
         typeof: str = "READ_MESSAGE",
         mark: int | None = None,
     ) -> ReadState:
+        """Read message.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param typeof: Attachment class that determines the upload type.
+        :type typeof: str
+        :param mark: The mark value.
+        :type mark: int | None
+        :returns: The resulting ReadState value.
+        :rtype: ReadState
+        """
         from ..models import ReadState
 
         return cast(
@@ -678,6 +860,13 @@ class MaxApi(AsyncInitializerMixin):
         self,
         poll: Poll,
     ) -> Poll:
+        """Create poll.
+
+        :param poll: Poll instance to process.
+        :type poll: Poll
+        :returns: The resulting Poll value what can be send with message in send_message method.
+        :rtype: Poll
+        """
         from ..models import Poll
 
         return cast(
@@ -695,6 +884,19 @@ class MaxApi(AsyncInitializerMixin):
         poll_id: int,
         answer_ids: list[int],
     ) -> PollState:
+        """Submit a vote for poll.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param poll_id: Identifier of the poll.
+        :type poll_id: int
+        :param answer_ids: Identifiers of the answer objects.
+        :type answer_ids: list[int]
+        :returns: The resulting PollState value.
+        :rtype: PollState
+        """
         from ..models import PollState
 
         return cast(
@@ -717,6 +919,23 @@ class MaxApi(AsyncInitializerMixin):
         event: str = "new",
         typeof: str = "CONTROL",
     ) -> tuple[Chat, Message] | tuple[None, None]:
+        """Create group.
+
+        :param title: The title value.
+        :type title: str
+        :param participant_ids: Identifiers of the participant objects.
+        :type participant_ids: list[int] | None
+        :param notify: Whether MAX should notify affected users.
+        :type notify: bool
+        :param chat_type: The chat type value.
+        :type chat_type: str
+        :param event: Incoming event to process.
+        :type event: str
+        :param typeof: Attachment class that determines the upload type.
+        :type typeof: str
+        :returns: The resulting tuple[Chat, Message] | tuple[None, None] value.
+        :rtype: tuple[Chat, Message] | tuple[None, None]
+        """
         from ..models import Chat, Message
 
         return cast(
@@ -738,6 +957,17 @@ class MaxApi(AsyncInitializerMixin):
         user_ids: list[int],
         show_history: bool = True,
     ) -> Chat | None:
+        """Invite users to group.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_ids: Identifiers of the users.
+        :type user_ids: list[int]
+        :param show_history: Show message history to new members.
+        :type show_history: bool
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         from ..models import Chat
 
         return cast(
@@ -756,6 +986,17 @@ class MaxApi(AsyncInitializerMixin):
         user_ids: list[int] | list[str],
         clean_msg_period: int,
     ) -> Chat | None:
+        """Remove users from group.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_ids: Identifiers of the users.
+        :type user_ids: list[int] | list[str]
+        :param clean_msg_period: Cleanup period for messages from removed participants.
+        :type clean_msg_period: int
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         from ..models import Chat
 
         return cast(
@@ -777,6 +1018,23 @@ class MaxApi(AsyncInitializerMixin):
         only_admin_can_call: bool | None = None,
         members_can_see_private_link: bool | None = None,
     ) -> Chat | None:
+        """Change group settings.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param all_can_pin_message: All participants can pin messages.
+        :type all_can_pin_message: bool | None
+        :param only_owner_can_change_icon_title: The only owner can change icon title.
+        :type only_owner_can_change_icon_title: bool | None
+        :param only_admin_can_add_member: The only admin can add member.
+        :type only_admin_can_add_member: bool | None
+        :param only_admin_can_call: The only admin can call.
+        :type only_admin_can_call: bool | None
+        :param members_can_see_private_link: The members can see private link.
+        :type members_can_see_private_link: bool | None
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         from ..models import Chat
 
         return cast(
@@ -798,6 +1056,17 @@ class MaxApi(AsyncInitializerMixin):
         name: str | None = None,
         description: str | None = None,
     ) -> Chat | None:
+        """Change group profile.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param name: The name of the chat.
+        :type name: str | None
+        :param description: The description of the chat.
+        :type description: str | None
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         from ..models import Chat
 
         return cast(
@@ -811,6 +1080,13 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def join_group(self, link: str) -> Chat:
+        """Join group.
+
+        :param link: Invite group link.
+        :type link: str
+        :returns: The resulting Chat value.
+        :rtype: Chat
+        """
         from ..models import Chat
 
         return cast(
@@ -819,6 +1095,13 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def join_channel(self, link: str) -> Chat:
+        """Join channel.
+
+        :param link: Invite channel link.
+        :type link: str
+        :returns: The resulting Chat value.
+        :rtype: Chat
+        """
         from ..models import Chat
 
         return cast(
@@ -827,6 +1110,13 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def resolve_group_by_link(self, link: str) -> Chat | None:
+        """Resolve group by link.
+
+        :param link: Invite group link.
+        :type link: str
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         from ..models import Chat
 
         return cast(
@@ -835,6 +1125,13 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def revoke_invite_link(self, chat_id: int) -> Chat:
+        """Revoke invite link.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :returns: The resulting Chat value.
+        :rtype: Chat
+        """
         from ..models import Chat
 
         return cast(
@@ -843,6 +1140,13 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def get_chats(self, chat_ids: Iterable[int]) -> list[Chat]:
+        """Retrieve chats.
+
+        :param chat_ids: Identifiers of the chats.
+        :type chat_ids: Iterable[int]
+        :returns: The collection from gotten chats.
+        :rtype: list[Chat]
+        """
         from ..models import Chat
 
         return cast(
@@ -851,12 +1155,27 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def get_chat(self, chat_id: int) -> Chat:
+        """Retrieve chat.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :returns: The resulting Chat value.
+        :rtype: Chat
+        :raises ValueError: If chat not found.
+        """
         chats = await self.get_chats([chat_id])
         if not chats:
             raise ValueError("Chat not found")
         return chats[0]
 
     async def leave_group(self, chat_id: int) -> Message | None:
+        """Leave group.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
+        """
         from ..models import Message
 
         return cast(
@@ -868,6 +1187,13 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def leave_channel(self, chat_id: int) -> Message | None:
+        """Leave channel.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
+        """
         from ..models import Message
 
         return cast(
@@ -879,6 +1205,13 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def fetch_chats(self, marker: int | None = None) -> list[Chat]:
+        """Fetch chats.
+
+        :param marker: Pagination marker in milliseconds. If ``None``, the current time is used.
+        :type marker: int | None
+        :returns: The resulting Chats collection.
+        :rtype: list[Chat]
+        """
         from ..models import Chat
 
         return cast(
@@ -887,6 +1220,15 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def get_join_requests(self, chat_id: int, count: int = 100) -> list[Member]:
+        """Retrieve join requests.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param count: Maximum number of items to retrieve.
+        :type count: int
+        :returns: The resulting Members collection.
+        :rtype: list[Member]
+        """
         from ..models import Member
 
         return cast(
@@ -904,6 +1246,17 @@ class MaxApi(AsyncInitializerMixin):
         user_ids: Iterable[int],
         show_history: bool = True,
     ) -> Chat | None:
+        """Confirm join requests.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_ids: Identifiers of the users.
+        :type user_ids: Iterable[int]
+        :param show_history: Show message history to new members.
+        :type show_history: bool
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         from ..models import Chat
 
         return cast(
@@ -922,6 +1275,17 @@ class MaxApi(AsyncInitializerMixin):
         user_id: int,
         show_history: bool = True,
     ) -> Chat | None:
+        """Confirm join request.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_id: Identifier of the user.
+        :type user_id: int
+        :param show_history: Show message history to new members.
+        :type show_history: bool
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         return await self.confirm_join_requests(
             chat_id=chat_id,
             user_ids=[user_id],
@@ -933,6 +1297,15 @@ class MaxApi(AsyncInitializerMixin):
         chat_id: int,
         user_ids: Iterable[int],
     ) -> Chat | None:
+        """Decline join requests.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_ids: Identifiers of the users.
+        :type user_ids: Iterable[int]
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         from ..models import Chat
 
         return cast(
@@ -949,6 +1322,15 @@ class MaxApi(AsyncInitializerMixin):
         chat_id: int,
         user_id: int,
     ) -> Chat | None:
+        """Decline join request.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_id: Identifier of the user.
+        :type user_id: int
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         return await self.decline_join_requests(
             chat_id=chat_id,
             user_ids=[user_id],
@@ -960,6 +1342,15 @@ class MaxApi(AsyncInitializerMixin):
         last_event_time: int | None = None,
         for_all: bool = True,
     ) -> None:
+        """Delete chat.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param last_event_time: The last event time value.
+        :type last_event_time: int | None
+        :param for_all: Delete only for the current account.
+        :type for_all: bool
+        """
         return cast(
             None,
             await self(
@@ -973,6 +1364,15 @@ class MaxApi(AsyncInitializerMixin):
     async def add_admin(
         self, chat_id: int, user_id: int, permissions: Iterable[ChannelPermissions]
     ) -> None:
+        """Add admin.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_id: Identifier of the user.
+        :type user_id: int
+        :param permissions: Collection of permissions.
+        :type permissions: Iterable[ChannelPermissions]
+        """
         return cast(
             None,
             await self(
@@ -991,6 +1391,19 @@ class MaxApi(AsyncInitializerMixin):
         email_code_getter: Callable[[str], Coroutine[Any, Any, str]] | None = None,
         two_factor_actions: list[TwoFactorAction] | None = None,
     ) -> None:
+        """Set 2fa.
+
+        :param password: New 2FA password.
+        :type password: str
+        :param email: Email address for 2FA, if required.
+        :type email: str | None
+        :param hint: Password hint, if required.
+        :type hint: str | None
+        :param email_code_getter: Callable to get password, first argument is phone number.
+        :type email_code_getter: Callable[[str], Coroutine[Any, Any, str]] | None
+        :param two_factor_actions: Collection of two factor actions.
+        :type two_factor_actions: list[TwoFactorAction] | None
+        """
         return cast(
             None,
             await self(
@@ -1009,6 +1422,15 @@ class MaxApi(AsyncInitializerMixin):
         two_factor_actions: list[TwoFactorAction] | None = None,
         remove_2fa: bool = True,
     ) -> None:
+        """Remove 2fa.
+
+        :param password: Account password.
+        :type password: str
+        :param two_factor_actions: Collection of two factor actions.
+        :type two_factor_actions: list[TwoFactorAction] | None
+        :param remove_2fa: The remove 2fa value.
+        :type remove_2fa: bool
+        """
         return cast(
             None,
             await self(
@@ -1026,6 +1448,17 @@ class MaxApi(AsyncInitializerMixin):
         hint: str | None = None,
         two_factor_actions: list[TwoFactorAction] | None = None,
     ) -> None:
+        """Change password.
+
+        :param password_old: The password old value.
+        :type password_old: str
+        :param password_new: The password new value.
+        :type password_new: str
+        :param hint: Password hint.
+        :type hint: str | None
+        :param two_factor_actions: Collection of two factor actions.
+        :type two_factor_actions: list[TwoFactorAction] | None
+        """
         return cast(
             None,
             await self(
@@ -1038,6 +1471,11 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def check_2fa(self) -> bool:
+        """Check 2fa.
+
+        :returns: True when the account has 2FA; otherwise False.
+        :rtype: bool
+        """
         return cast(
             bool,
             await self(
@@ -1046,6 +1484,11 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def approve_qr_login(self, qr_link: str) -> None:
+        """Approve qr login.
+
+        :param qr_link: Link to the authorization QR code.
+        :type qr_link: str
+        """
         return cast(
             None,
             await self(
@@ -1063,6 +1506,23 @@ class MaxApi(AsyncInitializerMixin):
         file_name: str | None = None,
         photo_token: str | None = None,
     ) -> Profile:
+        """Change profile.
+
+        :param first_name: The first name.
+        :type first_name: str
+        :param last_name: The last name.
+        :type last_name: str | None
+        :param description: The description.
+        :type description: str | None
+        :param photo: The photo data.
+        :type photo: bytes | None
+        :param file_name: The file name or photo file.
+        :type file_name: str | None
+        :param photo_token: The photo token value.
+        :type photo_token: str | None
+        :returns: The resulting Profile.
+        :rtype: Profile
+        """
         from ..models import Profile
 
         return cast(
@@ -1085,6 +1545,19 @@ class MaxApi(AsyncInitializerMixin):
         filters: list[Any] | None = None,
         folder_id: str | None = None,
     ) -> FolderUpdate:
+        """Create folder.
+
+        :param title: The title of folder.
+        :type title: str
+        :param chat_include: Collection of chat include.
+        :type chat_include: list[int]
+        :param filters: Collection of filters.
+        :type filters: list[Any] | None
+        :param folder_id: Identifier of the folder.
+        :type folder_id: str | None
+        :returns: The resulting FolderUpdate.
+        :rtype: FolderUpdate
+        """
         from ..models import FolderUpdate
 
         return cast(
@@ -1099,6 +1572,13 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def get_folders(self, folder_sync: int = 0) -> FolderList:
+        """Retrieve folders.
+
+        :param folder_sync: Synchronization marker. Leave as ``0`` for the initial load..
+        :type folder_sync: int
+        :returns: The resulting FolderList.
+        :rtype: FolderList
+        """
         from ..models import FolderList
 
         return cast(
@@ -1117,6 +1597,21 @@ class MaxApi(AsyncInitializerMixin):
         filters: list[Any] | None = None,
         options: list[Any] | None = None,
     ) -> FolderUpdate:
+        """Update folder.
+
+        :param folder_id: Identifier of the folder.
+        :type folder_id: str
+        :param title: The title of folder.
+        :type title: str
+        :param chat_include: Collection of chat include.
+        :type chat_include: list[int] | None
+        :param filters: Collection of filters.
+        :type filters: list[Any] | None
+        :param options: Collection of options.
+        :type options: list[Any] | None
+        :returns: The resulting FolderUpdate.
+        :rtype: FolderUpdate
+        """
         from ..models import FolderUpdate
 
         return cast(
@@ -1133,8 +1628,15 @@ class MaxApi(AsyncInitializerMixin):
 
     async def delete_folders(
         self,
-        folder_ids: list[str] | None = None,
+        folder_ids: list[str],
     ) -> FolderUpdate:
+        """Delete folders.
+
+        :param folder_ids: Identifiers of the folders.
+        :type folder_ids: list[str]
+        :returns: The resulting FolderUpdate.
+        :rtype: FolderUpdate
+        """
         from ..models import FolderUpdate
 
         return cast(
@@ -1146,9 +1648,21 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def delete_folder(self, folder_id: str) -> FolderUpdate:
+        """Delete folder.
+
+        :param folder_id: Identifier of the folder.
+        :type folder_id: str
+        :returns: The resulting FolderUpdate.
+        :rtype: FolderUpdate
+        """
         return await self.delete_folders(folder_ids=[folder_id])
 
     async def close_all_sessions(self) -> bool:
+        """Close all sessions.
+
+        :returns: ``True`` if the server accepted the request; otherwise ``False``.
+        :rtype: bool
+        """
         return cast(
             bool,
             await self(
@@ -1157,9 +1671,15 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def logout(self) -> None:
+        """Logout."""
         return cast(None, await self(LogoutMethod))
 
     async def set_presence(self, online: bool) -> None:
+        """Set presence.
+
+        :param online: The online value.
+        :type online: bool
+        """
         return cast(
             None,
             await self(
@@ -1169,22 +1689,34 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def change_profile_settings(self, privacy_settings: PrivacySettings) -> None:
+        """Update the account privacy settings.
+
+        :param privacy_settings: Privacy settings to apply to the account.
+
+        :raises ValueError: If updating the privacy settings fails.
+
+        :type privacy_settings: PrivacySettings
         """
-        :param privacy_settings: PrivacySettings
 
-        :raise ValueError if updating privacy settings fails
-
-        """
-
-        return cast(
-            None,
-            await self(
-                ChangeProfileSettingsMethod,
-                privacy_settings=privacy_settings,
-            ),
-        )
+        try:
+            return cast(
+                None,
+                await self(
+                    ChangeProfileSettingsMethod,
+                    privacy_settings=privacy_settings,
+                ),
+            )
+        except MapperApiError as e:
+            raise ValueError("Change profile settings failed") from e
 
     async def get_members_by_ids(self, member_ids: list[int]) -> Sequence[Contact]:
+        """Retrieve members by ids.
+
+        :param member_ids: Identifiers of the members.
+        :type member_ids: list[int]
+        :returns: The Contacts collection.
+        :rtype: Sequence[Contact]
+        """
         from ..models import Contact
 
         contacts = cast(
@@ -1198,10 +1730,24 @@ class MaxApi(AsyncInitializerMixin):
         # return await self.mapper.get_member_by_id(member_id)
 
     async def get_member_by_id(self, member_id: int) -> Contact | None:
+        """Retrieve member by id.
+
+        :param member_id: Identifier of the member.
+        :type member_id: int
+        :returns: The resulting Contact | None.
+        :rtype: Contact | None
+        """
         contacts = await self.get_members_by_ids(member_ids=[member_id])
         return contacts[0] if contacts else None
 
     async def get_users(self, user_ids: list[int]) -> list[Contact]:
+        """Retrieve users.
+
+        :param user_ids: Identifiers of the users.
+        :type user_ids: list[int]
+        :returns: The resulting collection.
+        :rtype: list[Contact]
+        """
         from ..models import Contact
 
         user = cast(
@@ -1214,10 +1760,24 @@ class MaxApi(AsyncInitializerMixin):
         return user
 
     async def get_user(self, user_id: int) -> Contact | None:
+        """Retrieve user.
+
+        :param user_id: Identifier of the user.
+        :type user_id: int
+        :returns: The resulting Contact | None.
+        :rtype: Contact | None
+        """
         user = await self.get_users(user_ids=[user_id])
         return user[0] if user else None
 
     async def search_by_phone(self, phone: str) -> Contact:
+        """Search for by phone.
+
+        :param phone: Phone number in the format accepted by MAX.
+        :type phone: str
+        :returns: The resulting Contact.
+        :rtype: Contact
+        """
         from ..models import Contact
 
         user = cast(
@@ -1230,11 +1790,25 @@ class MaxApi(AsyncInitializerMixin):
         return user
 
     async def get_sessions(self) -> list[Session]:
+        """Retrieve sessions.
+
+        :returns: The Sessions collection.
+        :rtype: list[Session]
+        """
         from ..models import Session
 
         return cast(list[Session], await self(GetSessionsMethod))
 
     async def get_chat_id(self, first_user_id: int, second_user_id: int) -> int:
+        """Retrieve chat id.
+
+        :param first_user_id: Identifier of the first user.
+        :type first_user_id: int
+        :param second_user_id: Identifier of the second user.
+        :type second_user_id: int
+        :returns: The resulting int value.
+        :rtype: int
+        """
         return cast(
             int,
             await self(
@@ -1245,6 +1819,13 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def add_contact(self, contact_id: int) -> Contact:
+        """Add contact.
+
+        :param contact_id: Identifier of the contact.
+        :type contact_id: int
+        :returns: The resulting Contact.
+        :rtype: Contact
+        """
         from ..models import Contact
 
         return cast(
@@ -1256,6 +1837,11 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def remove_contact(self, contact_id: int) -> None:
+        """Remove contact.
+
+        :param contact_id: Identifier of the contact.
+        :type contact_id: int
+        """
         return cast(
             None,
             await self(
@@ -1265,6 +1851,13 @@ class MaxApi(AsyncInitializerMixin):
         )
 
     async def import_contacts(self, contacts: list[ContactInfo]) -> list[Contact]:
+        """Import contacts.
+
+        :param contacts: Collection of contacts.
+        :type contacts: list[ContactInfo]
+        :returns: The Contacts collection.
+        :rtype: list[Contact]
+        """
         from ..models import Contact
 
         return cast(

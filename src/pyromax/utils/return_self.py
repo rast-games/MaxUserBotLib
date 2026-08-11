@@ -9,8 +9,7 @@ R = TypeVar("R")
 def return_self_after_method(
     initializer: Callable[..., Coroutine[Any, Any, R]],
 ) -> Callable[..., Coroutine[Any, Any, T]]:
-    """
-    Need use to async initializer in __new__ method
+    """Need use to async initializer in __new__ method
     Args:
           initializer (function): method that will be called, your async initializer
     Returns:
@@ -52,10 +51,24 @@ def return_self_after_method(
         Result:
             ExampleClass1
             init_return_another
+
+    :param initializer: Callable to invoke.
+    :type initializer: Callable[..., Coroutine[Any, Any, R]]
+    :returns: The resulting Callable[..., Coroutine[Any, Any, T]] value.
+    :rtype: Callable[..., Coroutine[Any, Any, T]]
     """
 
     # @wraps
     async def initializer_wrapper(self: T, *args: Any, **kwargs: Any) -> T:
+        """Initializer wrapper.
+
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting T value.
+        :rtype: T
+        """
         result = await initializer(self, *args, **kwargs)
         return cast(T, result if result is not None else self)
 

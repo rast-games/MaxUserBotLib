@@ -31,6 +31,17 @@ if TYPE_CHECKING:
 class BaseBuildInMappingMethod(ABC):
     @abstractmethod
     async def __call__(self, mapper: Mapper, *args: Any, **kwargs: Any) -> Any:
+        """Execute the base build in mapping MAX API method.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: Mapper
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        """
         pass
 
 
@@ -43,6 +54,19 @@ class LoginBuildInMappingMethod(BaseBuildInMappingMethod):
         login_backoff: Backoff | None = None,
         **kwargs: Any,
     ) -> ChoiceLoginVariantResponse:
+        """Execute the login build in mapping MAX API method.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: Mapper
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param login_backoff: Backoff instance to process.
+        :type login_backoff: Backoff | None
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting ChoiceLoginVariantResponse value.
+        :rtype: ChoiceLoginVariantResponse
+        """
         pass
 
     @staticmethod
@@ -50,6 +74,16 @@ class LoginBuildInMappingMethod(BaseBuildInMappingMethod):
         mapper: Mapper,
         metadata: MetadataResponse,
     ) -> None:
+        """Track login.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: Mapper
+        :param metadata: MetadataResponse instance to process.
+        :type metadata: MetadataResponse
+        :raises RuntimeError: If track login failed.
+        :raises RuntimeError: If track status is missing in response.
+        :raises TimeoutError: If the requested action cannot be completed.
+        """
         track_id = metadata.track_id
         polling_interval = metadata.polling_interval / 1000
         expires_at = metadata.expires_at / 1000
@@ -83,15 +117,25 @@ class LoginBuildInMappingMethod(BaseBuildInMappingMethod):
         url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None = None,
     ) -> None:
 
+        """Resolve qr.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: Mapper
+        :param metadata: MetadataResponse instance to process.
+        :type metadata: MetadataResponse
+        :param url_callback: Callable to invoke.
+        :type url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None
+        """
         if not url_callback:
 
             async def url_callback(url: str) -> None:
-                """
-                Creating a QR code scanned by max. It is displayed immediately in the console
+                """Creating a QR code scanned by max. It is displayed immediately in the console
 
                 Args:
                     url - authorization url
 
+                :param url: Resource URL.
+                :type url: str
                 """
 
                 qr = qrcode.QRCode()
@@ -114,6 +158,18 @@ class LoginBuildInMappingMethod(BaseBuildInMappingMethod):
         registration_config: RegistrationConfig,
         choice: ChoiceLoginVariantResponse,
     ) -> ChoiceLoginVariantResponse:
+        """End registration.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: Mapper
+        :param registration_config: RegistrationConfig instance to process.
+        :type registration_config: RegistrationConfig
+        :param choice: ChoiceLoginVariantResponse instance to process.
+        :type choice: ChoiceLoginVariantResponse
+        :returns: The resulting ChoiceLoginVariantResponse value.
+        :rtype: ChoiceLoginVariantResponse
+        :raises MapperApiError: If try a register already registered account.
+        """
         if choice.payload.token_attrs.register_token is None:
             raise MapperApiError("Try a register already registered account.")
         response = await mapper.confirm_registration(
@@ -131,6 +187,23 @@ class LoginBuildInMappingMethod(BaseBuildInMappingMethod):
         use_mobile_fingerprint: bool = True,
         registration_config: RegistrationConfig | None = None,
     ) -> ChoiceLoginVariantResponse:
+        """Resolve sms auth.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: Mapper
+        :param code_getter: Callable to invoke.
+        :type code_getter: Callable[[str], Coroutine[Any, Any, int]] | None
+        :param use_mobile_fingerprint: Whether to use mobile fingerprint.
+        :type use_mobile_fingerprint: bool
+        :param registration_config: RegistrationConfig instance to process.
+        :type registration_config: RegistrationConfig | None
+        :returns: The resulting ChoiceLoginVariantResponse value.
+        :rtype: ChoiceLoginVariantResponse
+        :raises RuntimeError: If phone is required to use sms auth.
+        :raises MapperApiError: If sMS auth send code limit reached.
+        :raises RuntimeError: If temp token not given.
+        :raises MapperApiError: If registration config not given, cannot end registration for account.
+        """
         auth_type = {"auth_type": "START_AUTH"}
         # temp_token: str | None = None
         # sms_backoff = Backoff(config=DEFAULT_BACKOFF_CONFIG)

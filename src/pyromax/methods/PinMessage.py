@@ -11,6 +11,16 @@ class PinMessageMethod(BaseMaxApiMethod[NoneType]):
         message_id: int | str,
         notify: bool = True,
     ) -> None:
+        """Execute the pin message MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param notify: Whether MAX should notify affected users.
+        :type notify: bool
+        :raises RuntimeError: If pinMessage method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("PinMessage method not bound to MaxApi instance")
         return cast(

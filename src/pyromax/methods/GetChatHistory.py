@@ -20,6 +20,31 @@ class GetChatHistoryMethod(BaseMaxApiMethod[Union[list[Message], list[str]]]):
         get_messages: Literal[True] = True,
         interactive: bool = ...,
     ) -> list[Message]:
+        """Execute the get chat history MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param forward: The forward value.
+        :type forward: int
+        :param backward: The backward value.
+        :type backward: int
+        :param backward_time: The backward time value.
+        :type backward_time: int
+        :param forward_time: The forward time value.
+        :type forward_time: int
+        :param from_time: The from time value.
+        :type from_time: int | None
+        :param item_type: The item type value.
+        :type item_type: str
+        :param get_chat: The get chat value.
+        :type get_chat: bool
+        :param get_messages: Literal[True] instance to process.
+        :type get_messages: Literal[True]
+        :param interactive: The interactive value.
+        :type interactive: bool
+        :returns: The resulting collection.
+        :rtype: list[Message]
+        """
         pass
 
     @overload
@@ -36,6 +61,31 @@ class GetChatHistoryMethod(BaseMaxApiMethod[Union[list[Message], list[str]]]):
         get_messages: Literal[False] = False,
         interactive: bool = ...,
     ) -> list[str]:
+        """Execute the get chat history MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param forward: The forward value.
+        :type forward: int
+        :param backward: The backward value.
+        :type backward: int
+        :param backward_time: The backward time value.
+        :type backward_time: int
+        :param forward_time: The forward time value.
+        :type forward_time: int
+        :param from_time: The from time value.
+        :type from_time: int | None
+        :param item_type: The item type value.
+        :type item_type: str
+        :param get_chat: The get chat value.
+        :type get_chat: bool
+        :param get_messages: Literal[False] instance to process.
+        :type get_messages: Literal[False]
+        :param interactive: The interactive value.
+        :type interactive: bool
+        :returns: The resulting collection.
+        :rtype: list[str]
+        """
         pass
 
     async def __call__(
@@ -51,6 +101,32 @@ class GetChatHistoryMethod(BaseMaxApiMethod[Union[list[Message], list[str]]]):
         get_messages: bool = True,
         interactive: bool = False,
     ) -> list[Message] | list[str]:
+        """Execute the get chat history MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param forward: The forward value.
+        :type forward: int
+        :param backward: The backward value.
+        :type backward: int
+        :param backward_time: The backward time value.
+        :type backward_time: int
+        :param forward_time: The forward time value.
+        :type forward_time: int
+        :param from_time: The from time value.
+        :type from_time: int | None
+        :param item_type: The item type value.
+        :type item_type: str
+        :param get_chat: The get chat value.
+        :type get_chat: bool
+        :param get_messages: The get messages value.
+        :type get_messages: bool
+        :param interactive: The interactive value.
+        :type interactive: bool
+        :returns: The resulting collection.
+        :rtype: list[Message] | list[str]
+        :raises RuntimeError: If getChatHistory method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("GetChatHistory method not bound to MaxApi instance")
 

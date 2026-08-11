@@ -63,6 +63,23 @@ class BaseFileMapping(
         file_size: int | None = None,
         **kwargs: Any,
     ) -> Self:
+        """Create file obj.
+
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: bytes | None
+        :param upload_url: The upload url value.
+        :type upload_url: str
+        :param uploaded: The uploaded value.
+        :type uploaded: bool
+        :param file_size: The file size value.
+        :type file_size: int | None
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The current instance.
+        :rtype: Self
+        :raises RuntimeError: If need upload_url or uploaded.
+        :raises RuntimeError: If need data or uploaded.
+        """
         if not upload_url and not uploaded:
             raise RuntimeError("need upload_url or uploaded")
         if not data and not uploaded:
@@ -81,9 +98,19 @@ class BaseFileMapping(
 
     @abstractmethod
     def dump_it(self) -> list[DumpReturn]:
+        """Dump it.
+
+        :returns: The resulting collection.
+        :rtype: list[DumpReturn]
+        """
         pass
 
     async def _upload_data_to_url(self, upload_url: str) -> None:
+        """Upload data to url.
+
+        :param upload_url: The upload url value.
+        :type upload_url: str
+        """
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 url=upload_url,
@@ -94,9 +121,11 @@ class BaseFileMapping(
 
     @property
     def headers(self) -> dict[str, str] | None:
-        """
-        Just base headers for Video/File and etc.
+        """Just base headers for Video/File and etc.
         In Photo class this getter need to overwrite
+
+        :returns: The resulting dict[str, str] | None value.
+        :rtype: dict[str, str] | None
         """
         return {
             "Content-Disposition": f"attachment; filename={self.file_name}",
@@ -107,14 +136,29 @@ class BaseFileMapping(
 
     @property
     def body(self) -> BodyType:
+        """Body.
+
+        :returns: The resulting BodyType value.
+        :rtype: BodyType
+        """
         return cast(BodyType, self.data)
 
     @property
     @abstractmethod
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         pass
 
     async def _parse_response(self, response: aiohttp.ClientResponse) -> None:
+        """Parse response.
+
+        :param response: Protocol response to process.
+        :type response: aiohttp.ClientResponse
+        """
         self.uploaded = True
 
     @staticmethod
@@ -124,6 +168,17 @@ class BaseFileMapping(
         file: Any,
         **kwargs: Any,
     ) -> str | None:
+        """Retrieve url to download.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: BaseMapper[BaseMaxProtocol[Any, Any], BaseFileMappingModel]
+        :param file: File attachment to process.
+        :type file: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting str | None value.
+        :rtype: str | None
+        """
         pass
 
 
@@ -135,6 +190,11 @@ class PhotoMapping(
     photo_tokens: list[str] = []
 
     def dump_it(self) -> list[PhotoMappingModel]:
+        """Dump it.
+
+        :returns: The resulting collection.
+        :rtype: list[PhotoMappingModel]
+        """
         dumped = []
         for i, photo in enumerate(self.to_payload):
             dumped.append(
@@ -153,11 +213,18 @@ class PhotoMapping(
 
     @property
     def headers(self) -> None:
-        """Photo not need headers"""
+        """Photo not need headers
+        """
         return None
 
     @property
     def body(self) -> dict[str, bytes]:
+        """Body.
+
+        :returns: The resulting dict[str, bytes] value.
+        :rtype: dict[str, bytes]
+        :raises RuntimeError: If try a upload photo with None data attr.
+        """
         if self.data is None:
             raise RuntimeError("try a upload photo with None data attr")
         return {"file": self.data}
@@ -168,9 +235,25 @@ class PhotoMapping(
         file: PhotoMappingModel,
         **kwargs: Any,
     ) -> str | None:
+        """Retrieve url to download.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: BaseMapper[BaseMaxProtocol[Any, Any], BaseFileMappingModel]
+        :param file: File attachment to process.
+        :type file: PhotoMappingModel
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting str | None value.
+        :rtype: str | None
+        """
         return file.base_url
 
     async def _parse_response(self, response: aiohttp.ClientResponse) -> None:
+        """Parse response.
+
+        :param response: Protocol response to process.
+        :type response: aiohttp.ClientResponse
+        """
         json: dict[str, Any] = await response.json()
         photos: dict[str, Any] = json["photos"]
         for photo_id, photo_token in photos.items():
@@ -179,6 +262,11 @@ class PhotoMapping(
 
     @property
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         photos = []
         for token in self.photo_tokens:
             photos.append(
@@ -202,6 +290,17 @@ class VideoMapping(
         file: VideoMappingModel,
         **kwargs: Any,
     ) -> str | None:
+        """Retrieve url to download.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: BaseMapper[BaseMaxProtocol[Any, Any], BaseFileMappingModel]
+        :param file: File attachment to process.
+        :type file: VideoMappingModel
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting str | None value.
+        :rtype: str | None
+        """
         quality = kwargs.get("quality", "MP4_720")
         response_future = await mapper.protocol.send(
             method=GetFileLinkMethod(opcode=Opcode.GET_VIDEO, file=file)
@@ -217,6 +316,11 @@ class VideoMapping(
 
     @property
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         return [
             VideoToPayloadRequest(
                 type="VIDEO",
@@ -226,6 +330,11 @@ class VideoMapping(
         ]
 
     def dump_it(self) -> list[VideoMappingModel]:
+        """Dump it.
+
+        :returns: The resulting collection.
+        :rtype: list[VideoMappingModel]
+        """
         return [
             VideoMappingModel(
                 type="VIDEO",
@@ -242,6 +351,11 @@ class VideoNoteMapping(
     VideoNoteAttachment,
 ):
     def dump_it(self) -> list[VideoNoteMappingModel]:  # type: ignore[override]
+        """Dump it.
+
+        :returns: The resulting collection.
+        :rtype: list[VideoNoteMappingModel]
+        """
         return [
             VideoNoteMappingModel(
                 type="VIDEO",
@@ -261,6 +375,11 @@ class VoiceMapping(
 
     @property
     def headers(self) -> dict[str, str] | None:
+        """Headers.
+
+        :returns: The resulting dict[str, str] | None value.
+        :rtype: dict[str, str] | None
+        """
         return {
             "Content-Disposition": f"attachment; filename={self.file_name}",
             "Content-Range": f"0-{self.file_size - 1}/{self.file_size}",
@@ -270,6 +389,11 @@ class VoiceMapping(
         }
 
     def dump_it(self) -> list[VoiceMappingModel]:  # type: ignore[override]
+        """Dump it.
+
+        :returns: The resulting collection.
+        :rtype: list[VoiceMappingModel]
+        """
         return [
             VoiceMappingModel(
                 type="AUDIO",
@@ -293,6 +417,17 @@ class FileMapping(
         file: VideoMappingModel,
         **kwargs: Any,
     ) -> str | None:
+        """Retrieve url to download.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: BaseMapper[BaseMaxProtocol[Any, Any], BaseFileMappingModel]
+        :param file: File attachment to process.
+        :type file: VideoMappingModel
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting str | None value.
+        :rtype: str | None
+        """
         response_future = await mapper.protocol.send(
             method=GetFileLinkMethod(opcode=Opcode.GET_FILE, file=file)
         )
@@ -305,6 +440,11 @@ class FileMapping(
 
     @property
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         return [
             FileToPayloadRequest(
                 type="FILE",
@@ -313,6 +453,11 @@ class FileMapping(
         ]
 
     def dump_it(self) -> list[FileMappingModel]:
+        """Dump it.
+
+        :returns: The resulting collection.
+        :rtype: list[FileMappingModel]
+        """
         return [
             FileMappingModel(
                 type="FILE",
@@ -364,6 +509,21 @@ async def upload_file(
     uploaded: bool = False,
     **kwargs: Any,
 ) -> list[BaseFileMappingModel]:
+    """Upload file.
+
+    :param data: Contextual data passed through the processing pipeline.
+    :type data: bytes | None
+    :param typeof: Attachment class that determines the upload type.
+    :type typeof: type[BaseFileAttachment]
+    :param upload_url: The upload url value.
+    :type upload_url: str | None
+    :param uploaded: The uploaded value.
+    :type uploaded: bool
+    :param kwargs: Keyword arguments forwarded to the wrapped callable.
+    :type kwargs: Any
+    :returns: The resulting collection.
+    :rtype: list[BaseFileMappingModel]
+    """
     translate_model = FILE_TYPES.get(typeof, FALLBACK_MODEL)
     loaded_attachment = await translate_model.create_file_obj(
         data=data, upload_url=cast(str, upload_url), uploaded=uploaded, **kwargs
@@ -388,6 +548,18 @@ async def get_file_url(
     file: BaseFileMappingModel,
     **kwargs: Any,
 ) -> str | None:
+    """Retrieve file url.
+
+    :param mapper: Mapper backend or mapper instance.
+    :type mapper: BaseMapper[BaseMaxProtocol[Any, Any], BaseFileMappingModel]
+    :param file: File attachment to process.
+    :type file: BaseFileMappingModel
+    :param kwargs: Keyword arguments forwarded to the wrapped callable.
+    :type kwargs: Any
+    :returns: The resulting str | None value.
+    :rtype: str | None
+    :raises DownloadFileError: If file has not been uploaded to chat, cannot download it(Most likely, you uploaded the attachment but did not send a message with it.).
+    """
     print(file)
     if not file.uploaded:
         raise DownloadFileError(

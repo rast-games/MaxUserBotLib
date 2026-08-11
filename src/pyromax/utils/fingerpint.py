@@ -21,10 +21,17 @@ class FingerprintGenerator:
     def __init__(
         self,
     ) -> None:
+        """Initialize the fingerprint generator.
+        """
         self.path = resources.files("pyromax._data") / "apk_fingerprints.json"
         self.data = self.load_fingerprints()
 
     def load_fingerprints(self) -> Any:
+        """Load fingerprints.
+
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        """
         with self.path.open("r", encoding="utf-8") as f:
             return json.load(f)
 
@@ -35,6 +42,19 @@ class FingerprintGenerator:
         calls_seed: int,
         arch: str = "arm64-v8a",
     ) -> bytes | None:
+        """Generate fingerprint.
+
+        :param version: The version value.
+        :type version: str
+        :param device_id: Identifier of the device.
+        :type device_id: str
+        :param calls_seed: The calls seed value.
+        :type calls_seed: int
+        :param arch: The arch value.
+        :type arch: str
+        :returns: The resulting bytes | None value.
+        :rtype: bytes | None
+        """
         data = self.data.get(version)
         if not data:
             return None

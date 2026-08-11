@@ -24,6 +24,17 @@ def apply_strategy(
     user_id: int,
     # thread_id: int | None = None,
 ) -> tuple[int, int]:
+    """Apply strategy.
+
+    :param strategy: FSMStrategy instance to process.
+    :type strategy: FSMStrategy
+    :param chat_id: Identifier of the chat.
+    :type chat_id: int
+    :param user_id: Identifier of the user.
+    :type user_id: int
+    :returns: The resulting tuple[int, int] value.
+    :rtype: tuple[int, int]
+    """
     if strategy == FSMStrategy.CHAT:
         return chat_id, chat_id
     if strategy == FSMStrategy.GLOBAL_USER:

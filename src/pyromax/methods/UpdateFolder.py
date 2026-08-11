@@ -13,6 +13,22 @@ class UpdateFolderMethod(BaseMaxApiMethod[FolderUpdate]):
         filters: list[Any] | None = None,
         options: list[Any] | None = None,
     ) -> FolderUpdate:
+        """Execute the update folder MAX API method.
+
+        :param folder_id: Identifier of the folder.
+        :type folder_id: str
+        :param title: The title value.
+        :type title: str
+        :param chat_include: Collection of chat include.
+        :type chat_include: list[int] | None
+        :param filters: Collection of filters.
+        :type filters: list[Any] | None
+        :param options: Collection of options.
+        :type options: list[Any] | None
+        :returns: The resulting FolderUpdate value.
+        :rtype: FolderUpdate
+        :raises RuntimeError: If updateFolder method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("UpdateFolder method not bound to MaxApi instance")
 

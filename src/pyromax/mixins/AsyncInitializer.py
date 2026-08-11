@@ -10,6 +10,15 @@ from ..utils import return_self_after_method
 class AsyncConstructorABC(ABC):
     @abstractmethod
     async def _async_init(self, *args: Any, **kwargs: Any) -> Any:
+        """Async init.
+
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        """
         pass
 
 
@@ -22,12 +31,31 @@ class NewMethod(Protocol[T]):
         cls: type[T],
         *args: Any,
         **kwargs: Any,
-    ) -> T: ...
+    ) -> T:
+        """Methods signature in protocol style.
+
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting T value.
+        :rtype: T
+        """
+        ...
 
 
 class AsyncConstructorMeta(ABCMeta):
     @staticmethod
     async def _call_wrapper(cls: type[T], *args: Any, **kwargs: Any) -> T:
+        """Call wrapper.
+
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting T value.
+        :rtype: T
+        """
         if cls.__new__ == object.__new__:
             __instance = cls.__new__(cls)
         else:
@@ -37,6 +65,15 @@ class AsyncConstructorMeta(ABCMeta):
 
     # mypy doesn't support generic __call__ on metaclasses
     def __call__(cls: type[T], *args: Any, **kwargs: Any) -> Awaitable[T]:  # type: ignore[misc]
+        """Invoke the async constructor meta.
+
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting Awaitable[T] value.
+        :rtype: Awaitable[T]
+        """
         return AsyncConstructorMeta._call_wrapper(cls, *args, **kwargs)
 
 
@@ -85,4 +122,14 @@ T_co = TypeVar("T_co", covariant=True)
 
 
 class AsyncConstructorType(Protocol[T_co]):
-    def __call__(self, *args: Any, **kwargs: Any) -> Awaitable[T_co]: ...
+    def __call__(self, *args: Any, **kwargs: Any) -> Awaitable[T_co]:
+        """Invoke the async constructor type.
+
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting Awaitable[T_co] value.
+        :rtype: Awaitable[T_co]
+        """
+        ...

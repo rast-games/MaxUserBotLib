@@ -12,6 +12,16 @@ class DeleteMessagesMethod(BaseMaxApiMethod[NoneType]):
         message_ids: list[str] | list[int],
         for_me: bool = False,
     ) -> None:
+        """Execute the delete messages MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_ids: Identifiers of the messages.
+        :type message_ids: list[str] | list[int]
+        :param for_me: The for me value.
+        :type for_me: bool
+        :raises RuntimeError: If deleteMessages method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("DeleteMessages method not bound to MaxApi instance")
 

@@ -12,6 +12,16 @@ class GetReactionsMethod(
         chat_id: int,
         message_ids: list[int] | list[str],
     ) -> dict[str, EmojiReaction] | None:
+        """Execute the get reactions MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_ids: Identifiers of the messages.
+        :type message_ids: list[int] | list[str]
+        :returns: The resulting dict[str, EmojiReaction] | None value.
+        :rtype: dict[str, EmojiReaction] | None
+        :raises RuntimeError: If getReactions method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("GetReactions method not bound to MaxApi instance")
 

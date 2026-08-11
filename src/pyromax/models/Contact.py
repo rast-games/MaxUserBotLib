@@ -29,18 +29,32 @@ class Contact(BaseMaxObject):
 
 
     async def add_contact(self) -> "Contact":
+        """Add contact.
+
+        :returns: The resulting 'Contact' value.
+        :rtype: 'Contact'
+        """
         return await self.max_api.add_contact(
             contact_id=self.id,
         )
 
 
     async def remove_contact(self) -> None:
+        """Remove contact.
+        """
         return await self.max_api.remove_contact(
             contact_id=self.id,
         )
 
 
     async def get_chat_id(self, contact_id: int) -> int:
+        """Retrieve chat id.
+
+        :param contact_id: Identifier of the contact.
+        :type contact_id: int
+        :returns: chat id.
+        :rtype: int
+        """
         return await self.max_api.get_chat_id(
             first_user_id=contact_id,
             second_user_id=self.id,

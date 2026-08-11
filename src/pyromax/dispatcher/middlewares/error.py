@@ -14,6 +14,11 @@ if TYPE_CHECKING:
 
 class ErrorsMiddleware(BaseMiddleware):
     def __init__(self, router: Router):
+        """Initialize the errors middleware.
+
+        :param router: Router instance to process.
+        :type router: Router
+        """
         self.router = router
 
     async def __call__(
@@ -22,6 +27,17 @@ class ErrorsMiddleware(BaseMiddleware):
         event: MaxObject,
         data: dict[str | type[Any], Any],
     ) -> Any:
+        """Process an event through the errors middleware.
+
+        :param handler: Handler to invoke.
+        :type handler: Callable[[MaxObject, dict[str | type[Any], Any]], Awaitable[Any]]
+        :param event: Incoming event to process.
+        :type event: MaxObject
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: dict[str | type[Any], Any]
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        """
         try:
             return await handler(event, data)
         except (CancelHandler, SkipHandler):

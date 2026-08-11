@@ -70,6 +70,15 @@ class BaseTranslateMappingModel(ABC, Generic[TranslateObj, ReturnObj]):
         @staticmethod
         @abstractmethod
         def translate(*args: Any, **kwargs: Any) -> ReturnObj:
+            """Translate the mapping payload into ReturnObj.
+
+            :param args: Positional arguments forwarded to the wrapped callable.
+            :type args: Any
+            :param kwargs: Keyword arguments forwarded to the wrapped callable.
+            :type kwargs: Any
+            :returns: The resulting ReturnObj value.
+            :rtype: ReturnObj
+            """
             pass
 
     else:
@@ -79,6 +88,17 @@ class BaseTranslateMappingModel(ABC, Generic[TranslateObj, ReturnObj]):
         def translate(
             mapping_model: TranslateObj, *args: Any, **kwargs: Any
         ) -> BaseMaxObject:
+            """Translate the mapping payload into BaseMaxObject.
+
+            :param mapping_model: Mapping model to translate.
+            :type mapping_model: TranslateObj
+            :param args: Positional arguments forwarded to the wrapped callable.
+            :type args: Any
+            :param kwargs: Keyword arguments forwarded to the wrapped callable.
+            :type kwargs: Any
+            :returns: The resulting BaseMaxObject value.
+            :rtype: BaseMaxObject
+            """
             pass
 
 
@@ -87,6 +107,13 @@ class TranslateName(BaseTranslateMappingModel[NameMappingModel]):
     def translate(
         mapping_model: NameMappingModel,
     ) -> Name:
+        """Translate translate between mapping and public models.
+
+        :param mapping_model: Mapping model to translate.
+        :type mapping_model: NameMappingModel
+        :returns: The translated Name instance.
+        :rtype: Name
+        """
         return Name(
             name=mapping_model.name,
             first_name=mapping_model.first_name,
@@ -98,6 +125,13 @@ class TranslateName(BaseTranslateMappingModel[NameMappingModel]):
 class TranslateContact(BaseTranslateMappingModel[ContactMappingModel]):
     @staticmethod
     def translate(contact: ContactMappingModel) -> Contact:
+        """Translate translate between mapping and public models.
+
+        :param contact: ContactMappingModel instance to process.
+        :type contact: ContactMappingModel
+        :returns: The translated Contact instance.
+        :rtype: Contact
+        """
         return Contact(
             id=contact.id,
             names=[TranslateName.translate(name) for name in contact.names],
@@ -125,6 +159,13 @@ class TranslateContact(BaseTranslateMappingModel[ContactMappingModel]):
 class TranslateProfile(BaseTranslateMappingModel[ProfileMappingModel]):
     @staticmethod
     def translate(profile: ProfileMappingModel) -> Profile:
+        """Translate translate between mapping and public models.
+
+        :param profile: ProfileMappingModel instance to process.
+        :type profile: ProfileMappingModel
+        :returns: The translated Profile instance.
+        :rtype: Profile
+        """
         profile_options = []
         for option in profile.profile_options:
             if isinstance(option, int):
@@ -140,6 +181,13 @@ class TranslateProfile(BaseTranslateMappingModel[ProfileMappingModel]):
 class TranslatePresence(BaseTranslateMappingModel[PresenceMappingModel]):
     @staticmethod
     def translate(presence: PresenceMappingModel) -> Presence:
+        """Translate translate between mapping and public models.
+
+        :param presence: PresenceMappingModel instance to process.
+        :type presence: PresenceMappingModel
+        :returns: The translated Presence instance.
+        :rtype: Presence
+        """
         return Presence(
             seen=presence.seen,
             status=presence.status,
@@ -149,6 +197,13 @@ class TranslatePresence(BaseTranslateMappingModel[PresenceMappingModel]):
 class TranslateMember(BaseTranslateMappingModel[MemberMappingModel]):
     @staticmethod
     def translate(member: MemberMappingModel) -> Member:
+        """Translate translate between mapping and public models.
+
+        :param member: MemberMappingModel instance to process.
+        :type member: MemberMappingModel
+        :returns: The translated Member instance.
+        :rtype: Member
+        """
         return Member(
             presence=TranslatePresence.translate(member.presence),
             contact=TranslateContact.translate(member.contact),
@@ -159,7 +214,23 @@ class TranslateMessage(BaseTranslateMappingModel[MessageMappingModel]):
     @staticmethod
     def translate(message: MessageMappingModel, fallback_chat_id: int = -1) -> Message:
 
+        """Translate translate between mapping and public models.
+
+        :param message: MessageMappingModel instance to process.
+        :type message: MessageMappingModel
+        :param fallback_chat_id: Identifier of the fallback chat.
+        :type fallback_chat_id: int
+        :returns: The translated Message instance.
+        :rtype: Message
+        """
         def translate_message(msg: MessageMappingModel) -> Message:
+            """Translate message between mapping and public models.
+
+            :param msg: MessageMappingModel instance to process.
+            :type msg: MessageMappingModel
+            :returns: The translated Message instance.
+            :rtype: Message
+            """
             msg_id = msg.id
             # if message.id is None:
             #     msg_id = 0
@@ -228,6 +299,19 @@ class TranslateReactionInfo(BaseTranslateMappingModel[ReactionInfoMappingModel])
         message_id: int | str,
         status: str = "ADD",
     ) -> EmojiReaction:
+        """Translate translate between mapping and public models.
+
+        :param reaction: ReactionInfoMappingModel instance to process.
+        :type reaction: ReactionInfoMappingModel
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param status: The status value.
+        :type status: str
+        :returns: The translated EmojiReaction instance.
+        :rtype: EmojiReaction
+        """
         from ......models.EmojiReaction import Counters
 
         return EmojiReaction(
@@ -247,6 +331,17 @@ class TranslateReadState(BaseTranslateMappingModel[ReadStateMappingModel]):
         chat_id: int,
         message_id: int | str,
     ) -> ReadState:
+        """Translate translate between mapping and public models.
+
+        :param read_state: ReadStateMappingModel instance to process.
+        :type read_state: ReadStateMappingModel
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :returns: The translated ReadState instance.
+        :rtype: ReadState
+        """
         return ReadState(
             chat_id=chat_id,
             message_id=message_id,
@@ -258,6 +353,13 @@ class TranslateReadState(BaseTranslateMappingModel[ReadStateMappingModel]):
 class TranslateChat(BaseTranslateMappingModel[ChatMappingModel]):
     @staticmethod
     def translate(chat: ChatMappingModel) -> Chat:
+        """Translate translate between mapping and public models.
+
+        :param chat: ChatMappingModel instance to process.
+        :type chat: ChatMappingModel
+        :returns: The translated Chat instance.
+        :rtype: Chat
+        """
         return Chat(
             id=chat.id,
             type=chat.type,
@@ -307,6 +409,13 @@ class TranslateChat(BaseTranslateMappingModel[ChatMappingModel]):
 class TranslateFolder(BaseTranslateMappingModel[FolderMappingModel]):
     @staticmethod
     def translate(folder: FolderMappingModel) -> Folder:
+        """Translate translate between mapping and public models.
+
+        :param folder: FolderMappingModel instance to process.
+        :type folder: FolderMappingModel
+        :returns: The translated Folder instance.
+        :rtype: Folder
+        """
         return Folder(
             source_id=folder.source_id,
             include=folder.include,
@@ -322,6 +431,13 @@ class TranslateFolderUpdate(BaseTranslateMappingModel[FolderUpdateMappingModel])
 
     @staticmethod
     def translate(folder_update: FolderUpdateMappingModel) -> FolderUpdate:
+        """Translate translate between mapping and public models.
+
+        :param folder_update: FolderUpdateMappingModel instance to process.
+        :type folder_update: FolderUpdateMappingModel
+        :returns: The translated FolderUpdate instance.
+        :rtype: FolderUpdate
+        """
         return FolderUpdate(
             folder_sync=folder_update.folder_sync,
             folders_order=folder_update.folders_order,
@@ -337,6 +453,13 @@ class TranslateFolderList(BaseTranslateMappingModel[FolderListMappingModel]):
 
     @staticmethod
     def translate(folder_list: FolderListMappingModel) -> FolderList:
+        """Translate translate between mapping and public models.
+
+        :param folder_list: FolderListMappingModel instance to process.
+        :type folder_list: FolderListMappingModel
+        :returns: The translated FolderList instance.
+        :rtype: FolderList
+        """
         return FolderList(
             folder_sync=folder_list.folder_sync,
             folders_order=folder_list.folders_order,
@@ -350,6 +473,13 @@ class TranslateFolderList(BaseTranslateMappingModel[FolderListMappingModel]):
 class TranslateSession(BaseTranslateMappingModel[SessionMappingModel]):
     @staticmethod
     def translate(session: SessionMappingModel) -> Session:
+        """Translate translate between mapping and public models.
+
+        :param session: SessionMappingModel instance to process.
+        :type session: SessionMappingModel
+        :returns: The translated Session instance.
+        :rtype: Session
+        """
         location = None
         ip = None
         if session.location is not None and ", IP" in session.location:
@@ -383,6 +513,13 @@ class TranslateSession(BaseTranslateMappingModel[SessionMappingModel]):
 class TranslatePollFlags(BaseTranslateMappingModel[PollFlagsMappingModel, PollFlags]):
     @staticmethod
     def translate(poll_flags: PollFlagsMappingModel) -> PollFlags:
+        """Translate translate between mapping and public models.
+
+        :param poll_flags: PollFlagsMappingModel instance to process.
+        :type poll_flags: PollFlagsMappingModel
+        :returns: The translated PollFlags instance.
+        :rtype: PollFlags
+        """
         poll_flags_map: dict[PollFlagsMappingModel, PollFlags] = {
             PollFlagsMappingModel.FLAG_SETTINGS_QUIZ: PollFlags.FLAG_SETTINGS_QUIZ,
             PollFlagsMappingModel.FLAG_SETTINGS_CLOSED: PollFlags.FLAG_SETTINGS_CLOSED,
@@ -403,6 +540,13 @@ class TranslatePollFlags(BaseTranslateMappingModel[PollFlagsMappingModel, PollFl
 class TranslatePollAnswer(BaseTranslateMappingModel[PollAnswerMappingModel]):
     @staticmethod
     def translate(poll_answer: PollAnswerMappingModel) -> PollAnswer:
+        """Translate translate between mapping and public models.
+
+        :param poll_answer: PollAnswerMappingModel instance to process.
+        :type poll_answer: PollAnswerMappingModel
+        :returns: The translated PollAnswer instance.
+        :rtype: PollAnswer
+        """
         return PollAnswer(
             answer_id=poll_answer.answer_id,
             text=poll_answer.text,
@@ -412,6 +556,13 @@ class TranslatePollAnswer(BaseTranslateMappingModel[PollAnswerMappingModel]):
 class TranslatePollVote(BaseTranslateMappingModel[PollVoteMappingModel]):
     @staticmethod
     def translate(poll_vote: PollVoteMappingModel) -> PollVote:
+        """Translate translate between mapping and public models.
+
+        :param poll_vote: PollVoteMappingModel instance to process.
+        :type poll_vote: PollVoteMappingModel
+        :returns: The translated PollVote instance.
+        :rtype: PollVote
+        """
         return PollVote(
             timestamp=poll_vote.timestamp,
             user_id=poll_vote.user_id,
@@ -421,6 +572,13 @@ class TranslatePollVote(BaseTranslateMappingModel[PollVoteMappingModel]):
 class TranslatePollResult(BaseTranslateMappingModel[PollResultMappingModel]):
     @staticmethod
     def translate(poll_result: PollResultMappingModel) -> PollResult:
+        """Translate translate between mapping and public models.
+
+        :param poll_result: PollResultMappingModel instance to process.
+        :type poll_result: PollResultMappingModel
+        :returns: The translated PollResult instance.
+        :rtype: PollResult
+        """
         return PollResult(
             votes=[TranslatePollVote.translate(vote) for vote in poll_result.votes],
             vote_count=poll_result.vote_count,
@@ -433,6 +591,13 @@ class TranslatePollResult(BaseTranslateMappingModel[PollResultMappingModel]):
 class TranslatePollState(BaseTranslateMappingModel[PollStateMappingModel]):
     @staticmethod
     def translate(poll_state: PollStateMappingModel) -> PollState:
+        """Translate translate between mapping and public models.
+
+        :param poll_state: PollStateMappingModel instance to process.
+        :type poll_state: PollStateMappingModel
+        :returns: The translated PollState instance.
+        :rtype: PollState
+        """
         poll_result = (
             [TranslatePollResult.translate(res) for res in poll_state.result]
             if poll_state.result is not None
@@ -448,6 +613,13 @@ class TranslatePollState(BaseTranslateMappingModel[PollStateMappingModel]):
 class TranslatePoll(BaseTranslateMappingModel[PollMappingModel, Poll]):
     @staticmethod
     def translate(poll: PollMappingModel) -> Poll:
+        """Translate translate between mapping and public models.
+
+        :param poll: PollMappingModel instance to process.
+        :type poll: PollMappingModel
+        :returns: The translated Poll instance.
+        :rtype: Poll
+        """
         return Poll(
             title=poll.title,
             settings=TranslatePollFlags.translate(poll.settings),
@@ -490,6 +662,17 @@ TRANSLATE_MAPPING_MODELS: dict[
 def translate_models(
     mapping_obj: CamelCaseModel, *args: Any, **kwargs: Any
 ) -> BaseMaxObject | BaseFileAttachment | CamelCaseModel:
+    """Translate models.
+
+    :param mapping_obj: CamelCaseModel instance to process.
+    :type mapping_obj: CamelCaseModel
+    :param args: Positional arguments forwarded to the wrapped callable.
+    :type args: Any
+    :param kwargs: Keyword arguments forwarded to the wrapped callable.
+    :type kwargs: Any
+    :returns: The resulting BaseMaxObject | BaseFileAttachment | CamelCaseModel value.
+    :rtype: BaseMaxObject | BaseFileAttachment | CamelCaseModel
+    """
     translate_model = TRANSLATE_MAPPING_MODELS.get(type(mapping_obj), None)
     if translate_model is None:
         return mapping_obj

@@ -11,6 +11,18 @@ def inspect_and_form(
     data: dict[type[T], T],
     raise_if_not_annotated: bool = False,
 ) -> dict[str, Any]:
+    """Inspect and form.
+
+    :param func: Callable to invoke.
+    :type func: Callable[..., Any]
+    :param data: Contextual data passed through the processing pipeline.
+    :type data: dict[type[T], T]
+    :param raise_if_not_annotated: The raise if not annotated value.
+    :type raise_if_not_annotated: bool
+    :returns: The resulting dict[str, Any] value.
+    :rtype: dict[str, Any]
+    :raises AnnotationError: If  Need annotate all params.
+    """
     signature = inspect.signature(func)
     data_str_keys: dict[str, T] = {
         str(key.__name__) if not isinstance(key, str) else key: value

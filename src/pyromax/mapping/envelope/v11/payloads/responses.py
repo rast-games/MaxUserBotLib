@@ -170,6 +170,13 @@ class TrackStatusResponse(CamelCaseModel):
 
     @model_validator(mode="after")
     def validate_after(self, v: Any) -> Self:
+        """Validate and normalize validate after.
+
+        :param v: The v value.
+        :type v: Any
+        :returns: The current instance.
+        :rtype: Self
+        """
         self.expires_at /= 1000
         return self
 
@@ -187,6 +194,13 @@ class MetadataResponse(CamelCaseModel):
 
     @model_validator(mode="after")
     def validate_after(self, v: Any) -> Self:
+        """Validate and normalize validate after.
+
+        :param v: The v value.
+        :type v: Any
+        :returns: The current instance.
+        :rtype: Self
+        """
         self.polling_interval /= 1000
         self.expires_at /= 1000
         return self

@@ -21,7 +21,15 @@ class Mapper(FullMixin):
         self,
         context: Any,
     ) -> AsyncGenerator[Response, None]:
-        """Endless updates reader"""
+        """Endless updates reader
+
+        :param context: Runtime context used while processing the request.
+        :type context: Any
+        :yields: Items produced by the iterator.
+        :ytype: AsyncGenerator[Response, None]
+        :raises RuntimeError: If lifecycle manager not set.
+        :raises MapperApiError: If the requested action cannot be completed.
+        """
         async with self._update_listener_lock:
 
             while True:
@@ -64,6 +72,13 @@ class Mapper(FullMixin):
     ) -> tuple[
         Callable[[Response], Response | BaseMaxObject], AsyncGenerator[Response, None]
     ]:
+        """Listen for updates.
+
+        :param context: Runtime context used while processing the request.
+        :type context: Any
+        :returns: Items produced by the iterator.
+        :rtype: tuple[Callable[[Response], Response | BaseMaxObject], AsyncGenerator[Response, None]]
+        """
         return partial(update_translate, context=context), self._listen_updates(
             context=context
         )

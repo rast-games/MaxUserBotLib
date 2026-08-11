@@ -13,6 +13,20 @@ class CreateFolderMethod(BaseMaxApiMethod[FolderUpdate]):
         filters: list[Any] | None = None,
         folder_id: str | None = None,
     ) -> FolderUpdate:
+        """Execute the create folder MAX API method.
+
+        :param title: The title value.
+        :type title: str
+        :param chat_include: Collection of chat include.
+        :type chat_include: list[int]
+        :param filters: Collection of filters.
+        :type filters: list[Any] | None
+        :param folder_id: Identifier of the folder.
+        :type folder_id: str | None
+        :returns: The resulting FolderUpdate value.
+        :rtype: FolderUpdate
+        :raises RuntimeError: If createFolder method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("CreateFolder method not bound to MaxApi instance")
 

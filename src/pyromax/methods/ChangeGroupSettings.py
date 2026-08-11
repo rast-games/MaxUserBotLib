@@ -15,6 +15,24 @@ class ChangeGroupSettingsMethod(BaseMaxApiMethod[Union[Chat, None]]):
         only_admin_can_call: bool | None = None,
         members_can_see_private_link: bool | None = None,
     ) -> Chat | None:
+        """Execute the change group settings MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param all_can_pin_message: The all can pin message value.
+        :type all_can_pin_message: bool | None
+        :param only_owner_can_change_icon_title: The only owner can change icon title value.
+        :type only_owner_can_change_icon_title: bool | None
+        :param only_admin_can_add_member: The only admin can add member value.
+        :type only_admin_can_add_member: bool | None
+        :param only_admin_can_call: The only admin can call value.
+        :type only_admin_can_call: bool | None
+        :param members_can_see_private_link: The members can see private link value.
+        :type members_can_see_private_link: bool | None
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        :raises RuntimeError: If changeGroupSettings method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError(
                 "ChangeGroupSettings method not bound to MaxApi instance"

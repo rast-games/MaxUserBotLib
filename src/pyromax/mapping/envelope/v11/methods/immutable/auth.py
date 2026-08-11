@@ -24,6 +24,13 @@ from .base import VERSION
 
 class TrackLoginMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the track login protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.TRACK_LOGIN
         request.cmd = Cmd.REQUEST
         request.payload = TrackLoginMappingModel(
@@ -36,6 +43,13 @@ class TrackLoginMethod(BaseMethod):
 
 class GetUserDataMethod(TrackLoginMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get user data protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request = await super().__call__(request)
         request.opcode = Opcode.GET_USER_DATA
         request.ver = VERSION
@@ -44,6 +58,13 @@ class GetUserDataMethod(TrackLoginMethod):
 
 class Resolve2FAMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the resolve2 f a protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.RESOLVE_2FA
         request.cmd = Cmd.REQUEST
         request.payload = Resolve2FARequest(
@@ -56,6 +77,13 @@ class Resolve2FAMethod(BaseMethod):
 
 class StartSMSAuthMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the start s m s auth protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.START_SMS_AUTH
         request.cmd = Cmd.REQUEST
         request.payload = StartPhoneAuthRequest(
@@ -69,6 +97,13 @@ class StartSMSAuthMethod(BaseMethod):
 
 class VerifySMSCodeMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the verify s m s code protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.CHECK_SMS_CODE
         request.cmd = Cmd.REQUEST
         request.payload = VerifySMSCodeRequest(
@@ -82,6 +117,13 @@ class VerifySMSCodeMethod(BaseMethod):
 
 class GetMetadataForLoginMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get metadata for login protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.METADATA_FOR_LOGIN
         request.cmd = Cmd.REQUEST
         request.payload = None
@@ -91,6 +133,13 @@ class GetMetadataForLoginMethod(BaseMethod):
 
 class SendUserAgentMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the send user agent protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.SEND_USER_AGENT
         request.cmd = Cmd.REQUEST
         user_agent: BaseUserAgentMappingModel = self.args["user_agent"]
@@ -103,6 +152,13 @@ class SendUserAgentMethod(BaseMethod):
 
 class SendAuthTokenMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the send auth token protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.AUTHORIZE
         request.cmd = Cmd.REQUEST
         request.payload = AuthMappingModel(**self.args).model_dump(
@@ -114,6 +170,13 @@ class SendAuthTokenMethod(BaseMethod):
 
 class SendKeepAlivePingMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the send keep alive ping protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.PING
         request.cmd = Cmd.REQUEST
         request.payload = KeepAliveRequest(
@@ -125,6 +188,13 @@ class SendKeepAlivePingMethod(BaseMethod):
 
 class ConfirmRegistrationMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the confirm registration protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.CONFIRM_REGISTRATION
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -138,6 +208,13 @@ class ConfirmRegistrationMethod(BaseMethod):
 
 class GetEmailCodeMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get email code protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.SET_EMAIL
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -150,6 +227,13 @@ class GetEmailCodeMethod(BaseMethod):
 
 class VerifyEmailMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the verify email protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.VERIFY_EMAIL
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -162,6 +246,13 @@ class VerifyEmailMethod(BaseMethod):
 
 class SetHintMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the set hint protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.SET_HINT
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -174,6 +265,13 @@ class SetHintMethod(BaseMethod):
 
 class SetPasswordMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the set password protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.SET_PASSWORD
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -186,6 +284,13 @@ class SetPasswordMethod(BaseMethod):
 
 class GetTrackIdFor2FAMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get track id for2 f a protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.GET_TRACKID_FOR2FA
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -197,6 +302,13 @@ class GetTrackIdFor2FAMethod(BaseMethod):
 
 class SetTwoFactorMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the set two factor protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.SET_2_FACTOR
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -211,6 +323,13 @@ class SetTwoFactorMethod(BaseMethod):
 
 class CheckPasswordMethod(SetPasswordMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the check password protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request = await super().__call__(request)
         request.opcode = Opcode.AUTH_CHECK_PASSWORD
         return request
@@ -218,6 +337,13 @@ class CheckPasswordMethod(SetPasswordMethod):
 
 class RemoveTwoFactorMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the remove two factor protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.SET_2_FACTOR
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -231,6 +357,13 @@ class RemoveTwoFactorMethod(BaseMethod):
 
 class ApproveQrLoginMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the approve qr login protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.AUTH_QR_APPROVE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION

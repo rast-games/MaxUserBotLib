@@ -13,6 +13,22 @@ class EditMessageMethod(BaseMaxApiMethod[Message]):
         attaches: list[BaseFileAttachment] | None = None,
         **kwargs: Any,
     ) -> Message:
+        """Execute the edit message MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param text: Message or textual content.
+        :type text: str | None
+        :param attaches: Attachments associated with the message.
+        :type attaches: list[BaseFileAttachment] | None
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting Message value.
+        :rtype: Message
+        :raises RuntimeError: If editMessage method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("EditMessage method not bound to MaxApi instance")
 

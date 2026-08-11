@@ -22,13 +22,32 @@ class BaseMaxProtocol(AsyncInitializerMixin, Generic[T, R]):
     async def send(
         self, method: BaseMaxProtocolMethod[T], data: Any | None = None
     ) -> Awaitable[R]:
+        """Send.
+
+        :param method: BaseMaxProtocolMethod[T] instance to process.
+        :type method: BaseMaxProtocolMethod[T]
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: Any | None
+        :returns: The resulting Awaitable[R] value.
+        :rtype: Awaitable[R]
+        """
         pass
 
     @abstractmethod
     async def get_updates(self) -> Iterable[Any]:
+        """Retrieve updates.
+
+        :returns: The resulting collection.
+        :rtype: Iterable[Any]
+        """
         pass
 
     @property
     @abstractmethod
     def transport(self) -> BaseTransport:
+        """Transport.
+
+        :returns: The resulting BaseTransport value.
+        :rtype: BaseTransport
+        """
         pass

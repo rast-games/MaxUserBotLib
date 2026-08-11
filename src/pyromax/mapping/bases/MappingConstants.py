@@ -1,6 +1,11 @@
 class MappingConstantsMeta(type):
     def __repr__(cls) -> str:
 
+        """Return the developer representation of the mapping constants meta.
+
+        :returns: The resulting str value.
+        :rtype: str
+        """
         attrs = {}
 
         for CLS in cls.__mro__:
@@ -23,6 +28,11 @@ class MappingConstantsMeta(type):
 class MappingConstants(metaclass=MappingConstantsMeta):
     def __repr__(self) -> str:
 
+        """Return the developer representation of the mapping constants.
+
+        :returns: The resulting str value.
+        :rtype: str
+        """
         attrs = {}
 
         for CLS in type(self).__mro__:

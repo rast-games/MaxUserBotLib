@@ -18,6 +18,22 @@ class SendMessageMethod(BaseMaxApiMethod[Optional[Message]]):
         notify: bool = True,
         **kwargs: Any,
     ) -> Message | None:
+        """Execute the send message MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param text: Message or textual content.
+        :type text: str | None
+        :param attaches: Attachments associated with the message.
+        :type attaches: list[BaseFileAttachment] | None
+        :param notify: Whether MAX should notify affected users.
+        :type notify: bool
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
+        :raises RuntimeError: If sendMessage method not bound to MaxApi instance.
+        """
         if not attaches:
             attaches = []
 

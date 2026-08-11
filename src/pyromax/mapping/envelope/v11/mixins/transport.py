@@ -35,10 +35,12 @@ class TransportMixin(MixinProtocol):
     async def connect(
         self,
     ) -> None:
-        """
-        Raises
-        ------
-            MapperConnectError
+        """Connect the mapper to its transport and initialize its lifecycle.
+
+        :raises MapperConnectError: If the transport connection cannot be established.
+
+
+        :raises RuntimeError: If lifecycle manager not initialized.
         """
         try:
             if self._lifecycle_manager is None:
@@ -68,6 +70,8 @@ class TransportMixin(MixinProtocol):
     async def close(
         self,
     ) -> None:
+        """Close.
+        """
         self._mapper_connected.clear()
         self._authorized.clear()
         await self.protocol.close()
@@ -82,8 +86,7 @@ class TransportMixin(MixinProtocol):
                 self._logger.debug("keepalive task already cancelled")
 
     def log(self, level: int, msg: str) -> None:
-        """
-        CRITICAL = 50
+        """CRITICAL = 50
         FATAL = CRITICAL
         ERROR = 40
         WARNING = 30
@@ -95,6 +98,9 @@ class TransportMixin(MixinProtocol):
         :param level:
         :param msg:
         :return:
+
+        :type level: int
+        :type msg: str
         """
         self._logger.log(level, msg)
 
@@ -106,12 +112,20 @@ class TransportMixin(MixinProtocol):
     ) -> Envelope:
         """Send request without catching exceptions
 
-        Raises
-        ------
-            MapperCancelledError
-            AlreadyFailedError
-            MapperApiError
-            MapperTransportError
+        :raises MapperCancelledError: If the operation fails.
+        :raises AlreadyFailedError: If the operation fails.
+        :raises MapperApiError: If the operation fails.
+        :raises MapperTransportError: If the operation fails.
+
+        :param method: BaseMethod instance to process.
+        :type method: BaseMethod
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: dict[Any, Any] | None
+        :param check_errors: The check errors value.
+        :type check_errors: bool
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        :raises error_obj: If the requested action cannot be completed.
         """
         if data is None:
             data = {}
@@ -155,6 +169,15 @@ class TransportMixin(MixinProtocol):
     async def send_raw_with_running_wait(
         self, method: BaseMethod, data: dict[Any, Any] | None = None
     ) -> Envelope:
+        """Send raw with running wait.
+
+        :param method: BaseMethod instance to process.
+        :type method: BaseMethod
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: dict[Any, Any] | None
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         if data is None:
             data = {}
         response = await self.send_raw(method=method, data=data)
@@ -168,11 +191,24 @@ class TransportMixin(MixinProtocol):
         check_errors: bool = False,
         max_retries: int = 3,
     ) -> Envelope:
-        """
-        Raises
-        ------
-            MapperTransportError
-            MapperCancelledError
+        """Execute a mapped method and return its response envelope.
+
+        :raises MapperTransportError: If sending or receiving protocol data fails.
+        :raises MapperCancelledError: If the request is cancelled.
+
+        :param method: BaseMethod instance to process.
+        :type method: BaseMethod
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: dict[Any, Any] | None
+        :param return_exception: The return exception value.
+        :type return_exception: bool
+        :param check_errors: The check errors value.
+        :type check_errors: bool
+        :param max_retries: The max retries value.
+        :type max_retries: int
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        :raises RuntimeError: If lifecycle manager not initialized.
         """
         if data is None:
             data = {}
@@ -269,6 +305,17 @@ class TransportMixin(MixinProtocol):
         *args: Any,
         **kwargs: Any,
     ) -> Any:
+        """Call build in method.
+
+        :param method_name: method_names instance to process.
+        :type method_name: method_names
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        """
         from ..Mapper import Mapper
 
         method = build_method(
@@ -279,6 +326,20 @@ class TransportMixin(MixinProtocol):
     async def call_method(
         self, method: type[BaseMaxApiMethod[Any]], *args: Any, **kwargs: Any
     ) -> Any:
+        """Call method.
+
+        :param method: type[BaseMaxApiMethod[Any]] instance to process.
+        :type method: type[BaseMaxApiMethod[Any]]
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        :raises MapperNotImplementedMethodError: If method not supported for this mapper.
+        :raises MapperApiError: If try call method on not initialized mapper(without user agent).
+        :raises MapperTransportNotSupportedForMethodError: If method not supported for this transport.
+        """
         from ..Mapper import Mapper
 
         methods_registry = get_methods_registry(cast(Mapper, self))

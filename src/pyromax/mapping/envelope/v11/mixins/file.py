@@ -36,6 +36,19 @@ class FileMixin(MixinProtocol):
         uploader_type: int = 0,
         count: int = 1,
     ) -> dict[str, Any]:
+        """Create cell for file.
+
+        :param opcode: The opcode value.
+        :type opcode: int
+        :param upload_type: The upload type value.
+        :type upload_type: int
+        :param uploader_type: The uploader type value.
+        :type uploader_type: int
+        :param count: Maximum number of items to retrieve.
+        :type count: int
+        :returns: The resulting dict[str, Any] value.
+        :rtype: dict[str, Any]
+        """
         response = await self.send(
             method=GetUrlToUploadFileMethod(
                 type_of_file_opcode=opcode,
@@ -58,6 +71,23 @@ class FileMixin(MixinProtocol):
         uploaded: bool = False,
         **kwargs: Any,
     ) -> list[BaseFileMappingModel]:
+        """Upload file.
+
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: bytes | None
+        :param typeof: Attachment class that determines the upload type.
+        :type typeof: type[BaseFileAttachment]
+        :param count: Maximum number of items to retrieve.
+        :type count: int
+        :param file_name: The file name value.
+        :type file_name: str | None
+        :param uploaded: The uploaded value.
+        :type uploaded: bool
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting collection.
+        :rtype: list[BaseFileMappingModel]
+        """
         payload = {}
         if not uploaded:
             upload_type = UPLOAD_TYPES.get(typeof)
@@ -94,6 +124,23 @@ class FileMixin(MixinProtocol):
         headers_to_download: dict[str, str] | None = None,
         **kwargs: Any,
     ) -> tuple[bytes, dict[str, str]] | tuple[None, None]:
+        """Download file.
+
+        :param file: File attachment to process.
+        :type file: BaseFileMappingModel
+        :param cookies_to_download: dict[str, str] instance to process.
+        :type cookies_to_download: dict[str, str] | None
+        :param headers_to_download: dict[str, str] instance to process.
+        :type headers_to_download: dict[str, str] | None
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting tuple[bytes, dict[str, str]] | tuple[None, None] value.
+        :rtype: tuple[bytes, dict[str, str]] | tuple[None, None]
+        :raises RuntimeError: If max_api must be set.
+        :raises RuntimeError: If mapper not bound to max_api instance, because user_agent is None.
+        :raises RuntimeError: If user_agent_header must be str.
+        :raises DownloadFileError: If download failed for file.
+        """
         url = await get_file_url(
             file=file,
             mapper=cast(BaseMapper[BaseMaxProtocol[Any, Any], Any], self),

@@ -37,6 +37,11 @@ class Router(Subject):
         *,
         name: str | None = None,
     ) -> None:
+        """Initialize the router.
+
+        :param name: The name value.
+        :type name: str | None
+        """
         self.name = name or hex(id(self))
 
         self.sub_routers: list[Router] = []
@@ -81,6 +86,11 @@ class Router(Subject):
 
     @property
     def chain_head(self) -> Generator["Router", None, None]:
+        """Chain head.
+
+        :yields: Items produced by the iterator.
+        :ytype: Generator['Router', None, None]
+        """
         router: Router | None = self
         while router:
             yield router
@@ -88,24 +98,37 @@ class Router(Subject):
 
     @property
     def chain_tail(self) -> Generator["Router", None, None]:
+        """Chain tail.
+
+        :yields: Items produced by the iterator.
+        :ytype: Generator['Router', None, None]
+        """
         yield self
         for router in self.sub_routers:
             yield from router.chain_tail
 
     @property
     def parent_router(self) -> Optional["Router"]:
+        """Parent router.
+
+        :returns: The resulting Optional['Router'] value.
+        :rtype: Optional['Router']
+        """
         return self._parent_router
 
     @parent_router.setter
     def parent_router(self, router: "Router") -> None:
-        """
-        Internal property setter of parent router fot this router.
+        """Internal property setter of parent router fot this router.
         Do not use this method in own code.
         All routers should be included via `include_router` method.
 
         Self- and circular- referencing are not allowed here
 
         :param router:
+
+        :type router: 'Router'
+        :raises ValueError: If the requested action cannot be completed.
+        :raises RuntimeError: If the requested action cannot be completed.
         """
         if not isinstance(router, Router):
             msg = f"router should be instance of Router not {type(router).__name__!r}"
@@ -131,10 +154,10 @@ class Router(Subject):
     def include_routers(self, *routers: "Router") -> None:
         """Attach multiple child routers at once.
 
-        Parameters
-        ----------
-        routers
-            Routers to attach.
+        :param routers: Routers to attach.
+        :type routers: 'Router'
+
+        :raises ValueError: If the requested action cannot be completed.
         """
         if not routers:
             msg = "At least one router must be provided"
@@ -145,15 +168,13 @@ class Router(Subject):
     def include_router(self, router: "Router") -> "Router":
         """Attach another router as a child router.
 
-        Parameters
-        ----------
-        router
-            Router to attach.
+        :param router: Router to attach.
+        :type router: 'Router'
 
-        Returns
-        -------
-        Router
-            The attached router.
+        :returns: The attached router.
+        :rtype: 'Router'
+
+        :raises ValueError: If the requested action cannot be completed.
         """
         if not isinstance(router, Router):
             msg = f"router should be instance of Router not {type(router).__class__.__name__}"
@@ -169,19 +190,17 @@ class Router(Subject):
     ) -> Any:
         """Propagate an update through handlers and child routers.
 
-        Parameters
-        ----------
-        update
-            Incoming update object.
-        data
-            Context data available to handlers.
-        event_types
-            keys of Router.events
+        :param update: Incoming update object.
+        :type update: MaxObject
+        :param data: Context data available to handlers.
+        :type data: dict[Any, Any] | None
+        :param event_types: keys of Router.events
+        :type event_types: list[str] | None
 
-        Returns
-        -------
-        bool
-            Any if the update was handled, otherwise UNHANDLED.
+        :returns: Any if the update was handled, otherwise UNHANDLED.
+        :rtype: Any
+
+        :raises ValueError: If data cannot be None.
         """
 
         if event_types is None:

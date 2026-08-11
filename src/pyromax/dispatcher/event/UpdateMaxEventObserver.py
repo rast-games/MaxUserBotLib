@@ -20,8 +20,24 @@ class UpdateMaxEventObserver(StandardMaxEventObserver[Response]):
         event_name: str,
         type_of_update: type[MaxObject] | types.UnionType,
     ) -> None:
+        """Initialize the update max event observer.
+
+        :param router: Router instance to process.
+        :type router: Router
+        :param event_name: The event name value.
+        :type event_name: str
+        :param type_of_update: type[MaxObject] | types.UnionType instance to process.
+        :type type_of_update: type[MaxObject] | types.UnionType
+        """
         super().__init__(router, event_name, Response)
         self.really_type_of_update: type[MaxObject] | types.UnionType = type_of_update
 
     async def is_my_update(self, update: Update) -> bool:
+        """Return whether my update.
+
+        :param update: Incoming update to process.
+        :type update: Update
+        :returns: True when the requested condition is satisfied; otherwise False.
+        :rtype: bool
+        """
         return isinstance(update, self.really_type_of_update)

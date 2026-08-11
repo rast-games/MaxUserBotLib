@@ -4,6 +4,13 @@ from pydantic import ConfigDict, BaseModel
 
 
 def to_camel_case(snake_str: str) -> str:
+    """To camel case.
+
+    :param snake_str: The snake str value.
+    :type snake_str: str
+    :returns: The resulting str value.
+    :rtype: str
+    """
     words = snake_str.split("_")
     camel_case = [words[0].lower()] + [word.capitalize() for word in words[1:]]
     return "".join(camel_case)

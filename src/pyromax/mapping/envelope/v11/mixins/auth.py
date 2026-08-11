@@ -71,6 +71,11 @@ class AuthMixin(MixinProtocol):
         user_agent: BaseUserAgentMappingModel,
     ) -> None:
 
+        """Send user agent.
+
+        :param user_agent: BaseUserAgentMappingModel instance to process.
+        :type user_agent: BaseUserAgentMappingModel
+        """
         response = await self.send_raw(
             method=SendUserAgentMethod(
                 user_agent=user_agent,
@@ -89,6 +94,24 @@ class AuthMixin(MixinProtocol):
         contacts_sync: int,
         drafts_sync: int,
     ) -> None:
+        """Send auth token.
+
+        :param token: Authentication token.
+        :type token: str
+        :param chats_count: The chats count value.
+        :type chats_count: int
+        :param interactive: The interactive value.
+        :type interactive: bool
+        :param presence_sync: The presence sync value.
+        :type presence_sync: int
+        :param chats_sync: The chats sync value.
+        :type chats_sync: int
+        :param contacts_sync: The contacts sync value.
+        :type contacts_sync: int
+        :param drafts_sync: The drafts sync value.
+        :type drafts_sync: int
+        :raises RuntimeError: If you try a send auth token, but not bound MaxApi instance to mapper.
+        """
         self._logger.debug("sending auth token")
         response = await self.send_raw(
             method=SendAuthTokenMethod(
@@ -139,6 +162,17 @@ class AuthMixin(MixinProtocol):
         auth_type: str = "START_AUTH",
         use_mobile_fingerprint: bool = True,
     ) -> StartSMSAuthResponse:
+        """Request code.
+
+        :param phone: Phone number in the format accepted by MAX.
+        :type phone: str
+        :param auth_type: The auth type value.
+        :type auth_type: str
+        :param use_mobile_fingerprint: Whether to use mobile fingerprint.
+        :type use_mobile_fingerprint: bool
+        :returns: The resulting StartSMSAuthResponse value.
+        :rtype: StartSMSAuthResponse
+        """
         user_agent = self.user_agent
         if (
             use_mobile_fingerprint
@@ -173,6 +207,17 @@ class AuthMixin(MixinProtocol):
         verify_code: str,
         auth_token_type: str = "CHECK_CODE",
     ) -> ChoiceLoginVariantResponse:
+        """Send code.
+
+        :param token: Authentication token.
+        :type token: str
+        :param verify_code: The verify code value.
+        :type verify_code: str
+        :param auth_token_type: The auth token type value.
+        :type auth_token_type: str
+        :returns: The resulting ChoiceLoginVariantResponse value.
+        :rtype: ChoiceLoginVariantResponse
+        """
         check_response = await self.send_raw(
             method=VerifySMSCodeMethod(
                 temp_token=token,
@@ -187,6 +232,11 @@ class AuthMixin(MixinProtocol):
     async def request_qr(
         self,
     ) -> MetadataResponse:
+        """Request qr.
+
+        :returns: The resulting MetadataResponse value.
+        :rtype: MetadataResponse
+        """
         response = await self.send_raw(
             method=GetMetadataForLoginMethod(), check_errors=True
         )
@@ -195,6 +245,14 @@ class AuthMixin(MixinProtocol):
         return metadata
 
     async def check_qr(self, track_id: str) -> TrackLoginResponse:
+        """Check qr.
+
+        :param track_id: Identifier of the track.
+        :type track_id: str
+        :returns: The resulting TrackLoginResponse value.
+        :rtype: TrackLoginResponse
+        :raises RuntimeError: If track login failed.
+        """
         response = await self.send_raw_with_running_wait(
             method=TrackLoginMethod(track_id=track_id),
             # return_exception=True
@@ -208,6 +266,13 @@ class AuthMixin(MixinProtocol):
         return track_data
 
     async def confirm_qr(self, track_id: str) -> ChoiceLoginVariantResponse:
+        """Confirm qr.
+
+        :param track_id: Identifier of the track.
+        :type track_id: str
+        :returns: The resulting ChoiceLoginVariantResponse value.
+        :rtype: ChoiceLoginVariantResponse
+        """
         response = await self.send_raw_with_running_wait(
             method=GetUserDataMethod(track_id=track_id),
         )
@@ -223,6 +288,17 @@ class AuthMixin(MixinProtocol):
         last_name: str | None,
         token: str,
     ) -> ConfirmRegistrationResponse:
+        """Confirm registration.
+
+        :param first_name: The first name value.
+        :type first_name: str
+        :param last_name: The last name value.
+        :type last_name: str | None
+        :param token: Authentication token.
+        :type token: str
+        :returns: The resulting ConfirmRegistrationResponse value.
+        :rtype: ConfirmRegistrationResponse
+        """
         response = await self.send(
             method=ConfirmRegistrationMethod(
                 first_name=first_name,
@@ -234,6 +310,11 @@ class AuthMixin(MixinProtocol):
         return ConfirmRegistrationResponse(**response.payload)
 
     async def _get_track_id(self) -> str | None:
+        """Retrieve track id.
+
+        :returns: The resulting str | None value.
+        :rtype: str | None
+        """
         response = await self.send(method=GetTrackIdFor2FAMethod())
 
         track_id = GetTrackIdFor2FAResponse(**response.payload).track_id
@@ -245,6 +326,15 @@ class AuthMixin(MixinProtocol):
         email: str,
         email_code_getter: Callable[[str], Coroutine[Any, Any, str]],
     ) -> None:
+        """Set email.
+
+        :param track_id: Identifier of the track.
+        :type track_id: str
+        :param email: The email value.
+        :type email: str
+        :param email_code_getter: Callable to invoke.
+        :type email_code_getter: Callable[[str], Coroutine[Any, Any, str]]
+        """
         response = await self.send(
             method=GetEmailCodeMethod(
                 track_id=track_id,
@@ -266,6 +356,13 @@ class AuthMixin(MixinProtocol):
         track_id: str,
         hint: str,
     ) -> None:
+        """Set hint.
+
+        :param track_id: Identifier of the track.
+        :type track_id: str
+        :param hint: The hint value.
+        :type hint: str
+        """
         response = await self.send(
             method=SetHintMethod(
                 track_id=track_id,
@@ -278,6 +375,13 @@ class AuthMixin(MixinProtocol):
         track_id: str,
         password: str,
     ) -> None:
+        """Set password.
+
+        :param track_id: Identifier of the track.
+        :type track_id: str
+        :param password: Account password.
+        :type password: str
+        """
         response = await self.send(
             method=SetPasswordMethod(
                 track_id=track_id,
@@ -293,6 +397,20 @@ class AuthMixin(MixinProtocol):
         email_code_getter: Callable[[str], Coroutine[Any, Any, str]] | None = None,
         two_factor_actions: list[TwoFactorAction] | None = None,
     ) -> None:
+        """Set 2fa.
+
+        :param password: Account password.
+        :type password: str
+        :param email: The email value.
+        :type email: str | None
+        :param hint: The hint value.
+        :type hint: str | None
+        :param email_code_getter: Callable to invoke.
+        :type email_code_getter: Callable[[str], Coroutine[Any, Any, str]] | None
+        :param two_factor_actions: Collection of two factor actions.
+        :type two_factor_actions: list[TwoFactorAction] | None
+        :raises MapperApiError: If no track id provided.
+        """
         if two_factor_actions is None:
             two_factor_actions = []
         track_id = await self._get_track_id()
@@ -311,6 +429,13 @@ class AuthMixin(MixinProtocol):
         if email is not None:
 
             async def default_email_code_getter(e: str) -> str:
+                """Default email code getter.
+
+                :param e: The e value.
+                :type e: str
+                :returns: The resulting str value.
+                :rtype: str
+                """
                 return await asyncio.to_thread(input, f"Введите код с почты {e}: ")
 
             callback = email_code_getter or default_email_code_getter
@@ -349,6 +474,15 @@ class AuthMixin(MixinProtocol):
     async def _check_2fa_password(
         self, track_id: str, password: str
     ) -> GetTrackIdFor2FAResponse:
+        """Check 2fa password.
+
+        :param track_id: Identifier of the track.
+        :type track_id: str
+        :param password: Account password.
+        :type password: str
+        :returns: The resulting GetTrackIdFor2FAResponse value.
+        :rtype: GetTrackIdFor2FAResponse
+        """
         response = await self.send(
             method=CheckPasswordMethod(
                 track_id=track_id,
@@ -364,6 +498,16 @@ class AuthMixin(MixinProtocol):
         expected_capabilities: list[TwoFactorAction] | None = None,
         remove_2fa: bool = True,
     ) -> None:
+        """Remove 2fa.
+
+        :param password: Account password.
+        :type password: str
+        :param expected_capabilities: Collection of expected capabilities.
+        :type expected_capabilities: list[TwoFactorAction] | None
+        :param remove_2fa: The remove 2fa value.
+        :type remove_2fa: bool
+        :raises RuntimeError: If failed to create auth track.
+        """
         if expected_capabilities is None:
             expected_capabilities = []
         self._logger.info("removing 2fa password_set=%s", bool(password))
@@ -389,6 +533,11 @@ class AuthMixin(MixinProtocol):
         return None
 
     async def approve_qr_login(self, qr_link: str) -> None:
+        """Approve qr login.
+
+        :param qr_link: The qr link value.
+        :type qr_link: str
+        """
         response = await self.send(
             method=ApproveQrLoginMethod(
                 qr_link=qr_link,
@@ -397,6 +546,12 @@ class AuthMixin(MixinProtocol):
         return None
 
     async def check_2fa(self) -> bool:
+        """Check 2fa.
+
+        :returns: True when the requested condition is satisfied; otherwise False.
+        :rtype: bool
+        :raises RuntimeError: If mapper not bound to MaxApi instance.
+        """
         if self.max_api is None:
             raise RuntimeError("Mapper not bound to MaxApi instance.")
 
@@ -414,6 +569,18 @@ class AuthMixin(MixinProtocol):
         expected_capabilities: list[TwoFactorAction] | None = None,
         hint: str | None = None,
     ) -> None:
+        """Change password.
+
+        :param password_old: The password old value.
+        :type password_old: str
+        :param password_new: The password new value.
+        :type password_new: str
+        :param expected_capabilities: Collection of expected capabilities.
+        :type expected_capabilities: list[TwoFactorAction] | None
+        :param hint: The hint value.
+        :type hint: str | None
+        :raises RuntimeError: If failed to create auth track.
+        """
         if expected_capabilities is None:
             expected_capabilities = []
         if TwoFactorAction.UPDATE_PASSWORD not in expected_capabilities:
@@ -449,6 +616,21 @@ class AuthMixin(MixinProtocol):
         use_mobile_fingerprint: bool = True,
     ) -> SuccessLoginResponse | None:
 
+        """Login.
+
+        :param url_callback: Callable to invoke.
+        :type url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None
+        :param login_backoff: Backoff instance to process.
+        :type login_backoff: Backoff | None
+        :param registration_config: RegistrationConfig instance to process.
+        :type registration_config: RegistrationConfig | None
+        :param use_mobile_fingerprint: Whether to use mobile fingerprint.
+        :type use_mobile_fingerprint: bool
+        :returns: The resulting SuccessLoginResponse | None value.
+        :rtype: SuccessLoginResponse | None
+        :raises RuntimeError: If user agent is not initialized.
+        :raises MapperApiError: If server not return token.
+        """
         token = self.token
 
         if token is None:
@@ -489,17 +671,38 @@ class AuthMixin(MixinProtocol):
         registration_config: RegistrationConfig | None = None,
         use_mobile_fingerprint: bool = True,
     ) -> SuccessLoginResponse:
+        """Login.
+
+        :param user_agent: BaseUserAgentMappingModel instance to process.
+        :type user_agent: BaseUserAgentMappingModel
+        :param login_backoff: Backoff instance to process.
+        :type login_backoff: Backoff | None
+        :param code_getter: Callable to invoke.
+        :type code_getter: Callable[[str], Coroutine[Any, Any, int]] | None
+        :param url_callback: Callable to invoke.
+        :type url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None
+        :param registration_config: RegistrationConfig instance to process.
+        :type registration_config: RegistrationConfig | None
+        :param use_mobile_fingerprint: Whether to use mobile fingerprint.
+        :type use_mobile_fingerprint: bool
+        :returns: The resulting SuccessLoginResponse value.
+        :rtype: SuccessLoginResponse
+        :raises RestartMapperError: If failed to login.
+        :raises RestartMapperError: If failed to login - timeout.
+        :raises MapperApiError: If password is required to login in account with 2FA.
+        """
         if login_backoff is None:
             login_backoff = Backoff(config=DEFAULT_BACKOFF_CONFIG)
         if not url_callback:
 
             async def url_callback(url: str) -> None:
-                """
-                Creating a QR code scanned by max. It is displayed immediately in the console
+                """Creating a QR code scanned by max. It is displayed immediately in the console
 
                 Args:
                     url - authorization url
 
+                :param url: Resource URL.
+                :type url: str
                 """
 
                 qr = qrcode.QRCode()
@@ -556,6 +759,15 @@ class AuthMixin(MixinProtocol):
     ) -> SuccessLoginResponse:
         # if password is None:
         #     raise RuntimeError("No password given, but need 2FA")
+        """Resolve two factor.
+
+        :param track_id: Identifier of the track.
+        :type track_id: str
+        :param password: Account password.
+        :type password: str
+        :returns: The resulting SuccessLoginResponse value.
+        :rtype: SuccessLoginResponse
+        """
         response = await self.send_raw_with_running_wait(
             method=Resolve2FAMethod(
                 password=password,
@@ -577,6 +789,28 @@ class AuthMixin(MixinProtocol):
         drafts_sync: int = 0,
         send_user_agent: bool = True,
     ) -> None:
+        """Auth.
+
+        :param token: Authentication token.
+        :type token: str
+        :param user_agent: BaseUserAgentMappingModel instance to process.
+        :type user_agent: BaseUserAgentMappingModel
+        :param chats_count: The chats count value.
+        :type chats_count: int
+        :param interactive: The interactive value.
+        :type interactive: bool
+        :param presence_sync: The presence sync value.
+        :type presence_sync: int
+        :param chats_sync: The chats sync value.
+        :type chats_sync: int
+        :param contacts_sync: The contacts sync value.
+        :type contacts_sync: int
+        :param drafts_sync: The drafts sync value.
+        :type drafts_sync: int
+        :param send_user_agent: The send user agent value.
+        :type send_user_agent: bool
+        :raises RestartMapperError: If auth failed.
+        """
         try:
             if send_user_agent:
                 await self._send_user_agent(
@@ -603,6 +837,8 @@ class AuthMixin(MixinProtocol):
             raise RestartMapperError("Auth failed") from e
 
     async def _keepalive(self) -> None:
+        """Keepalive.
+        """
         try:
             while True:
                 await asyncio.sleep(self._keepalive_ping_interval)

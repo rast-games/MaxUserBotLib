@@ -57,6 +57,17 @@ class Message(BaseMaxObject):
         attaches: list[BaseFileAttachment] | None = None,
         link: MessageLink | None = None,
     ) -> Any:
+        """Answer.
+
+        :param text: Message or textual content.
+        :type text: str | None
+        :param attaches: Attachments associated with the message.
+        :type attaches: list[BaseFileAttachment] | None
+        :param link: Invite, message, or resource link.
+        :type link: MessageLink | None
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        """
         from ..methods import SendMessageMethod
 
         return await self.max_api(
@@ -72,6 +83,15 @@ class Message(BaseMaxObject):
         text: str | None = None,
         attaches: list[BaseFileAttachment] | None = None,
     ) -> Any:
+        """Reply.
+
+        :param text: Message or textual content.
+        :type text: str | None
+        :param attaches: Attachments associated with the message.
+        :type attaches: list[BaseFileAttachment] | None
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        """
         link = MessageLink(
             type="REPLY",
             message_id=self.message_id,
@@ -89,6 +109,15 @@ class Message(BaseMaxObject):
         *,
         notify: bool = True,
     ) -> Message | None:
+        """Forward.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param notify: Whether MAX should notify affected users.
+        :type notify: bool
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
+        """
         return await self.max_api.forward_message(
             from_chat_id=self.chat_id,
             to_chat_id=chat_id,
@@ -97,6 +126,11 @@ class Message(BaseMaxObject):
         )
 
     async def pin(self, notify_pin: bool = True) -> None:
+        """Pin.
+
+        :param notify_pin: Whether MAX should notify affected users.
+        :type notify_pin: bool
+        """
         return await self.max_api.pin_message(
             chat_id=self.chat_id,
             message_id=self.message_id,
@@ -108,6 +142,15 @@ class Message(BaseMaxObject):
         text: str | None = None,
         attachments: list[BaseFileAttachment] | None = None,
     ) -> Message:
+        """Edit.
+
+        :param text: Message or textual content.
+        :type text: str | None
+        :param attachments: Attachments associated with the message.
+        :type attachments: list[BaseFileAttachment] | None
+        :returns: The resulting Message value.
+        :rtype: Message
+        """
         return await self.max_api.edit_message(
             chat_id=self.chat_id,
             message_id=self.message_id,
@@ -116,6 +159,11 @@ class Message(BaseMaxObject):
         )
 
     async def delete(self, for_me: bool = False) -> None:
+        """Delete.
+
+        :param for_me: Delete only for the current account.
+        :type for_me: bool
+        """
         return await self.max_api.delete_messages(
             chat_id=self.chat_id,
             message_ids=[self.message_id],
@@ -123,12 +171,24 @@ class Message(BaseMaxObject):
         )
 
     async def read(self) -> ReadState:
+        """Read.
+
+        :returns: The resulting ReadState value.
+        :rtype: ReadState
+        """
         return await self.max_api.read_message(
             chat_id=self.chat_id,
             message_id=self.message_id,
         )
 
     async def react(self, reaction: str) -> EmojiReaction | None:
+        """React.
+
+        :param reaction: The reaction value.
+        :type reaction: str
+        :returns: The resulting EmojiReaction | None value.
+        :rtype: EmojiReaction | None
+        """
         return await self.max_api.add_reaction(
             chat_id=self.chat_id,
             message_id=self.message_id,
@@ -136,12 +196,22 @@ class Message(BaseMaxObject):
         )
 
     async def unreact(self) -> EmojiReaction | None:
+        """Unreact.
+
+        :returns: The resulting EmojiReaction | None value.
+        :rtype: EmojiReaction | None
+        """
         return await self.max_api.remove_reaction(
             chat_id=self.chat_id,
             message_id=self.message_id,
         )
 
     async def get_reactions(self) -> dict[str, EmojiReaction] | None:
+        """Retrieve reactions.
+
+        :returns: The resulting dict[str, EmojiReaction] | None value.
+        :rtype: dict[str, EmojiReaction] | None
+        """
         return await self.max_api.get_reactions(
             chat_id=self.chat_id,
             message_ids=[self.message_id],

@@ -12,6 +12,20 @@ class ReadMessageMethod(BaseMaxApiMethod[ReadState]):
         mark: int,
         typeof: str = "READ_MESSAGE",
     ) -> ReadState:
+        """Execute the read message MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param mark: The mark value.
+        :type mark: int
+        :param typeof: Attachment class that determines the upload type.
+        :type typeof: str
+        :returns: The resulting ReadState value.
+        :rtype: ReadState
+        :raises RuntimeError: If readMessage method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("ReadMessage method not bound to MaxApi instance")
         return cast(

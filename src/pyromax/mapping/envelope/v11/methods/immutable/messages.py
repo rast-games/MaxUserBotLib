@@ -21,6 +21,13 @@ from ...payloads.models import MessageMappingModel, MessageLinkMappingModel
 
 class SendMessageMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the send message protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.SEND_MESSAGE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -61,6 +68,13 @@ class SendMessageMethod(BaseMethod):
 
 class EditMessageMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the edit message protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.EDIT_MESSAGE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -80,6 +94,13 @@ class EditMessageMethod(BaseMethod):
 
 class GetMessagesMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get messages protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.GET_MESSAGES
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -92,6 +113,13 @@ class GetMessagesMethod(BaseMethod):
 
 class GetChatHistoryMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get chat history protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.GET_CHAT_MESSAGES_PER_CHUNK
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -112,6 +140,13 @@ class GetChatHistoryMethod(BaseMethod):
 
 class DeleteMessageMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the delete message protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.DELETE_MESSAGE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -125,6 +160,13 @@ class DeleteMessageMethod(BaseMethod):
 
 class PinMessageMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the pin message protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.CHAT_UPDATE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -138,6 +180,13 @@ class PinMessageMethod(BaseMethod):
 
 class AddReactionMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the add reaction protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.ADD_REACTION
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -154,6 +203,13 @@ class AddReactionMethod(BaseMethod):
 
 class RemoveReactionMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the remove reaction protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.REMOVE_REACTION
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -166,6 +222,13 @@ class RemoveReactionMethod(BaseMethod):
 
 class GetReactionsMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get reactions protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.GET_REACTIONS
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -178,6 +241,13 @@ class GetReactionsMethod(BaseMethod):
 
 class ReadMessageMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the read message protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.READ_MESSAGE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -192,6 +262,13 @@ class ReadMessageMethod(BaseMethod):
 
 class VotePollMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the vote poll protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.VOTE_POLL
         request.cmd = Cmd.REQUEST
         request.ver = VERSION

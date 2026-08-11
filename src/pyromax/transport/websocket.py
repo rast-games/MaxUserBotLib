@@ -30,6 +30,15 @@ class WebSocketTransport(StreamTransport):
         origin: str = "https://web.max.ru",
         user_agent_header: str = DEFAULT_WEB_HEADER_USER_AGENT,
     ) -> None:
+        """Initialize the web socket transport.
+
+        :param url: Resource URL.
+        :type url: str
+        :param origin: The origin value.
+        :type origin: str
+        :param user_agent_header: The user agent header value.
+        :type user_agent_header: str
+        """
         self.url = url
         self.origin = Origin(origin)
         self.user_agent_header = user_agent_header
@@ -37,6 +46,11 @@ class WebSocketTransport(StreamTransport):
         self.__logger = logging.getLogger("WebSocketTransport")
 
     async def _async_init(self, url: str = "wss://ws-api.oneme.ru/websocket") -> None:
+        """Async init.
+
+        :param url: Resource URL.
+        :type url: str
+        """
         await asyncio.to_thread(self.__init__, url=url)  # type: ignore[misc]
         self.__logger.info("Initializing WebSocket Transport")
 
@@ -45,6 +59,12 @@ class WebSocketTransport(StreamTransport):
         self.__logger.info("WebSocket connected to %s", self.url)
 
     async def connect(self, **kwargs: Any) -> None:
+        """Connect.
+
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :raises WebSocketException: If connection handshake timed out.
+        """
         if self.ws:
             self.__logger.info("WebSocket already connected to %s", self.url)
             await self.close()
@@ -65,6 +85,7 @@ class WebSocketTransport(StreamTransport):
         self.__logger.info("WebSocket connected to %s", self.url)
 
     async def close(self) -> None:
+        """Close."""
         if self.ws is not None:
             await self.ws.close()
             self.ws = None
@@ -73,6 +94,13 @@ class WebSocketTransport(StreamTransport):
             self.__logger.info("Websocket already closed")
 
     async def send(self, data: Binary | str | bytes | dict[str, Any]) -> None:
+        """Send.
+
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: Binary | str | bytes | dict[str, Any]
+        :raises TypeError: If data must be str or bytes.
+        :raises RuntimeError: If you try to send before initialization connection.
+        """
         if not isinstance(data, (Binary, str, bytes, dict)):
             raise TypeError("data must be str or bytes")
 
@@ -81,6 +109,12 @@ class WebSocketTransport(StreamTransport):
         await self.ws.send(json.dumps(data))
 
     async def recv(self) -> Any:
+        """Recv.
+
+        :returns: The value returned by backend.
+        :rtype: Any
+        :raises RuntimeError: If you try to recv before initialization connection.
+        """
         if self.ws is None:
             raise RuntimeError("You try to recv before initialization connection")
         response = await self.ws.recv()

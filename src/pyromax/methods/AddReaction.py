@@ -12,6 +12,20 @@ class AddReactionMethod(BaseMaxApiMethod[Optional[EmojiReaction]]):
         reaction_id: str,
         reaction_type: str = "EMOJI",
     ) -> EmojiReaction | None:
+        """Execute the add reaction MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param reaction_id: Identifier of the reaction.
+        :type reaction_id: str
+        :param reaction_type: The reaction type value.
+        :type reaction_type: str
+        :returns: The resulting EmojiReaction | None value.
+        :rtype: EmojiReaction | None
+        :raises RuntimeError: If addReaction method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("AddReaction method not bound to MaxApi instance")
 

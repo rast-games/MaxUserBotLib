@@ -17,6 +17,13 @@ class TranslateModel(BaseModel, ABC):
 
     @abstractmethod
     def translate(self, context: Any) -> BaseMaxObject:
+        """Translate translate between mapping and public models.
+
+        :param context: Runtime context used while processing the request.
+        :type context: Any
+        :returns: The translated BaseMaxObject instance.
+        :rtype: BaseMaxObject
+        """
         pass
 
 
@@ -24,11 +31,31 @@ class PushTranslateModel(TranslateModel):
     payload: PushUpdateResponse
 
     def translate(self, context: Any) -> Message:
+        """Translate the mapping payload into Message.
+
+        :param context: Runtime context used while processing the request.
+        :type context: Any
+        :returns: The resulting Message value.
+        :rtype: Message
+        :raises RuntimeError: If self.payload.message is None.
+        :raises MapperApiError: If translated_message is None (UpdateTranslate.PushTranslateModel), message: %s.
+        :raises RuntimeError: If message.id must be int.
+        """
         self.payload.message.chat_id = self.payload.chat_id
 
         def translate_message(
             message: MessageMappingModel, chat_id: int | None = None
         ) -> Message | None:
+            """Translate message.
+
+            :param message: MessageMappingModel instance to process.
+            :type message: MessageMappingModel
+            :param chat_id: Identifier of the chat.
+            :type chat_id: int | None
+            :returns: The resulting Message | None value.
+            :rtype: Message | None
+            :raises RuntimeError: If message.id must be int.
+            """
             message_link = message.link
             message.chat_id = chat_id
             for attach in message.attaches:
@@ -101,6 +128,13 @@ class EmojiReactionModel(TranslateModel):
 
     def translate(self, context: Any) -> EmojiReaction:
 
+        """Translate the mapping payload into EmojiReaction.
+
+        :param context: Runtime context used while processing the request.
+        :type context: Any
+        :returns: The resulting EmojiReaction value.
+        :rtype: EmojiReaction
+        """
         status = (
             "REMOVE"
             if not (
@@ -133,6 +167,15 @@ TRANSLATE_MODELS: dict[int, type[TranslateModel]] = {
 
 
 def translate(update: Envelope, context: Any) -> BaseMaxObject | Envelope:
+    """Translate the mapping payload into BaseMaxObject | Envelope.
+
+    :param update: Incoming update to process.
+    :type update: Envelope
+    :param context: Runtime context used while processing the request.
+    :type context: Any
+    :returns: The envelope populated with the request opcode and payload.
+    :rtype: BaseMaxObject | Envelope
+    """
     if update.opcode is None or not isinstance(update.opcode, int):
         return update
 

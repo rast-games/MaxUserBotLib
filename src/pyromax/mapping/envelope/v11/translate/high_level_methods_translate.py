@@ -72,6 +72,13 @@ def get_registry(
     mapper: Mapper,
 ) -> dict[type[BaseMaxApiMethod[Any]], dict[str, Callable[..., Awaitable[Any]]]]:
 
+    """Retrieve registry.
+
+    :param mapper: Mapper backend or mapper instance.
+    :type mapper: Mapper
+    :returns: The resulting dict[type[BaseMaxApiMethod[Any]], dict[str, Callable[..., Awaitable[Any]]]] value.
+    :rtype: dict[type[BaseMaxApiMethod[Any]], dict[str, Callable[..., Awaitable[Any]]]]
+    """
     high_methods_registry: dict[
         type[BaseMaxApiMethod[Any]], dict[str, Callable[..., Awaitable[Any]]]
     ] = {

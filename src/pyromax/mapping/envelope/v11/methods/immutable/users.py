@@ -14,6 +14,13 @@ from ...payloads.models import ChangeProfileSettingsMappingModel
 
 class ChangeProfileMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the change profile protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.PROFILE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -28,6 +35,13 @@ class ChangeProfileMethod(BaseMethod):
 
 class CreateFolderMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the create folder protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.FOLDERS_UPDATE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -42,6 +56,13 @@ class CreateFolderMethod(BaseMethod):
 
 class GetFoldersMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get folders protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.FOLDERS_GET
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -53,6 +74,13 @@ class GetFoldersMethod(BaseMethod):
 
 class UpdateFolderMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the update folder protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.FOLDERS_UPDATE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -68,6 +96,13 @@ class UpdateFolderMethod(BaseMethod):
 
 class DeleteFoldersMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the delete folders protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.FOLDERS_DELETE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -79,6 +114,13 @@ class DeleteFoldersMethod(BaseMethod):
 
 class CloseAllSessionsMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the close all sessions protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.SESSIONS_CLOSE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -88,6 +130,13 @@ class CloseAllSessionsMethod(BaseMethod):
 
 class LogoutMethod(CloseAllSessionsMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the logout protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request = await super().__call__(request)
         request.opcode = Opcode.LOGOUT
         return request
@@ -95,6 +144,13 @@ class LogoutMethod(CloseAllSessionsMethod):
 
 class ChangeProfileSettingsMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the change profile settings protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.CONFIG
         request.cmd = Cmd.REQUEST
         request.ver = VERSION

@@ -10,7 +10,10 @@ class CancelHandler(Exception):
 
 
 def skip(message: str | None = None) -> NoReturn:
-    """
-    Raise an SkipHandler
+    """Raise an SkipHandler
+
+    :param message: The message value.
+    :type message: str | None
+    :raises SkipHandler: If the requested action cannot be completed.
     """
     raise SkipHandler(message or "Event skipped")

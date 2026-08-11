@@ -40,6 +40,15 @@ class SocketTransport(StreamTransport):
     async def _async_init(
         self, url: str = "api.oneme.ru", host: str = "api.oneme.ru", port: int = 443
     ) -> None:
+        """Async init.
+
+        :param url: Resource URL.
+        :type url: str
+        :param host: The host value.
+        :type host: str
+        :param port: The port value.
+        :type port: int
+        """
         self.url = url
         self.port = port
         self.__buffer = bytearray()
@@ -59,16 +68,31 @@ class SocketTransport(StreamTransport):
                 await asyncio.sleep(2)
 
     def __init__(self) -> None:
+        """Initialize the socket transport."""
         self.__reader = None
         self.__writer = None
         self._ssl_context = ssl.create_default_context()
 
     async def send(self, request: bytes) -> None:
+        """Send.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: bytes
+        """
         assert self.__writer is not None, "Writer is not initialized"
         self.__writer.write(request)
         await self.__writer.drain()
 
     async def _recv_raw(self, nbytes: int) -> bytes:
+        """Recv raw.
+
+        :param nbytes: The nbytes value.
+        :type nbytes: int
+        :returns: The resulting bytes value.
+        :rtype: bytes
+        :raises SocketTransportConnectionError: If graceful shutdown.
+        :raises SocketTransportConnectionError: If the requested action cannot be completed.
+        """
         assert self.__reader is not None, "Reader is not initialized"
 
         loop = asyncio.get_running_loop()
@@ -107,11 +131,25 @@ class SocketTransport(StreamTransport):
         coefficient: int = 2,
         max_retries: int = 6,
     ) -> bytes | None:
+        """Safe decompress.
+
+        :param data: Data what need to be decompressed.
+        :type data: bytes
+        :param start_uncompressed_size: The start uncompressed size value.
+        :type start_uncompressed_size: int
+        :param coefficient: The coefficient value.
+        :type coefficient: int
+        :param max_retries: The max retries value.
+        :type max_retries: int
+        :returns: The resulting bytes | None value.
+        :rtype: bytes | None
+        """
         uncompressed_size = start_uncompressed_size
         for _ in range(max_retries):
             try:
                 uncompressed_data = lz4.block.decompress(
-                    data, uncompressed_size=uncompressed_size
+                    data,
+                    uncompressed_size=uncompressed_size,
                 )
                 return cast(bytes, uncompressed_data)
             except lz4.block.LZ4BlockError:
@@ -120,6 +158,13 @@ class SocketTransport(StreamTransport):
             return None
 
     async def recv(self) -> Any:
+        """Recv.
+
+        :returns: The value returned by backend.
+        :rtype: Any
+        :raises SocketTransportError: If uncompressed return None.
+        :raises SocketTransportError: If the requested action cannot be completed.
+        """
         loop = asyncio.get_running_loop()
 
         header_raw = await self._recv_raw(10)
@@ -168,6 +213,12 @@ class SocketTransport(StreamTransport):
         )
 
     async def connect(self, **kwargs: Any) -> None:
+        """Connect.
+
+        # :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        # :type kwargs: Any
+        :raises SocketTransportConnectionError: If the requested action cannot be completed.
+        """
         try:
 
             self.__reader, self.__writer = await asyncio.open_connection(
@@ -179,6 +230,7 @@ class SocketTransport(StreamTransport):
         self.__logger.info("Socket connected")
 
     async def close(self) -> None:
+        """Close."""
         if self.__writer:
             try:
                 self.__writer.close()
@@ -198,6 +250,21 @@ class SocketTransportEnvelope(SocketTransport):
     def _create_packet(
         self, seq: int, opcode: int, cmd: int, ver: int, payload: Any
     ) -> bytes:
+        """Create packet.
+
+        :param seq: The seq value.
+        :type seq: int
+        :param opcode: The opcode value.
+        :type opcode: int
+        :param cmd: The cmd value.
+        :type cmd: int
+        :param ver: The ver value.
+        :type ver: int
+        :param payload: Payload to encode, decode, or validate.
+        :type payload: Any
+        :returns: The resulting bytes value.
+        :rtype: bytes
+        """
         packed_payload = msgpack.packb(payload)
         seq_b = seq.to_bytes(1, "big")
         cmd_b = cmd.to_bytes(2, "big")
@@ -212,6 +279,13 @@ class SocketTransportEnvelope(SocketTransport):
         )
 
     async def send(self, request: dict[str, Any]) -> None:  # type: ignore[override]
+        """Send.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: dict[str, Any]
+        :raises SocketTransportSendError: If request must be a dict with keys: "seq", "opcode", and "cmd".
+        :raises SocketTransportSendError: If the requested action cannot be completed.
+        """
         if not isinstance(request, dict):
             raise SocketTransportSendError(
                 'request must be a dict with keys: "seq", "opcode", and "cmd"'
@@ -238,13 +312,33 @@ class SocketTransportEnvelope(SocketTransport):
             raise SocketTransportSendError(f"send error: {e}")
 
     async def recv(self) -> Any:
+        """Recv.
+
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        """
         return await super().recv()
 
     async def close(self) -> None:
+        """Close."""
         await super().close()
 
     async def connect(self, **kwargs: Any) -> None:
+        """Connect.
+
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        """
         await super().connect(**kwargs)
 
     async def _async_init(self, *args: Any, **kwargs: Any) -> Any:
+        """Async init.
+
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        """
         return await super()._async_init(*args, **kwargs)

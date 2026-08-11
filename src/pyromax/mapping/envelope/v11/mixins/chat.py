@@ -35,6 +35,14 @@ from ..translate.FromDTO import reverse_translate_channel_permissions
 
 class ChatMixin(MixinProtocol):
     def _cache_chat(self, chat: Chat) -> Chat:
+        """Cache chat.
+
+        :param chat: Chat instance to process.
+        :type chat: Chat
+        :returns: The resulting Chat value.
+        :rtype: Chat
+        :raises RuntimeError: If mapper not bound to max_api instance.
+        """
         chat = self.bind_api_instance(chat)
         if self.max_api is None:
             raise RuntimeError("Mapper not bound to max_api instance")
@@ -52,6 +60,14 @@ class ChatMixin(MixinProtocol):
         return chat
 
     def _get_cached_chat(self, chat_id: int) -> Chat | None:
+        """Retrieve cached chat.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        :raises RuntimeError: If mapper not bound to max_api instance.
+        """
         if self.max_api is None:
             raise RuntimeError("Mapper not bound to max_api instance")
 
@@ -61,6 +77,12 @@ class ChatMixin(MixinProtocol):
         return None
 
     def _remove_cached_chat(self, chat_id: int) -> None:
+        """Remove cached chat.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :raises RuntimeError: If mapper not bound to max_api instance.
+        """
         if self.max_api is None:
             raise RuntimeError("Mapper not bound to max_api instance")
 
@@ -78,6 +100,23 @@ class ChatMixin(MixinProtocol):
         event: str = "new",
         typeof: str = "CONTROL",
     ) -> tuple[Chat, Message] | tuple[None, None]:
+        """Create group.
+
+        :param title: The title value.
+        :type title: str
+        :param participant_ids: Identifiers of the participant objects.
+        :type participant_ids: list[int] | None
+        :param notify: Whether MAX should notify affected users.
+        :type notify: bool
+        :param chat_type: The chat type value.
+        :type chat_type: str
+        :param event: Incoming event to process.
+        :type event: str
+        :param typeof: Attachment class that determines the upload type.
+        :type typeof: str
+        :returns: The resulting tuple[Chat, Message] | tuple[None, None] value.
+        :rtype: tuple[Chat, Message] | tuple[None, None]
+        """
         if participant_ids is None:
             participant_ids = []
         response = await self.send(
@@ -113,6 +152,17 @@ class ChatMixin(MixinProtocol):
         user_ids: list[int],
         show_history: bool = True,
     ) -> Chat | None:
+        """Invite users to group.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_ids: Identifiers of the users.
+        :type user_ids: list[int]
+        :param show_history: The show history value.
+        :type show_history: bool
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         response = await self.send(
             method=ChatMemberOperationMethod(
                 chat_id=chat_id,
@@ -135,6 +185,17 @@ class ChatMixin(MixinProtocol):
         user_ids: list[int] | list[str],
         clean_msg_period: int,
     ) -> Chat | None:
+        """Remove users from group.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_ids: Identifiers of the users.
+        :type user_ids: list[int] | list[str]
+        :param clean_msg_period: The clean msg period value.
+        :type clean_msg_period: int
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         response = await self.send(
             method=ChatMemberOperationMethod(
                 chat_id=chat_id,
@@ -160,6 +221,23 @@ class ChatMixin(MixinProtocol):
         only_admin_can_call: bool | None = None,
         members_can_see_private_link: bool | None = None,
     ) -> Chat | None:
+        """Change group settings.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param all_can_pin_message: The all can pin message value.
+        :type all_can_pin_message: bool | None
+        :param only_owner_can_change_icon_title: The only owner can change icon title value.
+        :type only_owner_can_change_icon_title: bool | None
+        :param only_admin_can_add_member: The only admin can add member value.
+        :type only_admin_can_add_member: bool | None
+        :param only_admin_can_call: The only admin can call value.
+        :type only_admin_can_call: bool | None
+        :param members_can_see_private_link: The members can see private link value.
+        :type members_can_see_private_link: bool | None
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         response = await self.send(
             method=ChangeGroupSettingsMethod(
                 chat_id=chat_id,
@@ -184,6 +262,17 @@ class ChatMixin(MixinProtocol):
         name: str | None = None,
         description: str | None = None,
     ) -> Chat | None:
+        """Change group profile.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param name: The name value.
+        :type name: str | None
+        :param description: The description value.
+        :type description: str | None
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         response = await self.send(
             method=ChangeGroupProfileMethod(
                 chat_id=chat_id,
@@ -199,6 +288,14 @@ class ChatMixin(MixinProtocol):
         return self._cache_chat(chat)
 
     async def _join_chat(self, link: str) -> Chat:
+        """Join chat.
+
+        :param link: Invite, message, or resource link.
+        :type link: str
+        :returns: The resulting Chat value.
+        :rtype: Chat
+        :raises MapperApiError: If joinGroup request doesn't return a chat.
+        """
         response = await self.send(method=JoinGroupMethod(link=link))
         mapped_chat = ChatContainsResponse(**response.payload).chat
         if mapped_chat is None:
@@ -208,21 +305,51 @@ class ChatMixin(MixinProtocol):
 
     @staticmethod
     def _prepare_chat_join_link(link: str) -> str | None:
+        """Prepare chat join link.
+
+        :param link: Invite, message, or resource link.
+        :type link: str
+        :returns: The resulting str | None value.
+        :rtype: str | None
+        """
         idx = link.find("join/")
         return link[idx:] if idx != -1 else None
 
     async def join_group(self, link: str) -> Chat:
+        """Join group.
+
+        :param link: Invite, message, or resource link.
+        :type link: str
+        :returns: The resulting Chat value.
+        :rtype: Chat
+        :raises ValueError: If join link invalid.
+        """
         parsed_link = self._prepare_chat_join_link(link)
         if parsed_link is None:
             raise ValueError("Join link invalid")
         return await self._join_chat(parsed_link)
 
     async def join_channel(self, link: str) -> Chat:
+        """Join channel.
+
+        :param link: Invite, message, or resource link.
+        :type link: str
+        :returns: The resulting Chat value.
+        :rtype: Chat
+        """
         parsed_link = self._prepare_chat_join_link(link)
 
         return await self._join_chat(parsed_link or link)
 
     async def resolve_group_by_link(self, link: str) -> Chat | None:
+        """Resolve group by link.
+
+        :param link: Invite, message, or resource link.
+        :type link: str
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        :raises ValueError: If invalid group link.
+        """
         parsed_link = self._prepare_chat_join_link(link)
         if parsed_link is None:
             raise ValueError("Invalid group link")
@@ -239,6 +366,14 @@ class ChatMixin(MixinProtocol):
         return self._cache_chat(chat)
 
     async def revoke_invite_link(self, chat_id: int) -> Chat:
+        """Revoke invite link.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :returns: The resulting Chat value.
+        :rtype: Chat
+        :raises MapperApiError: If rework invite link request doesn't return a chat.
+        """
         response = await self.send(
             method=RevokePrivateLinkMethod(
                 chat_id=chat_id,
@@ -253,6 +388,13 @@ class ChatMixin(MixinProtocol):
         return self._cache_chat(chat)
 
     async def get_chats(self, chat_ids: Iterable[int]) -> list[Chat]:
+        """Retrieve chats.
+
+        :param chat_ids: Identifiers of the chats.
+        :type chat_ids: Iterable[int]
+        :returns: The resulting collection.
+        :rtype: list[Chat]
+        """
         cached = {
             chat_id: chat
             for chat_id in chat_ids
@@ -275,6 +417,13 @@ class ChatMixin(MixinProtocol):
         return [cached[chat_id] for chat_id in chat_ids if chat_id in cached]
 
     async def leave_group(self, chat_id: int) -> Message | None:
+        """Leave group.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
+        """
         response = await self.send(
             method=LeaveChatMethod(
                 chat_id=chat_id,
@@ -290,9 +439,23 @@ class ChatMixin(MixinProtocol):
         return self.bind_api_instance(cast(Message, translate_models(msg)))
 
     async def leave_channel(self, chat_id: int) -> Message | None:
+        """Leave channel.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
+        """
         return await self.leave_group(chat_id)
 
     async def fetch_chats(self, marker: int | None = None) -> list[Chat]:
+        """Fetch chats.
+
+        :param marker: Pagination marker from which to continue.
+        :type marker: int | None
+        :returns: The resulting collection.
+        :rtype: list[Chat]
+        """
         response = await self.send(
             method=FetchChatsMethod(
                 marker=marker or int(time.time() * 1000),
@@ -308,6 +471,15 @@ class ChatMixin(MixinProtocol):
         return chats
 
     async def get_join_requests(self, chat_id: int, count: int = 100) -> list[Member]:
+        """Retrieve join requests.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param count: Maximum number of items to retrieve.
+        :type count: int
+        :returns: The resulting collection.
+        :rtype: list[Member]
+        """
         response = await self.send(
             method=FetchJoinRequestsMethod(
                 chat_id=chat_id,
@@ -327,6 +499,17 @@ class ChatMixin(MixinProtocol):
         user_ids: Iterable[int],
         show_history: bool = True,
     ) -> Chat | None:
+        """Confirm join requests.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_ids: Identifiers of the users.
+        :type user_ids: Iterable[int]
+        :param show_history: The show history value.
+        :type show_history: bool
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         response = await self.send(
             method=ChatMemberOperationMethod(
                 chat_id=chat_id,
@@ -344,6 +527,15 @@ class ChatMixin(MixinProtocol):
     async def decline_join_requests(
         self, chat_id: int, user_ids: Iterable[int]
     ) -> Chat | None:
+        """Decline join requests.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_ids: Identifiers of the users.
+        :type user_ids: Iterable[int]
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        """
         response = await self.send(
             method=ChatMemberOperationMethod(
                 chat_id=chat_id,
@@ -364,6 +556,15 @@ class ChatMixin(MixinProtocol):
         last_event_time: int | None = None,
         for_all: bool = True,
     ) -> None:
+        """Delete chat.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param last_event_time: The last event time value.
+        :type last_event_time: int | None
+        :param for_all: The for all value.
+        :type for_all: bool
+        """
         await self.send(
             method=DeleteChatMethod(
                 chat_id=chat_id,
@@ -377,6 +578,15 @@ class ChatMixin(MixinProtocol):
     async def add_admin(
         self, chat_id: int, user_id: int, permissions: Iterable[ChannelPermissions]
     ) -> None:
+        """Add admin.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_id: Identifier of the user.
+        :type user_id: int
+        :param permissions: Collection of permissions.
+        :type permissions: Iterable[ChannelPermissions]
+        """
         mapped_channel_permissions = [
             reverse_translate_channel_permissions(permission)
             for permission in permissions

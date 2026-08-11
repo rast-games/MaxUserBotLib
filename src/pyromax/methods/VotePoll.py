@@ -12,6 +12,20 @@ class VotePollMethod(BaseMaxApiMethod[PollState]):
         poll_id: int,
         answer_ids: list[int],
     ) -> PollState:
+        """Execute the vote poll MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param poll_id: Identifier of the poll.
+        :type poll_id: int
+        :param answer_ids: Identifiers of the answer objects.
+        :type answer_ids: list[int]
+        :returns: The resulting PollState value.
+        :rtype: PollState
+        :raises RuntimeError: If votePoll method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("VotePoll method not bound to MaxApi instance")
 

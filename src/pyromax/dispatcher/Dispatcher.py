@@ -48,6 +48,21 @@ class Dispatcher(Router):
         name: str | None = None,
         **kwargs: Any,
     ) -> None:
+        """Initialize the dispatcher.
+
+        :param storage: BaseStorage instance to process.
+        :type storage: BaseStorage | None
+        :param fsm_strategy: FSMStrategy instance to process.
+        :type fsm_strategy: FSMStrategy
+        :param events_isolation: BaseEventIsolation instance to process.
+        :type events_isolation: BaseEventIsolation | None
+        :param disable_fsm: The disable fsm value.
+        :type disable_fsm: bool
+        :param name: The name value.
+        :type name: str | None
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        """
         super().__init__(name=name)
 
         self.update = UpdateMaxEventObserver(
@@ -57,6 +72,15 @@ class Dispatcher(Router):
         async def notify_wrapper(
             resolved_update: ResolvedUpdate, data: DataDict
         ) -> Any:
+            """Notify wrapper.
+
+            :param resolved_update: ResolvedUpdate instance to process.
+            :type resolved_update: ResolvedUpdate
+            :param data: Contextual data passed through the processing pipeline.
+            :type data: DataDict
+            :returns: The value returned by the wrapped callable or backend.
+            :rtype: Any
+            """
             data.update(
                 {
                     type(resolved_update): resolved_update,
@@ -87,10 +111,8 @@ class Dispatcher(Router):
     async def start_polling(self, max_api: MaxApi) -> None:
         """Start reading updates and dispatch them to handlers.
 
-        Parameters
-        ----------
-        max_api
-            Initialized MaxApi instance.
+        :param max_api: Initialized MaxApi instance.
+        :type max_api: MaxApi
         """
 
         context = {"max_api": max_api}

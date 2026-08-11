@@ -49,6 +49,19 @@ class Chat(BaseMaxObject):
         attaches: list[BaseFileAttachment] | None = None,
         notify: bool = True,
     ) -> Message | None:
+        """Answer.
+
+        :param text: Message or textual content.
+        :type text: str | None
+        :param link: Message link to another message(s).
+        :type link: MessageLink | None
+        :param attaches: Attachments associated with the message.
+        :type attaches: list[BaseFileAttachment] | None
+        :param notify: Whether MAX should notify affected users.
+        :type notify: bool
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
+        """
         return await self.max_api.send_message(
             chat_id=self.id,
             text=text,
@@ -70,6 +83,29 @@ class Chat(BaseMaxObject):
         get_messages: Literal[True] = True,
         interactive: bool = ...,
     ) -> list[Message]:
+        """History.
+
+        :param forward: The forward value.
+        :type forward: int
+        :param backward: The backward value.
+        :type backward: int
+        :param backward_time: The backward time value.
+        :type backward_time: int
+        :param forward_time: The forward time value.
+        :type forward_time: int
+        :param from_time: The from time value.
+        :type from_time: int | None
+        :param item_type: Literal['DELAYED', 'REGULAR'] instance to process.
+        :type item_type: Literal['DELAYED', 'REGULAR']
+        :param get_chat: The get chat value.
+        :type get_chat: bool
+        :param get_messages: Literal[True] instance to process.
+        :type get_messages: Literal[True]
+        :param interactive: The interactive value.
+        :type interactive: bool
+        :returns: The resulting collection.
+        :rtype: list[Message]
+        """
         pass
 
     @overload
@@ -85,6 +121,29 @@ class Chat(BaseMaxObject):
         get_messages: Literal[False] = False,
         interactive: bool = ...,
     ) -> list[str]:
+        """History.
+
+        :param forward: The forward value.
+        :type forward: int
+        :param backward: The backward value.
+        :type backward: int
+        :param backward_time: The backward time value.
+        :type backward_time: int
+        :param forward_time: The forward time value.
+        :type forward_time: int
+        :param from_time: The from time value.
+        :type from_time: int | None
+        :param item_type: Literal['DELAYED', 'REGULAR'] instance to process.
+        :type item_type: Literal['DELAYED', 'REGULAR']
+        :param get_chat: The get chat value.
+        :type get_chat: bool
+        :param get_messages: Literal[False] instance to process.
+        :type get_messages: Literal[False]
+        :param interactive: The interactive value.
+        :type interactive: bool
+        :returns: The resulting collection.
+        :rtype: list[str]
+        """
         pass
 
     @overload
@@ -100,6 +159,29 @@ class Chat(BaseMaxObject):
         get_messages: bool = ...,
         interactive: bool = ...,
     ) -> list[Message] | list[str]:
+        """History.
+
+        :param forward: The forward value.
+        :type forward: int
+        :param backward: The backward value.
+        :type backward: int
+        :param backward_time: The backward time value.
+        :type backward_time: int
+        :param forward_time: The forward time value.
+        :type forward_time: int
+        :param from_time: The from time value.
+        :type from_time: int | None
+        :param item_type: Literal['DELAYED', 'REGULAR'] instance to process.
+        :type item_type: Literal['DELAYED', 'REGULAR']
+        :param get_chat: The get chat value.
+        :type get_chat: bool
+        :param get_messages: The get messages value.
+        :type get_messages: bool
+        :param interactive: The interactive value.
+        :type interactive: bool
+        :returns: The resulting collection.
+        :rtype: list[Message] | list[str]
+        """
         pass
 
     async def history(
@@ -114,6 +196,31 @@ class Chat(BaseMaxObject):
         get_messages: bool = True,
         interactive: bool = False,
     ) -> list[Message] | list[str]:
+
+        """Retrieve chat history.
+
+        :param forward: How many messages to load ahead from ``from_time``.
+        :type forward: int
+        :param backward: How many messages to load back from ``from_time``.
+        :type backward: int
+        :param backward_time: Look-back time window in milliseconds.
+        :type backward_time: int
+        :param forward_time: Forward time window in milliseconds.
+        :type forward_time: int
+        :param from_time: The reference point in Unix time (milliseconds). If ``None``, the current moment is used.
+        :type from_time: int | None
+        :param item_type: History item type.
+        :type item_type: Literal['DELAYED', 'REGULAR']
+        :param get_chat: Request chat data along with the history.
+        :type get_chat: bool
+        :param get_messages: The get messages value.
+        :type get_messages: bool
+        :param interactive: Request the messages themselves.
+        :type interactive: bool
+        :returns: Message collection if get_messages is True else message ids collection.
+        :rtype: list[Message] | list[str]
+        """
+
         return await self.max_api.get_chat_history(
             chat_id=self.id,
             forward=forward,
@@ -128,6 +235,13 @@ class Chat(BaseMaxObject):
         )
 
     async def get_message(self, message_id: int | str) -> Message | None:
+        """Retrieve message.
+
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
+        """
         return await self.max_api.get_message(
             chat_id=self.id,
             message_id=message_id,
@@ -136,14 +250,20 @@ class Chat(BaseMaxObject):
     async def get_messages(
         self, message_ids: Iterable[int] | Iterable[str]
     ) -> list[Message]:
+        """Retrieve messages.
+
+        :param message_ids: Identifiers of the messages.
+        :type message_ids: Iterable[int] | Iterable[str]
+        :returns: The resulting collection.
+        :rtype: list[Message]
+        """
         return await self.max_api.get_messages(
             chat_id=self.id,
             message_ids=message_ids,
         )
 
     async def leave(self) -> None:
-        """
-        leave the chat
+        """leave the chat
 
         :raises RuntimeError: if chat is DIALOG
         :raises ValueError: if chat type is unknown
@@ -162,6 +282,11 @@ class Chat(BaseMaxObject):
         raise ValueError("Unknown chat type=%s", self.type)
 
     async def delete(self, for_all: bool = True) -> None:
+        """Delete.
+
+        :param for_all: Delete only for the current account.
+        :type for_all: bool
+        """
         return await self.max_api.delete_chat(
             chat_id=self.id,
             for_all=for_all,
@@ -170,11 +295,17 @@ class Chat(BaseMaxObject):
     async def invite(
         self, user_ids: list[int], show_history: bool = True
     ) -> Chat | None:
-        """
-        invite users to chat
+        """invite users to chat
 
         :raises ValueError: if try to invite users to unknown chat
         :raises RuntimeError: if max_api not linked to chat instance
+
+        :param user_ids: Identifiers of the users.
+        :type user_ids: list[int]
+        :param show_history: Show message history to new members.
+        :type show_history: bool
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
         """
 
         if self.type == "CHAT":
@@ -197,6 +328,13 @@ class Chat(BaseMaxObject):
         user_ids: list[int],
         clean_msg_period: int = 0,
     ) -> None:
+        """Remove users.
+
+        :param user_ids: Identifiers of the users.
+        :type user_ids: list[int]
+        :param clean_msg_period: Cleanup period for messages from removed participants.
+        :type clean_msg_period: int
+        """
         return await self.max_api.remove_users_from_group(
             chat_id=self.id,
             user_ids=user_ids,
@@ -204,6 +342,13 @@ class Chat(BaseMaxObject):
         )
 
     async def pin_message(self, message_id: str | int, notify_pin: bool = True) -> None:
+        """Pin message.
+
+        :param message_id: Identifier of the message.
+        :type message_id: str | int
+        :param notify_pin: Whether MAX should notify affected users.
+        :type notify_pin: bool
+        """
         return await self.max_api.pin_message(
             chat_id=self.id,
             message_id=message_id,
@@ -218,6 +363,19 @@ class Chat(BaseMaxObject):
         only_admin_can_call: bool | None = None,
         members_can_see_private_link: bool | None = None,
     ) -> None:
+        """Update settings.
+
+        :param all_can_pin_message: The all can pin message.
+        :type all_can_pin_message: bool | None
+        :param only_owner_can_change_icon_title: The only owner can change icon title.
+        :type only_owner_can_change_icon_title: bool | None
+        :param only_admin_can_add_member: The only admin can add member.
+        :type only_admin_can_add_member: bool | None
+        :param only_admin_can_call: The only admin can call.
+        :type only_admin_can_call: bool | None
+        :param members_can_see_private_link: The members can see private link.
+        :type members_can_see_private_link: bool | None
+        """
         return await self.max_api.change_group_settings(
             chat_id=self.id,
             all_can_pin_message=all_can_pin_message,
@@ -228,16 +386,36 @@ class Chat(BaseMaxObject):
         )
 
     async def revoke_invite_link(self) -> Chat:
+        """Revoke invite link.
+
+        :returns: The resulting Chat value.
+        :rtype: Chat
+        """
         return await self.max_api.revoke_invite_link(chat_id=self.id)
 
     @property
     def is_dialog(self) -> bool:
+        """Return whether dialog.
+
+        :returns: ``True`` when the requested condition is satisfied; otherwise ``False``.
+        :rtype: bool
+        """
         return self.type == "DIALOG"
 
     @property
     def is_group(self) -> bool:
+        """Return whether group.
+
+        :returns: ``True`` when the requested condition is satisfied; otherwise ``False``.
+        :rtype: bool
+        """
         return self.type == "CHAT"
 
     @property
     def is_channel(self) -> bool:
+        """Return whether channel.
+
+        :returns: ``True`` when the requested condition is satisfied; otherwise ``False``.
+        :rtype: bool
+        """
         return self.type == "CHANNEL"

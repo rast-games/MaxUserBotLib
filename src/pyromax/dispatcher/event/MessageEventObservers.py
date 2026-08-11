@@ -24,14 +24,15 @@ class MessageEventObserver(StandardMaxEventObserver[Message]):
     ) -> Callable[[Callable[..., Any]], None]:
         """Register a message handler decorator.
 
-        Parameters
-        ----------
-        filters
-            Additional filters applied to the handler.
-        pattern
-            Optional message predicate.
-        from_me
-            If True, allow messages from the current user.
+        :param filters: Additional filters applied to the handler.
+        :type filters: Filter
+        :param pattern: Optional message predicate.
+        :type pattern: Callable[[Message], bool] | None
+        :param from_me: If True, allow messages from the current user.
+        :type from_me: bool
+
+        :returns: The resulting Callable[[Callable[..., Any]], None] value.
+        :rtype: Callable[[Callable[..., Any]], None]
         """
         filters_list = []
         filters_list += list(filters)
@@ -39,11 +40,23 @@ class MessageEventObserver(StandardMaxEventObserver[Message]):
             filters_list.append(~FromMeFilter())
 
         def decorator(func: Callable[..., Any]) -> None:
+            """Decorator.
+
+            :param func: Callable to invoke.
+            :type func: Callable[..., Any]
+            """
             self.register(func, *filters_list, pattern=pattern)
 
         return decorator
 
     async def is_my_update(self, update: Message) -> bool:
+        """Return whether my update.
+
+        :param update: Incoming update to process.
+        :type update: Message
+        :returns: True when the requested condition is satisfied; otherwise False.
+        :rtype: bool
+        """
         return await super().is_my_update(update) and update.status == self.event_name
 
 
@@ -51,6 +64,13 @@ class MessageForwardEventObserver(MessageEventObserver):
     """Observe forwarded messages."""
 
     async def is_my_update(self, update: Message) -> bool:
+        """Return whether my update.
+
+        :param update: Incoming update to process.
+        :type update: Message
+        :returns: True when the requested condition is satisfied; otherwise False.
+        :rtype: bool
+        """
         forward_filter = FilterObject(MessageForwardFromFilter())
         return await StandardMaxEventObserver.is_my_update(self, update) and bool(
             await forward_filter(update, data={Message: update})
@@ -61,6 +81,13 @@ class ReplyToMessageEventObserver(MessageEventObserver):
     """Observe reply messages."""
 
     async def is_my_update(self, update: Message) -> bool:
+        """Return whether my update.
+
+        :param update: Incoming update to process.
+        :type update: Message
+        :returns: True when the requested condition is satisfied; otherwise False.
+        :rtype: bool
+        """
         reply_filter = FilterObject(ReplyToMessageFilter())
         return await StandardMaxEventObserver.is_my_update(self, update) and bool(
             await reply_filter(update, data={Message: update})
@@ -71,6 +98,13 @@ class RemovedMessageEventObserver(MessageEventObserver):
     """Observe removed messages."""
 
     async def is_my_update(self, update: Message) -> bool:
+        """Return whether my update.
+
+        :param update: Incoming update to process.
+        :type update: Message
+        :returns: True when the requested condition is satisfied; otherwise False.
+        :rtype: bool
+        """
         removed_filter = FilterObject(MessageRemovedFilter())
         return await StandardMaxEventObserver.is_my_update(self, update) and bool(
             await removed_filter(update, data={Message: update})

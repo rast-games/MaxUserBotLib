@@ -11,6 +11,16 @@ class DeleteChatMethod(BaseMaxApiMethod[NoneType]):
         last_event_time: int | None = None,
         for_all: bool = True,
     ) -> None:
+        """Execute the delete chat MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param last_event_time: The last event time value.
+        :type last_event_time: int | None
+        :param for_all: The for all value.
+        :type for_all: bool
+        :raises RuntimeError: If deleteChat method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("DeleteChat method not bound to MaxApi instance")
         return cast(

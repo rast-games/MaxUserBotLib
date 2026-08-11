@@ -52,6 +52,15 @@ class UserMixin(MixinProtocol):
         count: int = 1,
         profile: bool = True,
     ) -> dict[str, Any]:
+        """Create cell for profile photo.
+
+        :param count: Maximum number of items to retrieve.
+        :type count: int
+        :param profile: The profile value.
+        :type profile: bool
+        :returns: The resulting dict[str, Any] value.
+        :rtype: dict[str, Any]
+        """
         response = await self.send(
             method=CreateCellForProfilePhotoMethod(
                 type_of_file_opcode=Opcode.CREATE_PHOTO,
@@ -72,6 +81,21 @@ class UserMixin(MixinProtocol):
         uploaded: bool = False,
         **kwargs: Any,
     ) -> list[PhotoMappingModel]:
+        """Upload profile photo.
+
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: bytes | None
+        :param count: Maximum number of items to retrieve.
+        :type count: int
+        :param file_name: The file name value.
+        :type file_name: str | None
+        :param uploaded: The uploaded value.
+        :type uploaded: bool
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting collection.
+        :rtype: list[PhotoMappingModel]
+        """
         payload = {}
         if not uploaded:
             payload = await self._create_cell_for_profile_photo(
@@ -99,6 +123,24 @@ class UserMixin(MixinProtocol):
         file_name: str | None = None,
         photo_token: str | None = None,
     ) -> Profile:
+        """Change profile.
+
+        :param first_name: The first name value.
+        :type first_name: str
+        :param last_name: The last name value.
+        :type last_name: str | None
+        :param description: The description value.
+        :type description: str | None
+        :param photo: The photo value.
+        :type photo: bytes | None
+        :param file_name: The file name value.
+        :type file_name: str | None
+        :param photo_token: The photo token value.
+        :type photo_token: str | None
+        :returns: The resulting Profile value.
+        :rtype: Profile
+        :raises RuntimeError: If max_api not bounded to mapper.
+        """
         if self.max_api is None:
             raise RuntimeError("max_api not bounded to mapper")
 
@@ -138,6 +180,19 @@ class UserMixin(MixinProtocol):
         filters: list[Any] | None = None,
         folder_id: str | None = None,
     ) -> FolderUpdate:
+        """Create folder.
+
+        :param title: The title value.
+        :type title: str
+        :param chat_include: Collection of chat include.
+        :type chat_include: list[int]
+        :param filters: Collection of filters.
+        :type filters: list[Any] | None
+        :param folder_id: Identifier of the folder.
+        :type folder_id: str | None
+        :returns: The resulting FolderUpdate value.
+        :rtype: FolderUpdate
+        """
         self._logger.info("creating folder")
 
         response = await self.send(
@@ -154,6 +209,13 @@ class UserMixin(MixinProtocol):
         return self.bind_api_instance(folder_update)
 
     async def get_folders(self, folder_sync: int = 0) -> FolderList:
+        """Retrieve folders.
+
+        :param folder_sync: The folder sync value.
+        :type folder_sync: int
+        :returns: The resulting FolderList value.
+        :rtype: FolderList
+        """
         self._logger.info("fetching folders")
         response = await self.send(
             method=GetFoldersMethod(
@@ -172,6 +234,21 @@ class UserMixin(MixinProtocol):
         filters: list[Any] | None = None,
         options: list[Any] | None = None,
     ) -> FolderUpdate:
+        """Update folder.
+
+        :param folder_id: Identifier of the folder.
+        :type folder_id: str
+        :param title: The title value.
+        :type title: str
+        :param chat_include: Collection of chat include.
+        :type chat_include: list[int] | None
+        :param filters: Collection of filters.
+        :type filters: list[Any] | None
+        :param options: Collection of options.
+        :type options: list[Any] | None
+        :returns: The resulting FolderUpdate value.
+        :rtype: FolderUpdate
+        """
         self._logger.info("updating folder")
         response = await self.send(
             method=UpdateFolderMethod(
@@ -187,6 +264,13 @@ class UserMixin(MixinProtocol):
         return self.bind_api_instance(folder_update)
 
     async def delete_folders(self, folder_ids: list[str]) -> FolderUpdate:
+        """Delete folders.
+
+        :param folder_ids: Identifiers of the folders.
+        :type folder_ids: list[str]
+        :returns: The resulting FolderUpdate value.
+        :rtype: FolderUpdate
+        """
         response = await self.send(
             method=DeleteFoldersMethod(
                 folder_ids=folder_ids,
@@ -197,6 +281,12 @@ class UserMixin(MixinProtocol):
         return self.bind_api_instance(folder_update)
 
     async def close_all_sessions(self) -> bool:
+        """Close all sessions.
+
+        :returns: True when the requested condition is satisfied; otherwise False.
+        :rtype: bool
+        :raises RuntimeError: If mapper not bound to max_api instance.
+        """
         if self.max_api is None:
             raise RuntimeError("Mapper not bound to max_api instance")
 
@@ -217,16 +307,29 @@ class UserMixin(MixinProtocol):
         return True
 
     async def logout(self) -> None:
+        """Logout.
+        """
         self._logger.info("logout")
         response = await self.send(method=LogoutMethod())
         return None
 
     async def set_presence(self, online: bool) -> None:
+        """Set presence.
+
+        :param online: The online value.
+        :type online: bool
+        """
         self._logger.info("setting presence to %s", "online" if online else "offline")
         self.keep_alive_interactive = online
 
     async def change_profile_settings(self, privacy_settings: PrivacySettings) -> None:
 
+        """Change profile settings.
+
+        :param privacy_settings: PrivacySettings instance to process.
+        :type privacy_settings: PrivacySettings
+        :raises ValueError: If server not send a config hash.
+        """
         mapped_privacy_settings = reverse_translate_privacy_settings(privacy_settings)
 
         response = await self.send(

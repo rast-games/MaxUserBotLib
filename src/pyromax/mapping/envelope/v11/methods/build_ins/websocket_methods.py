@@ -23,6 +23,24 @@ class WebSocketLoginBuildInMappingMethod(LoginBuildInMappingMethod):
         code_getter: Callable[..., Coroutine[Any, Any, int]] | None = None,
         **kwargs: Any,
     ) -> ChoiceLoginVariantResponse:
+        """Execute the web socket login build in mapping MAX API method.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: Mapper
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param url_callback: Callable to invoke.
+        :type url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None
+        :param sms_auth: The sms auth value.
+        :type sms_auth: bool
+        :param code_getter: Callable to invoke.
+        :type code_getter: Callable[..., Coroutine[Any, Any, int]] | None
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting ChoiceLoginVariantResponse value.
+        :rtype: ChoiceLoginVariantResponse
+        :raises MapperApiError: If metadata not given for login.
+        """
         if sms_auth:
             return await self._resolve_sms_auth(
                 mapper=mapper,

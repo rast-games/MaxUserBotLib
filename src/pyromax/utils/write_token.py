@@ -10,7 +10,13 @@ JSON_FILE = ROOT_DIR / "tokens.json"
 
 
 async def write_token(token: str, name_of_token: str = "max_token") -> None:
-    """Write or overwriting token from json file."""
+    """Write or overwriting token from json file.
+
+    :param token: Authentication token.
+    :type token: str
+    :param name_of_token: The name of token value.
+    :type name_of_token: str
+    """
     # Читаем существующие данные
     existing_data = {}
     if JSON_FILE.exists():
@@ -31,7 +37,13 @@ async def write_token(token: str, name_of_token: str = "max_token") -> None:
 
 
 async def read_token(name_of_token: str = "max_token") -> str | None:
-    """Read token from json file."""
+    """Read token from json file.
+
+    :param name_of_token: The name of token value.
+    :type name_of_token: str
+    :returns: The resulting str | None value.
+    :rtype: str | None
+    """
     if not JSON_FILE.exists():
         return None
     async with aiofiles.open(JSON_FILE, mode="r") as f:
@@ -46,6 +58,8 @@ async def read_token(name_of_token: str = "max_token") -> str | None:
 
 
 async def main() -> None:
+    """Main.
+    """
     await write_token("test")
 
     token = await read_token()

@@ -11,6 +11,16 @@ class GetMessagesMethod(BaseMaxApiMethod[list[Message]]):
         chat_id: int,
         message_ids: Iterable[int | str],
     ) -> list[Message]:
+        """Execute the get messages MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_ids: Identifiers of the messages.
+        :type message_ids: Iterable[int | str]
+        :returns: The resulting collection.
+        :rtype: list[Message]
+        :raises RuntimeError: If getMessages method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("GetMessages method not bound to MaxApi instance")
 

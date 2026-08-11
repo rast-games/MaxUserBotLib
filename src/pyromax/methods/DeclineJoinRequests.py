@@ -11,6 +11,16 @@ class DeclineJoinRequestsMethod(BaseMaxApiMethod[Union[Chat, None]]):
         chat_id: int,
         user_ids: Iterable[int],
     ) -> Chat | None:
+        """Execute the decline join requests MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_ids: Identifiers of the users.
+        :type user_ids: Iterable[int]
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        :raises RuntimeError: If declineJoinRequests method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError(
                 "DeclineJoinRequests method not bound to MaxApi instance"

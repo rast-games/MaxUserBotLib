@@ -6,8 +6,7 @@ from ..config import APP_VERSIONS
 
 
 def get_random_string(length: int, chars: str) -> str:
-    """
-    Generate a random string of specified length using characters from the provided set.
+    """Generate a random string of specified length using characters from the provided set.
 
     This function creates a random string by selecting characters randomly
     from the provided character set. Each character in the result is chosen
@@ -19,6 +18,13 @@ def get_random_string(length: int, chars: str) -> str:
 
     Returns:
         A random string of the specified length containing only characters from chars
+
+    :param length: The length value.
+    :type length: int
+    :param chars: The chars value.
+    :type chars: str
+    :returns: The resulting str value.
+    :rtype: str
     """
     random_string = ""
     for i in range(length):
@@ -27,6 +33,11 @@ def get_random_string(length: int, chars: str) -> str:
 
 
 def get_random_device_id() -> str:
+    """Retrieve random device id.
+
+    :returns: The resulting str value.
+    :rtype: str
+    """
     random_string = list(get_random_string(32, string.ascii_lowercase + string.digits))
 
     for inx in [8, 13, 18, 23]:
@@ -36,6 +47,11 @@ def get_random_device_id() -> str:
 
 
 def get_random_device_id_numeric() -> str:
+    """Retrieve random device id numeric.
+
+    :returns: The resulting str value.
+    :rtype: str
+    """
     random_string = ""
     for _ in range(18):
         random_string += random.choice(string.digits)
@@ -46,6 +62,11 @@ def get_random_device_id_numeric() -> str:
 
 def get_random_app_version_and_build_number() -> tuple[str, int]:
 
+    """Retrieve random app version and build number.
+
+    :returns: The resulting tuple[str, int] value.
+    :rtype: tuple[str, int]
+    """
     app_version, build_number = random.choice(APP_VERSIONS)
 
     return app_version, build_number

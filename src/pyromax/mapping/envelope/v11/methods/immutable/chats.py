@@ -25,6 +25,13 @@ from ...payloads.models import (
 
 class CreateChatMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the create chat protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.SEND_MESSAGE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -51,6 +58,13 @@ class CreateChatMethod(BaseMethod):
 
 class ChatMemberOperationMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the chat member operation protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.OPERATION_WITH_CHAT_MEMBER
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -66,6 +80,13 @@ class ChatMemberOperationMethod(BaseMethod):
 
 class ChangeGroupSettingsMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the change group settings protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.CHAT_UPDATE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -88,6 +109,13 @@ class ChangeGroupSettingsMethod(BaseMethod):
 
 class ChangeGroupProfileMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the change group profile protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.CHAT_UPDATE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -101,6 +129,13 @@ class ChangeGroupProfileMethod(BaseMethod):
 
 class JoinGroupMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the join group protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.JOIN_GROUP
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -112,6 +147,13 @@ class JoinGroupMethod(BaseMethod):
 
 class ResolveGroupByLinkMethod(JoinGroupMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the resolve group by link protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request = await super().__call__(request)
         request.opcode = Opcode.LINK_INFO
         return request
@@ -119,6 +161,13 @@ class ResolveGroupByLinkMethod(JoinGroupMethod):
 
 class RevokePrivateLinkMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the revoke private link protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.CHAT_UPDATE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -131,6 +180,13 @@ class RevokePrivateLinkMethod(BaseMethod):
 
 class GetChatInfoMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get chat info protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.GET_CHAT
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -142,6 +198,13 @@ class GetChatInfoMethod(BaseMethod):
 
 class LeaveChatMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the leave chat protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.LEAVE_CHAT
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -153,6 +216,13 @@ class LeaveChatMethod(BaseMethod):
 
 class FetchChatsMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the fetch chats protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.FETCH_CHATS
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -164,6 +234,13 @@ class FetchChatsMethod(BaseMethod):
 
 class FetchJoinRequestsMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the fetch join requests protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.CHAT_MEMBERS
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -177,6 +254,13 @@ class FetchJoinRequestsMethod(BaseMethod):
 
 class DeleteChatMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the delete chat protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.DELETE_CHAT
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -190,6 +274,13 @@ class DeleteChatMethod(BaseMethod):
 
 class AddAdminMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the add admin protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.OPERATION_WITH_CHAT_MEMBER
         request.cmd = Cmd.REQUEST
         request.ver = VERSION

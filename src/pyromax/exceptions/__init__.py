@@ -4,6 +4,9 @@ from .SendMessageError import (
     SendMessageNotFoundError,
     SendMessageError,
 )
+from .ReactionError import (
+    ReactionError,
+)
 from .AnnotationError import AnnotationError
 from .BackoffError import BackoffError
 from .FileError import FileError, DownloadFileError
@@ -70,4 +73,5 @@ __all__ = [
     "MapperNotImplementedMethodError",
     "MapperTransportNotSupportedForMethodError",
     "ParseMaxApiError",
+    "ReactionError",
 ]

@@ -42,8 +42,32 @@ class MixinProtocol(Protocol):
     _lifecycle_manager_inited: asyncio.Event
     _mapper_connected: asyncio.Event
 
-    def bind_api_instance(self, obj: T) -> T: ...
+    def bind_api_instance(self, obj: T) -> T:
+        """Bind api instance.
 
-    def _cache_chat(self, chat: T_CHAT) -> T_CHAT: ...
+        :param obj: T instance to process.
+        :type obj: T
+        :returns: The resulting T value.
+        :rtype: T
+        """
+        ...
 
-    def _cache_user(self, user: T_USER) -> T_USER: ...
+    def _cache_chat(self, chat: T_CHAT) -> T_CHAT:
+        """Cache chat.
+
+        :param chat: T_CHAT instance to process.
+        :type chat: T_CHAT
+        :returns: The resulting T_CHAT value.
+        :rtype: T_CHAT
+        """
+        ...
+
+    def _cache_user(self, user: T_USER) -> T_USER:
+        """Cache user.
+
+        :param user: T_USER instance to process.
+        :type user: T_USER
+        :returns: The resulting T_USER value.
+        :rtype: T_USER
+        """
+        ...

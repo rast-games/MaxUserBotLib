@@ -7,6 +7,13 @@ from ...payloads.requests import (
 
 class GetUrlToUploadFileMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get url to upload file protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = self.args["type_of_file_opcode"]
         request.cmd = Cmd.REQUEST
         count = 1
@@ -23,6 +30,13 @@ class GetUrlToUploadFileMethod(BaseMethod):
 
 class CreateCellForProfilePhotoMethod(GetUrlToUploadFileMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the create cell for profile photo protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request = await super().__call__(request)
         count = request.payload.count
         request.payload = CreateCellForProfilePhotoRequest(
@@ -37,6 +51,13 @@ class CreateCellForProfilePhotoMethod(GetUrlToUploadFileMethod):
 
 class GetFileLinkMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get file link protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = self.args["opcode"]
         request.cmd = Cmd.REQUEST
         request.payload = self.args["file"].get_payload_to_get_link

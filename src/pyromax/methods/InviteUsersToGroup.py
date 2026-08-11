@@ -11,6 +11,18 @@ class InviteUsersToGroupMethod(BaseMaxApiMethod[Union[Chat, None]]):
         user_ids: list[int],
         show_history: bool = True,
     ) -> Chat | None:
+        """Execute the invite users to group MAX API method.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param user_ids: Identifiers of the users.
+        :type user_ids: list[int]
+        :param show_history: The show history value.
+        :type show_history: bool
+        :returns: The resulting Chat | None value.
+        :rtype: Chat | None
+        :raises RuntimeError: If inviteUsersToGroup method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError("InviteUsersToGroup method not bound to MaxApi instance")
 

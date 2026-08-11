@@ -6,6 +6,15 @@ from .html_parser import DeepestTagScanner
 def clean_and_map(
     raw_html: str, target_tags: list[str]
 ) -> tuple[str, list[dict[str, Any]]]:
+    """Clean and map.
+
+    :param raw_html: The raw html value.
+    :type raw_html: str
+    :param target_tags: Collection of target tags.
+    :type target_tags: list[str]
+    :returns: The resulting tuple[str, list[dict[str, Any]]] value.
+    :rtype: tuple[str, list[dict[str, Any]]]
+    """
     scanner = DeepestTagScanner(target_tags)
     scanner.feed(raw_html)
 

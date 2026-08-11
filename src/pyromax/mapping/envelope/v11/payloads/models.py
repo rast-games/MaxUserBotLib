@@ -89,11 +89,25 @@ class BaseUserAgentMappingModel(BaseUserAgent, CamelCaseModel, ABC):
     device_name: str = "WINDOWS10"
 
     @abstractmethod
-    def to_request(self) -> BaseUserAgentRequest: ...
+    def to_request(self) -> BaseUserAgentRequest:
+        """To request.
+
+        :returns: The resulting BaseUserAgentRequest value.
+        :rtype: BaseUserAgentRequest
+        """
+        ...
 
     @classmethod
     @abstractmethod
-    def get_random_user_agent(cls, **kwargs: Any) -> Self: ...
+    def get_random_user_agent(cls, **kwargs: Any) -> Self:
+        """Retrieve random user agent.
+
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The current instance.
+        :rtype: Self
+        """
+        ...
 
 
 class WebUserAgentMappingModel(BaseUserAgentMappingModel):
@@ -104,6 +118,11 @@ class WebUserAgentMappingModel(BaseUserAgentMappingModel):
     screen: str = WEB_SCREEN
 
     def to_request(self) -> WebUserAgentRequest:
+        """To request.
+
+        :returns: The resulting WebUserAgentRequest value.
+        :rtype: WebUserAgentRequest
+        """
         device_id = self.device_id
         from .requests import WebUserAgentRequest
 
@@ -111,6 +130,13 @@ class WebUserAgentMappingModel(BaseUserAgentMappingModel):
 
     @classmethod
     def get_random_user_agent(cls, **kwargs: Any) -> WebUserAgentMappingModel:
+        """Retrieve random user agent.
+
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting WebUserAgentMappingModel value.
+        :rtype: WebUserAgentMappingModel
+        """
         from .....config import LOCALE_TIMEZONES
 
         locale, timezone = random.choice(LOCALE_TIMEZONES)
@@ -136,6 +162,14 @@ class AppUserAgentMappingModel(BaseUserAgentMappingModel):
     @model_validator(mode="before")
     @classmethod
     def set_random_version_pair(cls, data: Any) -> Any:
+        """Validate and normalize set random version pair.
+
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: Any
+        :returns: The value returned by the wrapped callable or backend.
+        :rtype: Any
+        :raises ValueError: If you need give pair from build_number and app_version.
+        """
         if isinstance(data, dict):
             if (
                 "build_number" in data
@@ -152,6 +186,11 @@ class AppUserAgentMappingModel(BaseUserAgentMappingModel):
         return data
 
     def to_request(self) -> AppUserAgentRequest:
+        """To request.
+
+        :returns: The resulting AppUserAgentRequest value.
+        :rtype: AppUserAgentRequest
+        """
         client_session_id = self.client_session_id
         device_id = self.device_id
         from .requests import AppUserAgentRequest
@@ -162,6 +201,13 @@ class AppUserAgentMappingModel(BaseUserAgentMappingModel):
 
     @classmethod
     def get_random_user_agent(cls, **kwargs: Any) -> AppUserAgentMappingModel:
+        """Retrieve random user agent.
+
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting AppUserAgentMappingModel value.
+        :rtype: AppUserAgentMappingModel
+        """
         from .....config import APP_VERSIONS, LOCALE_TIMEZONES, PREFERRED_VERSION
 
         app_version, build_number = random.choice(APP_VERSIONS)
@@ -196,6 +242,11 @@ class MobileUserAgentMappingModel(AppUserAgentMappingModel):
     )
 
     def to_request(self) -> MobileUserAgentRequest:
+        """To request.
+
+        :returns: The resulting MobileUserAgentRequest value.
+        :rtype: MobileUserAgentRequest
+        """
         from .requests import MobileUserAgentRequest
 
         return MobileUserAgentRequest(
@@ -207,6 +258,13 @@ class MobileUserAgentMappingModel(AppUserAgentMappingModel):
 
     @classmethod
     def get_random_user_agent(cls, **kwargs: Any) -> MobileUserAgentMappingModel:
+        """Retrieve random user agent.
+
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting MobileUserAgentMappingModel value.
+        :rtype: MobileUserAgentMappingModel
+        """
         from .....config import ANDROID_DEVICES, APP_VERSIONS, LOCALE_TIMEZONES
 
         device_name, os_version, screen, arch = random.choice(ANDROID_DEVICES)
@@ -376,6 +434,11 @@ class BaseFileMappingModel(BaseFileAttachment, CamelCaseModel, ABC):
     @property
     @abstractmethod
     def get_payload_to_get_link(self) -> dict[str, Any] | None:
+        """Retrieve payload to get link.
+
+        :returns: The resulting dict[str, Any] | None value.
+        :rtype: dict[str, Any] | None
+        """
         return {
             "messageId": self.message_id,
             "chatId": self.chat_id,
@@ -384,6 +447,11 @@ class BaseFileMappingModel(BaseFileAttachment, CamelCaseModel, ABC):
     @property
     @abstractmethod
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         pass
 
 
@@ -398,10 +466,20 @@ class PhotoMappingModel(BaseFileMappingModel, PhotoAttachment):
     # never will be called
     @property
     def get_payload_to_get_link(self) -> dict[str, Any] | None:
+        """Retrieve payload to get link.
+
+        :returns: The resulting dict[str, Any] | None value.
+        :rtype: dict[str, Any] | None
+        """
         return None
 
     @property
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         from .requests import PhotoToPayloadRequest
 
         photos = []
@@ -425,6 +503,11 @@ class VideoMappingModel(BaseFileMappingModel, VideoAttachment):
 
     @property
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         from .requests import VideoToPayloadRequest
 
         return [
@@ -435,6 +518,12 @@ class VideoMappingModel(BaseFileMappingModel, VideoAttachment):
 
     @property
     def get_payload_to_get_link(self) -> dict[str, Any] | None:
+        """Retrieve payload to get link.
+
+        :returns: The resulting dict[str, Any] | None value.
+        :rtype: dict[str, Any] | None
+        :raises RuntimeError: If get_payload_to_get_link should return dict.
+        """
         res = super().get_payload_to_get_link
         if res is None:
             raise RuntimeError("get_payload_to_get_link should return dict")
@@ -463,6 +552,11 @@ class VideoNoteMappingModel(VideoNoteAttachment, VideoMappingModel):
 
     @property
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         from .requests import VideoToPayloadRequest
 
         return [
@@ -479,6 +573,11 @@ class VoiceMappingModel(BaseFileMappingModel, VoiceAttachment):
 
     @property
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         from .requests import VideoToPayloadRequest
 
         return [
@@ -489,6 +588,12 @@ class VoiceMappingModel(BaseFileMappingModel, VoiceAttachment):
 
     @property
     def get_payload_to_get_link(self) -> dict[str, Any] | None:
+        """Retrieve payload to get link.
+
+        :returns: The resulting dict[str, Any] | None value.
+        :rtype: dict[str, Any] | None
+        :raises RuntimeError: If get_payload_to_get_link should return dict.
+        """
         res = super().get_payload_to_get_link
         if res is None:
             raise RuntimeError("get_payload_to_get_link should return dict")
@@ -510,6 +615,11 @@ class FileMappingModel(BaseFileMappingModel, FileAttachment):
 
     @property
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         from .requests import FileToPayloadRequest
 
         return [
@@ -521,6 +631,12 @@ class FileMappingModel(BaseFileMappingModel, FileAttachment):
 
     @property
     def get_payload_to_get_link(self) -> dict[str, Any] | None:
+        """Retrieve payload to get link.
+
+        :returns: The resulting dict[str, Any] | None value.
+        :rtype: dict[str, Any] | None
+        :raises RuntimeError: If get_payload_to_get_link should return dict.
+        """
         res = super().get_payload_to_get_link
         if res is None:
             raise RuntimeError("get_payload_to_get_link should return dict")
@@ -544,10 +660,21 @@ class ShareMappingModel(BaseFileMappingModel, ShareAttachment):
 
     @property
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         return []
 
     @property
     def get_payload_to_get_link(self) -> dict[str, Any] | None:
+        """Retrieve payload to get link.
+
+        :returns: The resulting dict[str, Any] | None value.
+        :rtype: dict[str, Any] | None
+        :raises TypeError: If try a download Share attachment.
+        """
         raise TypeError("Try a download Share attachment")
 
 
@@ -561,10 +688,21 @@ class ControlMappingModel(BaseFileMappingModel, ControlAttachment):
 
     @property
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         return []
 
     @property
     def get_payload_to_get_link(self) -> dict[str, Any] | None:
+        """Retrieve payload to get link.
+
+        :returns: The resulting dict[str, Any] | None value.
+        :rtype: dict[str, Any] | None
+        :raises TypeError: If try a download Control attachment.
+        """
         raise TypeError("Try a download Control attachment")
 
 
@@ -600,6 +738,11 @@ class PollMappingModel(BaseFileMappingModel, Poll):
 
     @property
     def to_payload(self) -> list[dict[str, Any]]:
+        """To payload.
+
+        :returns: The resulting collection.
+        :rtype: list[dict[str, Any]]
+        """
         from .requests import PollToPayloadRequest
 
         return [
@@ -613,6 +756,12 @@ class PollMappingModel(BaseFileMappingModel, Poll):
 
     @property
     def get_payload_to_get_link(self) -> dict[str, Any] | None:
+        """Retrieve payload to get link.
+
+        :returns: The resulting dict[str, Any] | None value.
+        :rtype: dict[str, Any] | None
+        :raises TypeError: If try a download Poll attachment.
+        """
         raise TypeError("Try a download Poll attachment")
 
 
@@ -627,6 +776,13 @@ StatusType = Literal["EDITED", "REPLY", "USER", "REMOVED"]
 
 
 def validate_status(v: Any) -> Any:
+    """Validate status.
+
+    :param v: The v value.
+    :type v: Any
+    :returns: The value returned by the wrapped callable or backend.
+    :rtype: Any
+    """
     if v not in ("EDITED", "REPLY", "USER", "REMOVED"):
         return "USER"
     return v
@@ -658,6 +814,13 @@ class MessageMappingModel(CamelCaseModel):
     @field_validator("attaches", mode="before")
     @classmethod
     def validate_attaches(cls, value: Any) -> list[Any]:
+        """Validate and normalize validate attaches.
+
+        :param value: Value to validate or transform.
+        :type value: Any
+        :returns: The resulting collection.
+        :rtype: list[Any]
+        """
         result = []
 
         ATTACH_TYPES: list[type[CamelCaseModel]] = [

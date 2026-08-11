@@ -4,6 +4,11 @@ from typing import Any
 
 class DeepestTagScanner(HTMLParser):
     def __init__(self, target_tags: list[str]):
+        """Initialize the deepest tag scanner.
+
+        :param target_tags: Collection of target tags.
+        :type target_tags: list[str]
+        """
         super().__init__()
         self.target_tags: set[str] = {t.lower() for t in target_tags}
         self.stack: list[dict[str, Any]] = []
@@ -11,10 +16,22 @@ class DeepestTagScanner(HTMLParser):
         self.raw_html: str = ""
 
     def feed(self, data: str) -> None:
+        """Feed.
+
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: str
+        """
         self.raw_html = data
         super().feed(data)
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        """Handle starttag.
+
+        :param tag: The tag value.
+        :type tag: str
+        :param attrs: Collection of attrs.
+        :type attrs: list[tuple[str, str | None]]
+        """
         if tag in self.target_tags:
             line, col = self.getpos()
             idx = self._get_raw_index(line, col)
@@ -32,6 +49,11 @@ class DeepestTagScanner(HTMLParser):
                 self.stack[-2]["has_child"] = True
 
     def handle_endtag(self, tag: str) -> None:
+        """Handle endtag.
+
+        :param tag: The tag value.
+        :type tag: str
+        """
         if tag.lower() in self.target_tags and self.stack:
             node = self.stack.pop()
             if not node["has_child"]:
@@ -50,6 +72,15 @@ class DeepestTagScanner(HTMLParser):
                 )
 
     def _get_raw_index(self, line: int, col: int) -> int:
+        """Retrieve raw index.
+
+        :param line: The line value.
+        :type line: int
+        :param col: The col value.
+        :type col: int
+        :returns: The resulting int value.
+        :rtype: int
+        """
         lines = self.raw_html.splitlines(keepends=True)
         return sum(len(s) for s in lines[: line - 1]) + col
 

@@ -28,6 +28,30 @@ class SocketLoginBuildInMappingMethod(LoginBuildInMappingMethod):
         registration_config: RegistrationConfig | None = None,
         **kwargs: Any,
     ) -> ChoiceLoginVariantResponse:
+        """Execute the socket login build in mapping MAX API method.
+
+        :param mapper: Mapper backend or mapper instance.
+        :type mapper: Mapper
+        :param args: Positional arguments forwarded to the wrapped callable.
+        :type args: Any
+        :param login_backoff: Backoff instance to process.
+        :type login_backoff: Backoff | None
+        :param code_getter: Callable to invoke.
+        :type code_getter: Callable[..., Coroutine[Any, Any, int]] | None
+        :param sms_auth: The sms auth value.
+        :type sms_auth: bool
+        :param url_callback: Callable to invoke.
+        :type url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None
+        :param use_mobile_fingerprint: Whether to use mobile fingerprint.
+        :type use_mobile_fingerprint: bool
+        :param registration_config: RegistrationConfig instance to process.
+        :type registration_config: RegistrationConfig | None
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting ChoiceLoginVariantResponse value.
+        :rtype: ChoiceLoginVariantResponse
+        :raises MapperApiError: If metadata must be provided.
+        """
         if sms_auth:
             return await self._resolve_sms_auth(
                 mapper=mapper,

@@ -28,9 +28,21 @@ class Envelope(BaseModel, Request["Envelope"], Response):
     payload: Any
 
     def __hash__(self) -> int:
+        """Hash.
+
+        :returns: The resulting int value.
+        :rtype: int
+        """
         return hash(f"seq:{self.seq}, opcode:{self.opcode}, cmd:{self.cmd}")
 
     def __eq__(self, other: object) -> bool:
+        """Eq.
+
+        :param other: object instance to process.
+        :type other: object
+        :returns: True when the requested condition is satisfied; otherwise False.
+        :rtype: bool
+        """
         if not isinstance(other, Envelope):
             return NotImplemented
 
@@ -41,6 +53,14 @@ class Envelope(BaseModel, Request["Envelope"], Response):
         )
 
     def is_my_response(self, response: Envelope) -> bool:
+        """Return whether my response.
+
+        :param response: Protocol response to process.
+        :type response: Envelope
+        :returns: True when the requested condition is satisfied; otherwise False.
+        :rtype: bool
+        :raises TypeError: If response must be Response instance.
+        """
         if not isinstance(response, self.__class__):
             raise TypeError("response must be Response instance")
         return (
@@ -53,6 +73,14 @@ class Envelope(BaseModel, Request["Envelope"], Response):
 @register_protocol("EnvelopeProtocol")
 class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
     def __init__(self, transport: StreamTransport, ping_interval: int = 30) -> None:
+        """Initialize the envelope protocol.
+
+        :param transport: Transport instance.
+        :type transport: StreamTransport
+        :param ping_interval: The ping interval value.
+        :type ping_interval: int
+        :raises TypeError: If transport must be StreamTransport.
+        """
         if not isinstance(transport, StreamTransport):
             raise TypeError("transport must be StreamTransport")
         self.event_router_lock = asyncio.Lock()
@@ -69,16 +97,34 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
     def set_generation_getter(
         self, generation_getter: Callable[..., Awaitable[int]]
     ) -> None:
+        """Set generation getter.
+
+        :param generation_getter: Callable to invoke.
+        :type generation_getter: Callable[..., Awaitable[int]]
+        """
         self._generation_getter = generation_getter
 
     def set_exceptions_callback(
         self, exceptions_callback: Callable[[Exception, int, str], Any]
     ) -> None:
+        """Set exceptions callback.
+
+        :param exceptions_callback: Callable to invoke.
+        :type exceptions_callback: Callable[[Exception, int, str], Any]
+        """
         self.exceptions_callback = exceptions_callback
 
     async def _async_init(
         self, transport: StreamTransport, ping_interval: int = 30
     ) -> None:
+        """Async init.
+
+        :param transport: Transport backend or transport instance.
+        :type transport: StreamTransport
+        :param ping_interval: The ping interval value.
+        :type ping_interval: int
+        :raises TypeError: If transport must be StreamTransport.
+        """
         if not isinstance(transport, StreamTransport):
             raise TypeError("transport must be StreamTransport")
 
@@ -97,23 +143,41 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
 
     @property
     def transport(self) -> StreamTransport:
+        """Transport.
+
+        :returns: The using transport.
+        :rtype: StreamTransport
+        """
         return self.__transport
 
     async def get_event_router(self) -> EventRouter[Envelope, Envelope] | None:
+        """Retrieve event router.
+
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: EventRouter[Envelope, Envelope] | None
+        """
         async with self.event_router_lock:
             return self.event_router
 
     async def set_event_router(
         self, event_router: EventRouter[Envelope, Envelope] | None
     ) -> None:
+        """Set event router.
+
+        :param event_router: EventRouter[Envelope, Envelope] instance to process.
+        :type event_router: EventRouter[Envelope, Envelope] | None
+        """
         async with self.event_router_lock:
             self.event_router = event_router
 
     async def connect(self, current_gen: int) -> None:
-        """
-        Raises
-        ------
-            ConnectProtocolError
+        """Connect the protocol transport and start its response reader.
+
+        :raises ConnectProtocolError: If the transport cannot be connected.
+
+
+        :param current_gen: The current gen value.
+        :type current_gen: int
         """
         async with self._network_lock:
             self._current_generation = current_gen
@@ -130,6 +194,12 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
                     self.__logger.debug("reader already cancelled in connect")
                 except asyncio.TimeoutError:
                     self.__logger.warning("reader task did not stop(in connect)")
+                except Exception as e:
+                    self.__logger.error("reader task ended with exception=%s", e)
+                    await self._close()
+                    raise ConnectProtocolError(
+                        "reader task ended with exception"
+                    ) from e
 
             try:
                 await asyncio.wait_for(self.__transport.connect(), timeout=30)
@@ -153,6 +223,13 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
                 def reader_done_callback_wrapper(
                     t: asyncio.Task[Any], gen: int = current_gen
                 ) -> None:
+                    """Wrap additional args in wrapper.
+
+                    :param t: asyncio.Task[Any] instance to process.
+                    :type t: asyncio.Task[Any]
+                    :param gen: The gen value.
+                    :type gen: int
+                    """
                     self._reader_done(t, gen)
 
                 reader_task.add_done_callback(reader_done_callback_wrapper)
@@ -165,6 +242,7 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
                 raise ConnectProtocolError("start background tasks error") from e
 
     async def _close(self) -> None:
+        """Close."""
         self.__logger.info("closing protocol")
         reader_task = self._reader_task
         self._reader_task = None
@@ -194,20 +272,26 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
             self.__logger.warning("transport close failed")
 
     async def close(self) -> None:
+        """Close."""
         async with self._network_lock:
             await self._close()
 
     async def send(
         self, method: BaseMaxProtocolMethod[Envelope], data: Any | None = None
     ) -> Future[Envelope]:
-        """
-        send a envelope
+        """send a envelope
 
-        Raises
-        ------
-            SendingProtocolError
-            AlreadyCancelledError
-            RuntimeError
+        :raises SendingProtocolError: If the operation fails.
+        :raises AlreadyCancelledError: If the operation fails.
+        :raises RuntimeError: If the operation fails.
+
+        :param method: BaseMaxProtocolMethod[Envelope] instance to process.
+        :type method: BaseMaxProtocolMethod[Envelope]
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: Any | None
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Future[Envelope]
+        :raises TypeError: If data must be dict instance.
         """
 
         if data is None:
@@ -259,6 +343,13 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
         return record
 
     def _reader_done(self, task: asyncio.Task[Any], gen: int | None) -> None:
+        """Reader done.
+
+        :param task: asyncio.Task[Any] instance to process.
+        :type task: asyncio.Task[Any]
+        :param gen: The gen value.
+        :type gen: int | None
+        """
         from ...utils import debug_tasks
 
         self.__logger.debug("%s", debug_tasks())
@@ -278,7 +369,9 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
                     self.__logger.debug("sending exception into exceptions callback")
                     self.exceptions_callback(cast(Exception, exc), gen, "reader")
             except Exception:
-                self.__logger.exception("exceptions_callback failed")
+                self.__logger.exception(
+                    "Exception occurred while sending reader exception into exceptions callback"
+                )
 
             self.__logger.error(
                 "Reader unhandled exception",
@@ -286,6 +379,12 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
             )
 
     async def receive_reader(self, gen: int) -> None:
+        """Receive reader.
+
+        :param gen: The gen value.
+        :type gen: int
+        :raises RuntimeError: If no event router while receive.
+        """
         event_router = await self.get_event_router()
         if event_router is None:
             raise RuntimeError("no event router while receive")
@@ -306,12 +405,12 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
             await event_router.resolve_response(response, gen=gen)
 
     async def get_updates(self) -> Iterable[Envelope]:
-        """
-        get updates from event router
+        """get updates from event router
 
-        Raises
-        ------
-            RuntimeError
+        :raises RuntimeError: If the operation fails.
+
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Iterable[Envelope]
         """
         try:
             event_router = await self.get_event_router()
@@ -324,6 +423,14 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
         return updates
 
     async def from_request(self, request_data: dict[str, Any]) -> Envelope:
+        """From request.
+
+        :param request_data: dict[str, Any] instance to process.
+        :type request_data: dict[str, Any]
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        :raises RuntimeError: If no event router while parse request.
+        """
         envelope_data = dict(request_data)
         if "seq" not in envelope_data:
             event_router = await self.get_event_router()
@@ -334,4 +441,11 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
         return Envelope(**envelope_data)
 
     def from_response(self, data: dict[str, Any]) -> Envelope:
+        """From response.
+
+        :param data: Contextual data passed through the processing pipeline.
+        :type data: dict[str, Any]
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         return Envelope(**data)

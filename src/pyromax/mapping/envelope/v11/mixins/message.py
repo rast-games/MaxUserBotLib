@@ -69,11 +69,29 @@ class MessageMixin(MixinProtocol):
         notify: bool = True,
         **kwargs: Any,
     ) -> Message | None:
-        """
+        """Send a message through the envelope mapper.
 
-        Raises
-        ------
-            SendMessageError
+        :raises SendMessageError: If MAX rejects the message or it cannot be sent.
+
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param text: Message or textual content.
+        :type text: str | None
+        :param attaches: Attachments associated with the message.
+        :type attaches: Sequence[BaseFileMappingModel] | None
+        :param link: Invite, message, or resource link.
+        :type link: MessageLink | None
+        :param parse_tags: The parse tags value.
+        :type parse_tags: bool
+        :param notify: Whether MAX should notify affected users.
+        :type notify: bool
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
+        :raises SendMessageFileError: If the requested action cannot be completed.
+        :raises SendMessageNotFoundError: If the requested action cannot be completed.
         """
         original_attaches = attaches
         if not attaches:
@@ -197,11 +215,21 @@ class MessageMixin(MixinProtocol):
         from_chat_id: int,
         notify: bool = True,
     ) -> Message | None:
-        """
-        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        """Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
         userbot, should use str type
 
         Socket use only int, and server raise exception if you try to send message ids use str type
+
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param to_chat_id: Identifier of the destination chat.
+        :type to_chat_id: int
+        :param from_chat_id: Identifier of the source chat.
+        :type from_chat_id: int
+        :param notify: Whether MAX should notify affected users.
+        :type notify: bool
+        :returns: The resulting Message | None value.
+        :rtype: Message | None
         """
 
         # if isinstance(message_id, int):
@@ -228,11 +256,25 @@ class MessageMixin(MixinProtocol):
         parse_tags: bool = True,
         **kwargs: Any,
     ) -> Message:
-        """
-        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        """Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
         userbot, should use str type
 
         Socket use only int, and server raise exception if you try to send message ids use str type
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param text: Message or textual content.
+        :type text: str | None
+        :param attaches: Attachments associated with the message.
+        :type attaches: Sequence[BaseFileMappingModel] | None
+        :param parse_tags: The parse tags value.
+        :type parse_tags: bool
+        :param kwargs: Keyword arguments forwarded to the wrapped callable.
+        :type kwargs: Any
+        :returns: The resulting Message value.
+        :rtype: Message
         """
 
         if not attaches:
@@ -279,11 +321,17 @@ class MessageMixin(MixinProtocol):
         chat_id: int,
         message_ids: Iterable[str] | Iterable[int],
     ) -> list[Message]:
-        """
-        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        """Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
         userbot, should use str type
 
         Socket use only int, and server raise exception if you try to send message ids use str type
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_ids: Identifiers of the messages.
+        :type message_ids: Iterable[str] | Iterable[int]
+        :returns: The resulting collection.
+        :rtype: list[Message]
         """
 
         # msg_ids = [str(msg_id) for msg_id in message_ids]
@@ -317,6 +365,31 @@ class MessageMixin(MixinProtocol):
         get_messages: Literal[True] = True,
         interactive: bool = ...,
     ) -> list[Message]:
+        """Retrieve chat history.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param forward: The forward value.
+        :type forward: int
+        :param backward: The backward value.
+        :type backward: int
+        :param backward_time: The backward time value.
+        :type backward_time: int
+        :param forward_time: The forward time value.
+        :type forward_time: int
+        :param from_time: The from time value.
+        :type from_time: int | None
+        :param item_type: The item type value.
+        :type item_type: str
+        :param get_chat: The get chat value.
+        :type get_chat: bool
+        :param get_messages: Literal[True] instance to process.
+        :type get_messages: Literal[True]
+        :param interactive: The interactive value.
+        :type interactive: bool
+        :returns: The resulting collection.
+        :rtype: list[Message]
+        """
         pass
 
     @overload
@@ -332,7 +405,33 @@ class MessageMixin(MixinProtocol):
         get_chat: bool = ...,
         get_messages: Literal[False] = False,
         interactive: bool = ...,
-    ) -> list[str]: ...
+    ) -> list[str]:
+        """Retrieve chat history.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param forward: The forward value.
+        :type forward: int
+        :param backward: The backward value.
+        :type backward: int
+        :param backward_time: The backward time value.
+        :type backward_time: int
+        :param forward_time: The forward time value.
+        :type forward_time: int
+        :param from_time: The from time value.
+        :type from_time: int | None
+        :param item_type: The item type value.
+        :type item_type: str
+        :param get_chat: The get chat value.
+        :type get_chat: bool
+        :param get_messages: Literal[False] instance to process.
+        :type get_messages: Literal[False]
+        :param interactive: The interactive value.
+        :type interactive: bool
+        :returns: The resulting collection.
+        :rtype: list[str]
+        """
+        ...
 
     async def get_chat_history(
         self,
@@ -348,6 +447,32 @@ class MessageMixin(MixinProtocol):
         interactive: bool = False,
     ) -> list[Message] | list[str]:
         # TODO: make return Chat object if get_chat==True, because now its doest make any and its just dummy to remember add this
+        """Retrieve chat history.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param forward: The forward value.
+        :type forward: int
+        :param backward: The backward value.
+        :type backward: int
+        :param backward_time: The backward time value.
+        :type backward_time: int
+        :param forward_time: The forward time value.
+        :type forward_time: int
+        :param from_time: The from time value.
+        :type from_time: int | None
+        :param item_type: The item type value.
+        :type item_type: str
+        :param get_chat: The get chat value.
+        :type get_chat: bool
+        :param get_messages: The get messages value.
+        :type get_messages: bool
+        :param interactive: The interactive value.
+        :type interactive: bool
+        :returns: The resulting collection.
+        :rtype: list[Message] | list[str]
+        :raises MapperApiError: If server return unknown response different from expected.
+        """
         response = await self.send(
             method=GetChatHistoryMethod(
                 chat_id=chat_id,
@@ -389,11 +514,17 @@ class MessageMixin(MixinProtocol):
     async def delete_messages(
         self, chat_id: int, message_ids: list[str] | list[int], for_me: bool = False
     ) -> None:
-        """
-        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        """Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
         userbot, should use str type
 
         Socket use only int, and server raise exception if you try to send message ids use str type
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_ids: Identifiers of the messages.
+        :type message_ids: list[str] | list[int]
+        :param for_me: The for me value.
+        :type for_me: bool
         """
 
         await self.send(
@@ -412,11 +543,17 @@ class MessageMixin(MixinProtocol):
         pin_message_id: int | str,
         notify_pin: bool = True,
     ) -> None:
-        """
-        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        """Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
         userbot, should use str type
 
         Socket use only int, and server raise exception if you try to send message ids use str type
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param pin_message_id: Identifier of the pin message.
+        :type pin_message_id: int | str
+        :param notify_pin: The notify pin value.
+        :type notify_pin: bool
         """
 
         await self.send(
@@ -433,33 +570,24 @@ class MessageMixin(MixinProtocol):
         reaction_id: str,
         reaction_type: str = "EMOJI",
     ) -> EmojiReaction | None:
-        """
-        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        """Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
         userbot, should use str type
 
         Socket use only int, and server raise exception if you try to send message ids use str type
 
+        :param chat_id: int
+        :type chat_id: int
+        :param message_id: int | str
+        :type message_id: int | str
+        :param reaction_id: str
+        :type reaction_id: str
+        :param reaction_type: str
+        :type reaction_type: str
 
-        Parameters
-        ----------
-        chat_id
-            int
-        message_id
-            int | str
-        reaction_id
-            str
-        reaction_type
-            str
+        :returns: info about reaction or None if cannot get this info
+        :rtype: EmojiReaction | None
 
-        Returns
-        -------
-        EmojiReaction | None
-            info about reaction or None if cannot get this info
-
-        Raises
-        -------
-            ReactionMapperError
-                if adding reaction failed
+        :raises ReactionMapperError: if adding reaction failed
         """
 
         try:
@@ -505,6 +633,15 @@ class MessageMixin(MixinProtocol):
         chat_id: int,
         message_id: str | int,
     ) -> EmojiReaction | None:
+        """Remove reaction.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: str | int
+        :returns: The resulting EmojiReaction | None value.
+        :rtype: EmojiReaction | None
+        """
         response = await self.send(
             method=RemoveReactionMethod(
                 chat_id=chat_id,
@@ -535,6 +672,15 @@ class MessageMixin(MixinProtocol):
         chat_id: int,
         message_ids: list[str] | list[int],
     ) -> dict[str, EmojiReaction] | None:
+        """Retrieve reactions.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_ids: Identifiers of the messages.
+        :type message_ids: list[str] | list[int]
+        :returns: The resulting dict[str, EmojiReaction] | None value.
+        :rtype: dict[str, EmojiReaction] | None
+        """
         response = await self.send(
             method=GetReactionsMethod(
                 chat_id=chat_id,
@@ -569,11 +715,21 @@ class MessageMixin(MixinProtocol):
         typeof: str,
         mark: int | None = None,
     ) -> ReadState:
-        """
-        Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
+        """Websocket can work with both message id types(str | int), but browser uses str, and if you want mask the use
         userbot, should use str type
 
         Socket use only int, and server raise exception if you try to send message ids use str type
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param typeof: Attachment class that determines the upload type.
+        :type typeof: str
+        :param mark: The mark value.
+        :type mark: int | None
+        :returns: The resulting ReadState value.
+        :rtype: ReadState
         """
 
         if mark is None:
@@ -601,6 +757,13 @@ class MessageMixin(MixinProtocol):
         return self.bind_api_instance(read_state)
 
     async def create_poll(self, poll: Poll[None]) -> PollMappingModel:
+        """Create poll.
+
+        :param poll: Poll[None] instance to process.
+        :type poll: Poll[None]
+        :returns: The resulting PollMappingModel value.
+        :rtype: PollMappingModel
+        """
         return reverse_translate_poll(poll)
 
     async def vote_poll(
@@ -610,6 +773,20 @@ class MessageMixin(MixinProtocol):
         poll_id: int,
         answer_ids: list[int],
     ) -> PollState:
+        """Submit a vote for poll.
+
+        :param chat_id: Identifier of the chat.
+        :type chat_id: int
+        :param message_id: Identifier of the message.
+        :type message_id: int | str
+        :param poll_id: Identifier of the poll.
+        :type poll_id: int
+        :param answer_ids: Identifiers of the answer objects.
+        :type answer_ids: list[int]
+        :returns: The resulting PollState value.
+        :rtype: PollState
+        :raises MapperApiError: If server dont return poll state.
+        """
         response = await self.send(
             method=VotePollMethod(
                 chat_id=chat_id,

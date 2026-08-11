@@ -9,6 +9,14 @@ class GetMembersByIdsMethod(BaseMaxApiMethod[Sequence[Contact]]):
         self,
         member_ids: list[int],
     ) -> Sequence[Contact]:
+        """Execute the get members by ids MAX API method.
+
+        :param member_ids: Identifiers of the members.
+        :type member_ids: list[int]
+        :returns: The resulting collection.
+        :rtype: Sequence[Contact]
+        :raises RuntimeError: If getMembersByIdsMethod method not bound to MaxApi instance.
+        """
         if not self._max_api:
             raise RuntimeError(
                 "GetMembersByIdsMethod method not bound to MaxApi instance"

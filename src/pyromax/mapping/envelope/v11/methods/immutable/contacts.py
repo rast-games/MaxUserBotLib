@@ -15,6 +15,13 @@ from ......models import ContactInfo
 class GetGeneralInfoAboutMemberMethod(BaseMethod):
 
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get general info about member protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.GET_CONTACT
         request.cmd = Cmd.REQUEST
         request.payload = GetContactRequest(
@@ -27,6 +34,13 @@ class GetGeneralInfoAboutMemberMethod(BaseMethod):
 
 class SearchByPhoneMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the search by phone protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.CONTACT_INFO_BY_PHONE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -38,6 +52,13 @@ class SearchByPhoneMethod(BaseMethod):
 
 class GetSessionsMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the get sessions protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.SESSIONS_INFO
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -47,6 +68,13 @@ class GetSessionsMethod(BaseMethod):
 
 class ContactActionMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the contact action protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.CONTACT_UPDATE
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
@@ -59,6 +87,13 @@ class ContactActionMethod(BaseMethod):
 
 class ImportContactsMethod(BaseMethod):
     async def __call__(self, request: Envelope) -> Envelope:
+        """Populate an envelope for the import contacts protocol request.
+
+        :param request: Protocol request envelope to populate or send.
+        :type request: Envelope
+        :returns: The envelope populated with the request opcode and payload.
+        :rtype: Envelope
+        """
         request.opcode = Opcode.SYNC
         request.cmd = Cmd.REQUEST
         request.ver = VERSION

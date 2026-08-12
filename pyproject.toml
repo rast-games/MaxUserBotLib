@@ -69,3 +69,11 @@ module = [
     "pymongo.*"
 ]
 ignore_missing_imports = true
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["pyromax*"]
+
+[tool.setuptools.package-data]
+pyromax = ["_data/*.json"]

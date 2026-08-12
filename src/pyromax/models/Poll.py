@@ -1,6 +1,6 @@
 from typing import Generic, cast
 
-from mypy.types import RequiredType
+
 from typing_extensions import TypeVar
 
 from .base import BaseMaxObject

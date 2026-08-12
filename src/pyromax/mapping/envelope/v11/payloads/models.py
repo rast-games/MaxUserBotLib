@@ -208,7 +208,7 @@ class AppUserAgentMappingModel(BaseUserAgentMappingModel):
         :returns: The resulting AppUserAgentMappingModel value.
         :rtype: AppUserAgentMappingModel
         """
-        from .....config import APP_VERSIONS, LOCALE_TIMEZONES, PREFERRED_VERSION
+        from .....config import APP_VERSIONS, LOCALE_TIMEZONES
 
         app_version, build_number = random.choice(APP_VERSIONS)
         locale, timezone = random.choice(LOCALE_TIMEZONES)

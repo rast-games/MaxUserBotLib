@@ -85,8 +85,9 @@ class LoginBuildInMappingMethod(BaseBuildInMappingMethod):
         :raises TimeoutError: If the requested action cannot be completed.
         """
         track_id = metadata.track_id
-        polling_interval = metadata.polling_interval / 1000
-        expires_at = metadata.expires_at / 1000
+        polling_interval = metadata.polling_interval
+        expires_at = metadata.expires_at
+
         while time.time() < expires_at:
             await asyncio.sleep(polling_interval)
 
@@ -116,7 +117,6 @@ class LoginBuildInMappingMethod(BaseBuildInMappingMethod):
         metadata: MetadataResponse,
         url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None = None,
     ) -> None:
-
         """Resolve qr.
 
         :param mapper: Mapper backend or mapper instance.

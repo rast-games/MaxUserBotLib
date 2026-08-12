@@ -389,6 +389,12 @@ Pull Requests приветствуются.
 Telegram разработчика: [ТЫК](https://t.me/PyroDeveloper)
 
 
+## Ссылки
+[Телеграм канал](t.me/PyromaxLib)
+[Github](https://github.com/rast-games/pyromax)
+[PyPi](https://pypi.org/project/pyromax/)
+
+
 # 📄 License
 
 MIT License.

@@ -111,6 +111,9 @@ class LoginBuildInMappingMethod(BaseBuildInMappingMethod):
                     """
                 raise TimeoutError(msg)
 
+            if track_data.status.login_available:
+                return None
+
     async def _resolve_qr(
         self,
         mapper: Mapper,

@@ -1,5 +1,8 @@
+<div style="text-align: center;">
+    <h1 style="font-size: 55px">Pyromax 🚀</h1>
+    <img src="./docs/favicon.png" alt="Лого Pyromax" width="400" />
+</div>
 
-# Pyromax 🚀
 
 > **Современный асинхронный Python-фреймворк для создания юзерботов в MAX Messenger.**
 

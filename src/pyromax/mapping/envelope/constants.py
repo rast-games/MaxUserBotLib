@@ -3,6 +3,7 @@ from ..bases.MappingConstants import MappingConstants
 
 class Opcode(MappingConstants):
     PING = 1
+    LOG = 5
     SEND_USER_AGENT = 6
     PROFILE = 16
     START_SMS_AUTH = 17

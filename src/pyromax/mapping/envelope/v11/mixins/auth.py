@@ -70,7 +70,6 @@ class AuthMixin(MixinProtocol):
         self,
         user_agent: BaseUserAgentMappingModel,
     ) -> None:
-
         """Send user agent.
 
         :param user_agent: BaseUserAgentMappingModel instance to process.
@@ -615,7 +614,6 @@ class AuthMixin(MixinProtocol):
         registration_config: RegistrationConfig | None = None,
         use_mobile_fingerprint: bool = True,
     ) -> SuccessLoginResponse | None:
-
         """Login.
 
         :param url_callback: Callable to invoke.
@@ -827,6 +825,9 @@ class AuthMixin(MixinProtocol):
                 drafts_sync=drafts_sync,
             )
             self._authorized.set()
+            if self._telemetry is not None:
+                await self._telemetry.start()
+
         except BaseMapperError as e:
             self._logger.warning("Cancelled auth")
             self._authorized.clear()
@@ -837,8 +838,7 @@ class AuthMixin(MixinProtocol):
             raise RestartMapperError("Auth failed") from e
 
     async def _keepalive(self) -> None:
-        """Keepalive.
-        """
+        """Keepalive."""
         try:
             while True:
                 await asyncio.sleep(self._keepalive_ping_interval)

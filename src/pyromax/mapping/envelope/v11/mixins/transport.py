@@ -70,8 +70,10 @@ class TransportMixin(MixinProtocol):
     async def close(
         self,
     ) -> None:
-        """Close.
-        """
+        """Close."""
+        if self._telemetry is not None:
+            await self._telemetry.stop()
+
         self._mapper_connected.clear()
         self._authorized.clear()
         await self.protocol.close()
@@ -109,6 +111,7 @@ class TransportMixin(MixinProtocol):
         method: BaseMethod,
         data: dict[Any, Any] | None = None,
         check_errors: bool = False,
+        timeout: int = 30,
     ) -> Envelope:
         """Send request without catching exceptions
 
@@ -141,7 +144,9 @@ class TransportMixin(MixinProtocol):
             self._logger.debug("send protocol error", exc_info=True)
             raise MapperTransportError("send failed") from e
         try:
-            response = await response_future
+            response = await asyncio.wait_for(response_future, timeout=timeout)
+        except asyncio.TimeoutError as e:
+            raise MapperTransportError("send timeout") from e
         except asyncio.CancelledError:
             # if asyncio.current_task().cancelling():
             #     raise
@@ -167,7 +172,10 @@ class TransportMixin(MixinProtocol):
         return response
 
     async def send_raw_with_running_wait(
-        self, method: BaseMethod, data: dict[Any, Any] | None = None
+        self,
+        method: BaseMethod,
+        data: dict[Any, Any] | None = None,
+        timeout: int = 30,
     ) -> Envelope:
         """Send raw with running wait.
 
@@ -180,7 +188,11 @@ class TransportMixin(MixinProtocol):
         """
         if data is None:
             data = {}
-        response = await self.send_raw(method=method, data=data)
+        response = await self.send_raw(
+            method=method,
+            data=data,
+            timeout=timeout,
+        )
         return response
 
     async def send(
@@ -190,6 +202,7 @@ class TransportMixin(MixinProtocol):
         return_exception: bool = False,
         check_errors: bool = False,
         max_retries: int = 3,
+        timeout: int = 30,
     ) -> Envelope:
         """Execute a mapped method and return its response envelope.
 
@@ -223,7 +236,10 @@ class TransportMixin(MixinProtocol):
                 gen = await self._lifecycle_manager.get_generation()
                 storage["gen"] = gen
                 response = await self.send_raw(
-                    method=method, data=data, check_errors=check_errors
+                    method=method,
+                    data=data,
+                    check_errors=check_errors,
+                    timeout=timeout,
                 )
                 return response
             except (MapperCancelledError, AlreadyFailedError) as e:

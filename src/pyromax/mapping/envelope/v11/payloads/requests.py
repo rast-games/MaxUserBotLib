@@ -19,6 +19,7 @@ from .models import (
     ChangeGroupSettingsMappingModel,
     TwoFactorActionMappingModel,
     ChangeProfileSettingsMappingModel,
+    TelemetryEventMappingModel,
 )
 
 
@@ -108,6 +109,10 @@ class RemoveTwoFactorRequest(CamelCaseModel):
 
 class ApproveQrLoginRequest(CamelCaseModel):
     qr_link: str
+
+
+class TelemetryRequest(CamelCaseModel):
+    events: list[TelemetryEventMappingModel]
 
 
 class SendMessageRequest(CamelCaseModel):

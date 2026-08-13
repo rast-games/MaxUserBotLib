@@ -12,6 +12,7 @@ from .....protocol import EnvelopeProtocol
 from ..payloads.models import BaseUserAgentMappingModel
 from ..constants import DEVICE_TYPE_TO_USERAGENT_MODEL as DEVICE_TYPE_TO_USER_AGENT_MAP
 from ..LifecycleManager import LifecycleManager
+from ..telemetry import TelemetryManager
 from .....utils import FingerprintGenerator, write_token, read_token
 
 if TYPE_CHECKING:
@@ -62,6 +63,8 @@ class ConstructorMixin(
         self._manage_lifecycle_task: Task[Any] | None = None
         self._update_listener_lock: Lock = Lock()
         self._authorized = asyncio.Event()
+        self.request_timeout: int = 30
+        self._telemetry: TelemetryManager | None = None
         self.user_agent: BaseUserAgentMappingModel | None = None
         self.fingerprint_generator = FingerprintGenerator()
         self.logged: bool = False
@@ -135,6 +138,7 @@ class ConstructorMixin(
         registration_config: RegistrationConfig | None = None,
         use_mobile_fingerprint: bool = True,
         token_suffix: str | None = None,
+        use_telemetry: bool = True,
         **kwargs: Any,
     ) -> None:
         """Initialize client.
@@ -214,6 +218,14 @@ class ConstructorMixin(
 
         if self._lifecycle_manager is None:
             raise RuntimeError("Cannot create a new lifecycle manager")
+
+        if use_telemetry:
+            if self.max_api is None:
+                raise RuntimeError("Mapper not bounded to MaxApi instance")
+            self._telemetry = TelemetryManager(
+                max_api=self.max_api,
+                mapper=cast(Mapper, self),
+            )
 
         self.protocol.set_generation_getter(self._lifecycle_manager.get_generation)
         self.protocol.set_exceptions_callback(

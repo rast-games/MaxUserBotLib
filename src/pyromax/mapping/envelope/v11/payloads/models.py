@@ -87,6 +87,9 @@ class BaseUserAgentMappingModel(BaseUserAgent, CamelCaseModel, ABC):
     device_locale: str = "ru"
     os_version: str = "Windows 10 Version 22H2"
     device_name: str = "WINDOWS10"
+    client_session_id: int = Field(
+        default_factory=lambda: random.randint(1, 30), exclude=True
+    )
 
     @abstractmethod
     def to_request(self) -> BaseUserAgentRequest:
@@ -116,6 +119,9 @@ class WebUserAgentMappingModel(BaseUserAgentMappingModel):
     header_user_agent: str = DEFAULT_WEB_HEADER_USER_AGENT
     app_version: str = WEB_APP_VERSION
     screen: str = WEB_SCREEN
+    client_session_id: int = Field(
+        default_factory=lambda: round(time.time() * 1000), exclude=True
+    )
 
     def to_request(self) -> WebUserAgentRequest:
         """To request.
@@ -153,9 +159,9 @@ class AppUserAgentMappingModel(BaseUserAgentMappingModel):
     device_type: str = "DESKTOP"
     screen: str = "2.0x"
     device_id: str = Field(default_factory=get_random_device_id_numeric, exclude=True)
-    client_session_id: int = Field(
-        default_factory=lambda: random.randint(1, 30), exclude=True
-    )
+    # client_session_id: int = Field(
+    #     default_factory=lambda: random.randint(1, 30), exclude=True
+    # )
     build_number: int
     app_version: str
 
@@ -349,6 +355,15 @@ class SessionMappingModel(CamelCaseModel):
     time: int | None = None
     info: str | None = None
     client: str | None = None
+
+
+class TelemetryEventMappingModel(CamelCaseModel):
+    time: int
+    user_id: int
+    type: str
+    event: str
+    params: dict[str, Any] = Field(default_factory=dict)
+    session_id: int
 
 
 class ProfileMappingModel(CamelCaseModel):

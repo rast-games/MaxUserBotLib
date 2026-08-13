@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import Protocol, TYPE_CHECKING, Any, TypeVar
 import logging
 
+from ..telemetry import TelemetryManager
+
 if TYPE_CHECKING:
     import asyncio
     from collections.abc import Coroutine, Callable
@@ -41,6 +43,7 @@ class MixinProtocol(Protocol):
     _lifecycle_manager: LifecycleManager | None
     _lifecycle_manager_inited: asyncio.Event
     _mapper_connected: asyncio.Event
+    _telemetry: TelemetryManager | None
 
     def bind_api_instance(self, obj: T) -> T:
         """Bind api instance.

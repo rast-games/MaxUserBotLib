@@ -99,6 +99,9 @@ class LoginBuildInMappingMethod(BaseBuildInMappingMethod):
             if track_data.status is None:
                 raise RuntimeError("Track status is missing in response")
 
+            if track_data.status.login_available:
+                return None
+
             if (
                 track_data.status
                 and track_data.status.expires_at < time.time()

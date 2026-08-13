@@ -36,3 +36,7 @@ class StreamTransport(BaseTransport):
         :type kwargs: Any
         """
         pass
+
+    @property
+    @abstractmethod
+    def connected(self) -> bool: ...

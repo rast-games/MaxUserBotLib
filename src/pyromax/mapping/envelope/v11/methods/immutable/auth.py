@@ -18,6 +18,7 @@ from ...payloads.requests import (
     SetTwoFactorRequest,
     ApproveQrLoginRequest,
     RemoveTwoFactorRequest,
+    TelemetryRequest,
 )
 from .base import VERSION
 
@@ -373,6 +374,17 @@ class ApproveQrLoginMethod(BaseMethod):
         return request
 
 
+class SendTelemetryMethod(BaseMethod):
+    async def __call__(self, request: Envelope) -> Envelope:
+        request.opcode = Opcode.LOG
+        request.cmd = Cmd.REQUEST
+        request.ver = VERSION
+        request.payload = TelemetryRequest(
+            events=self.args["events"],
+        ).model_dump(by_alias=True, exclude_none=True)
+        return request
+
+
 __all__ = [
     "TrackLoginMethod",
     "GetUserDataMethod",
@@ -393,4 +405,5 @@ __all__ = [
     "CheckPasswordMethod",
     "RemoveTwoFactorMethod",
     "ApproveQrLoginMethod",
+    "SendTelemetryMethod",
 ]

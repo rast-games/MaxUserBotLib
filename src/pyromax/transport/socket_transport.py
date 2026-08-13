@@ -243,6 +243,10 @@ class SocketTransport(StreamTransport):
                 self.__buffer.clear()
         self.__logger.info("Socket closed")
 
+    @property
+    def connected(self) -> bool:
+        return self.__writer is not None
+
 
 @register_transport("socket_envelope")
 class SocketTransportEnvelope(SocketTransport):

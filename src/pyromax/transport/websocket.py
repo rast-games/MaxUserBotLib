@@ -119,3 +119,7 @@ class WebSocketTransport(StreamTransport):
             raise RuntimeError("You try to recv before initialization connection")
         response = await self.ws.recv()
         return response
+
+    @property
+    def connected(self) -> bool:
+        return self.ws is not None

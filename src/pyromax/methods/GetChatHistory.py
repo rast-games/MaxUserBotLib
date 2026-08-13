@@ -60,7 +60,7 @@ class GetChatHistoryMethod(BaseMaxApiMethod[Union[list[Message], list[str]]]):
         get_chat: bool = ...,
         get_messages: Literal[False] = False,
         interactive: bool = ...,
-    ) -> list[str]:
+    ) -> list[str | int]:
         """Execute the get chat history MAX API method.
 
         :param chat_id: Identifier of the chat.
@@ -100,7 +100,7 @@ class GetChatHistoryMethod(BaseMaxApiMethod[Union[list[Message], list[str]]]):
         get_chat: bool = False,
         get_messages: bool = True,
         interactive: bool = False,
-    ) -> list[Message] | list[str]:
+    ) -> list[Message] | list[str | int]:
         """Execute the get chat history MAX API method.
 
         :param chat_id: Identifier of the chat.
@@ -131,7 +131,7 @@ class GetChatHistoryMethod(BaseMaxApiMethod[Union[list[Message], list[str]]]):
             raise RuntimeError("GetChatHistory method not bound to MaxApi instance")
 
         return cast(
-            list[Message] | list[str],
+            list[Message] | list[str | int],
             await self._max_api.mapper.call_method(
                 type(self),
                 chat_id=chat_id,

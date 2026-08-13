@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from functools import reduce
 from operator import or_
 
-from .MixinProtocol import MixinProtocol
+from .MixinProtocol import MixinProtocol, T_CHAT
 from .....exceptions import MapperApiError, ParseMaxApiError
 from .....models import Chat, Message, Member, ChannelPermissions
 from ..methods.immutable import (
@@ -34,7 +34,7 @@ from ..translate.FromDTO import reverse_translate_channel_permissions
 
 
 class ChatMixin(MixinProtocol):
-    def _cache_chat(self, chat: Chat) -> Chat:
+    def _cache_chat(self, chat: T_CHAT) -> T_CHAT:
         """Cache chat.
 
         :param chat: Chat instance to process.

@@ -405,7 +405,7 @@ class MessageMixin(MixinProtocol):
         get_chat: bool = ...,
         get_messages: Literal[False] = False,
         interactive: bool = ...,
-    ) -> list[str]:
+    ) -> list[str | int]:
         """Retrieve chat history.
 
         :param chat_id: Identifier of the chat.
@@ -445,7 +445,7 @@ class MessageMixin(MixinProtocol):
         get_chat: bool = False,
         get_messages: bool = True,
         interactive: bool = False,
-    ) -> list[Message] | list[str]:
+    ) -> list[Message] | list[str | int]:
         # TODO: make return Chat object if get_chat==True, because now its doest make any and its just dummy to remember add this
         """Retrieve chat history.
 

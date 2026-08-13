@@ -9,7 +9,7 @@ from .Contacts import ContactsMixin
 from .Message import MessageMixin
 
 
-class AsyncConstructorProtocolMeta(type(Protocol), AsyncConstructorMeta):
+class AsyncConstructorProtocolMeta(type(Protocol), AsyncConstructorMeta):  # type: ignore[misc]
     pass
 
 

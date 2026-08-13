@@ -6,6 +6,7 @@ from typing import (
     AsyncGenerator,
 )
 from collections.abc import Callable
+from typing import Any, cast
 
 from ..mixins import AsyncInitializerMixin
 
@@ -52,6 +53,7 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
         auth_middleware_manager: AuthMiddlewareManager | None = None,
         registration_config: RegistrationConfig | None = None,
         token_suffix: str | None = None,
+        connect_timeout: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Asynchronously initialize transport, protocol, and mapper.
@@ -135,6 +137,15 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
         if token is None and self.auth_middleware_manager is not None:
             from ..models.AuthFlow import AuthFlow
 
+            await self.mapper.start_auth_flow(
+                device_type=device_type,
+                password=password,
+                user_agent_params=user_agent_params,
+                registration_config=registration_config,
+                token_suffix=token_suffix,
+                **kwargs,
+            )
+
             mapper_type = type(self.mapper)
             protocol_type = type(self.protocol)
             transport_type = type(self.transport)
@@ -187,6 +198,8 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
 
             resolved_flow = await wrapped(flow, cast(dict[Any, Any], data))
             token = resolved_flow.token
+
+            await self.mapper.end_auth_flow()
 
         await self.mapper.initialize_client(
             token=token,

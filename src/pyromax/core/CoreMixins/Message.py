@@ -184,7 +184,13 @@ class MessageMixin(CoreMixinsProtocol):
         :returns: The resulting Message | None value.
         :rtype: Message | None
         """
-        msgs = await self.get_messages(chat_id=chat_id, message_ids=[message_id])
+        msg_ids: list[int] | list[str]
+        if isinstance(message_id, str):
+            msg_ids = [message_id]
+        else:
+            msg_ids = [message_id]
+
+        msgs = await self.get_messages(chat_id=chat_id, message_ids=msg_ids)
         return msgs[0] if msgs else None
 
     @overload
@@ -216,7 +222,7 @@ class MessageMixin(CoreMixinsProtocol):
         get_chat: bool = ...,
         get_messages: Literal[False] = False,
         interactive: bool = ...,
-    ) -> list[str]:
+    ) -> list[str | int]:
         pass
 
     @overload
@@ -232,7 +238,7 @@ class MessageMixin(CoreMixinsProtocol):
         get_chat: bool = ...,
         get_messages: bool = ...,
         interactive: bool = ...,
-    ) -> list[Message] | list[str]: ...
+    ) -> list[Message] | list[str | int]: ...
 
     async def get_chat_history(
         self,
@@ -246,7 +252,7 @@ class MessageMixin(CoreMixinsProtocol):
         get_chat: bool = False,
         get_messages: bool = True,
         interactive: bool = False,
-    ) -> list[Message] | list[str]:
+    ) -> list[Message] | list[str | int]:
         """Retrieve chat history.
 
         :param chat_id: Identifier of the chat.
@@ -274,7 +280,7 @@ class MessageMixin(CoreMixinsProtocol):
         """
 
         return cast(
-            list[Message] | list[str],
+            list[Message] | list[str | int],
             await self(
                 GetChatHistoryMethod,
                 chat_id=chat_id,

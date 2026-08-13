@@ -6,13 +6,16 @@ from ..telemetry import TelemetryManager
 
 if TYPE_CHECKING:
     import asyncio
-    from collections.abc import Coroutine, Callable
+    from collections.abc import Coroutine, Callable, Mapping
     from ..payloads.models import BaseUserAgentMappingModel
     from .....protocol import EnvelopeProtocol, Envelope
     from .....core import MaxApi
     from ..LifecycleManager import LifecycleManager
     from .....utils import FingerprintGenerator
-    from .....models import BaseMaxObject, Chat, Contact
+    from .....models import BaseMaxObject
+    from .....models.Chat import Chat
+    from .....models.Contact import Contact
+
 
 T = TypeVar("T", bound="BaseMaxObject")
 T_CHAT = TypeVar("T_CHAT", bound="Chat")
@@ -43,7 +46,15 @@ class MixinProtocol(Protocol):
     _lifecycle_manager: LifecycleManager | None
     _lifecycle_manager_inited: asyncio.Event
     _mapper_connected: asyncio.Event
+    _protocol_connected: asyncio.Event
     _telemetry: TelemetryManager | None
+
+    # DEVICE_TYPE_TO_USERAGENT_MODEL: dict[str, type[BaseUserAgentMappingModel]]
+
+    @property
+    def DEVICE_TYPE_TO_USERAGENT_MODEL(
+        self,
+    ) -> Mapping[str, type[BaseUserAgentMappingModel]]: ...
 
     def bind_api_instance(self, obj: T) -> T:
         """Bind api instance.

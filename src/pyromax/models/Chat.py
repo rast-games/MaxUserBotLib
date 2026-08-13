@@ -64,7 +64,7 @@ class Chat(BaseMaxObject):
         """
         return await self.max_api.send_message(
             chat_id=self.id,
-            text=text,
+            text=text or "",
             link=link,
             attaches=attaches,
             notify=notify,
@@ -120,7 +120,7 @@ class Chat(BaseMaxObject):
         get_chat: bool = ...,
         get_messages: Literal[False] = False,
         interactive: bool = ...,
-    ) -> list[str]:
+    ) -> list[str | int]:
         """History.
 
         :param forward: The forward value.
@@ -158,7 +158,7 @@ class Chat(BaseMaxObject):
         get_chat: bool = ...,
         get_messages: bool = ...,
         interactive: bool = ...,
-    ) -> list[Message] | list[str]:
+    ) -> list[Message] | list[str | int]:
         """History.
 
         :param forward: The forward value.
@@ -195,7 +195,7 @@ class Chat(BaseMaxObject):
         get_chat: bool = False,
         get_messages: bool = True,
         interactive: bool = False,
-    ) -> list[Message] | list[str]:
+    ) -> list[Message] | list[str | int]:
 
         """Retrieve chat history.
 
@@ -262,7 +262,7 @@ class Chat(BaseMaxObject):
             message_ids=message_ids,
         )
 
-    async def leave(self) -> None:
+    async def leave(self) -> None | Message:
         """leave the chat
 
         :raises RuntimeError: if chat is DIALOG
@@ -327,7 +327,7 @@ class Chat(BaseMaxObject):
         self,
         user_ids: list[int],
         clean_msg_period: int = 0,
-    ) -> None:
+    ) -> Chat | None:
         """Remove users.
 
         :param user_ids: Identifiers of the users.
@@ -362,7 +362,7 @@ class Chat(BaseMaxObject):
         only_admin_can_add_member: bool | None = None,
         only_admin_can_call: bool | None = None,
         members_can_see_private_link: bool | None = None,
-    ) -> None:
+    ) -> Chat | None:
         """Update settings.
 
         :param all_can_pin_message: The all can pin message.

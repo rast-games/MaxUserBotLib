@@ -45,8 +45,13 @@ class Mapper(FullMixin):
                             "lifecycle manager not available, wait init"
                         )
                         await self._lifecycle_manager_inited.wait()
-                        self._lifecycle_manager: LifecycleManager
-                        gen = await self._lifecycle_manager.get_generation()
+                        # self._lifecycle_manager: LifecycleManager
+                        lifecycle_manager = cast(
+                            LifecycleManager, self._lifecycle_manager
+                        )
+                        gen = await lifecycle_manager.get_generation()
+                    if self._lifecycle_manager is None:
+                        raise RuntimeError("lifecycle manager not set")
                     self._logger.error("get_updates failed: %s", e)
                     self._lifecycle_manager.notify_about_exception(
                         e,

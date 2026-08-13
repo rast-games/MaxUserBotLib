@@ -9,7 +9,10 @@ from ...protocol import Response
 from ...mixins import AsyncInitializerMixin, AsyncConstructorMeta
 
 if TYPE_CHECKING:
-    from ...models import BaseFileAttachment, BaseMaxObject, Message, Contact
+    # from ...models import BaseFileAttachment, BaseMaxObject, Message, Contact
+    from ...models.Message import Message
+    from ...models.Contact import Contact
+    from ...models import BaseMaxObject, BaseFileAttachment
     from ...protocol import Request
     from ...dispatcher.event import Update
     from ...core import MaxApi
@@ -63,6 +66,12 @@ class BaseMapper(AsyncInitializerMixin, Generic[T_protocol, T_file]):
         :type kwargs: Any
         """
         pass
+
+    @abstractmethod
+    async def start_auth_flow(self, *args: Any, **kwargs: Any) -> Any: ...
+
+    @abstractmethod
+    async def end_auth_flow(self, *args: Any, **kwargs: Any) -> Any: ...
 
     @abstractmethod
     def listen_updates(

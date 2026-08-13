@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from typing import cast
 
-from .MixinProtocol import MixinProtocol
+from .MixinProtocol import MixinProtocol, T_USER
 from .....models import Contact, Session, ContactInfo
 from .....exceptions import MapperApiError
 from ..methods.immutable import (
@@ -21,7 +21,7 @@ from ..translate.ToDTO import translate_models
 
 
 class ContactMixin(MixinProtocol):
-    def _cache_user(self, user: Contact) -> Contact:
+    def _cache_user(self, user: T_USER) -> T_USER:
         """Cache user.
 
         :param user: Contact instance to process.

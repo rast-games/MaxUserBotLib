@@ -164,9 +164,14 @@ class Message(BaseMaxObject):
         :param for_me: Delete only for the current account.
         :type for_me: bool
         """
+        msg_ids: list[int] | list[str]
+        if isinstance(self.message_id, str):
+            msg_ids = [self.message_id]
+        else:
+            msg_ids = [self.message_id]
         return await self.max_api.delete_messages(
             chat_id=self.chat_id,
-            message_ids=[self.message_id],
+            message_ids=msg_ids,
             for_me=for_me,
         )
 
@@ -212,7 +217,12 @@ class Message(BaseMaxObject):
         :returns: The resulting dict[str, EmojiReaction] | None value.
         :rtype: dict[str, EmojiReaction] | None
         """
+        msg_ids: list[int] | list[str]
+        if isinstance(self.message_id, str):
+            msg_ids = [self.message_id]
+        else:
+            msg_ids = [self.message_id]
         return await self.max_api.get_reactions(
             chat_id=self.chat_id,
-            message_ids=[self.message_id],
+            message_ids=msg_ids,
         )

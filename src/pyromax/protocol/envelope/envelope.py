@@ -95,7 +95,7 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
         self._current_generation: int | None = None
 
     def set_generation_getter(
-        self, generation_getter: Callable[..., Awaitable[int]]
+        self, generation_getter: Callable[..., Awaitable[int]] | None
     ) -> None:
         """Set generation getter.
 
@@ -105,7 +105,7 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
         self._generation_getter = generation_getter
 
     def set_exceptions_callback(
-        self, exceptions_callback: Callable[[Exception, int, str], Any]
+        self, exceptions_callback: Callable[[Exception, int, str], Any] | None
     ) -> None:
         """Set exceptions callback.
 
@@ -393,12 +393,13 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
             response_raw = json.loads(response_json)
 
             # from random import random
+            #
             # rnd = random()
             #
             # if rnd > 0.5:
-            #     print('raise')
-            #     print(f'raise {str(response_raw)[0:100]}...')
-            #     raise self.__transport.BASE_EXCEPTION_FOR_TRANSPORT('test')
+            #     print("raise")
+            #     print(f"raise {str(response_raw)[0:100]}...")
+            #     raise self.__transport.BASE_EXCEPTION_FOR_TRANSPORT("test")
 
             response = self.from_response(response_raw)
             self.__logger.debug("fetched response %s", response)

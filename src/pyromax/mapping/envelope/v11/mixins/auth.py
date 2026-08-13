@@ -60,12 +60,16 @@ from .....exceptions import (
     MapperApiError,
 )
 from ..constants import DEFAULT_BACKOFF_CONFIG
+from ..LifecycleManager import LifecycleManager
 
 
 from .MixinProtocol import MixinProtocol
 
 
 class AuthMixin(MixinProtocol):
+    _lifecycle_manager: LifecycleManager | None
+    user_agent: BaseUserAgentMappingModel | None
+
     async def _send_user_agent(
         self,
         user_agent: BaseUserAgentMappingModel,
@@ -133,9 +137,11 @@ class AuthMixin(MixinProtocol):
                 "You try a send auth token, but not bound MaxApi instance to mapper"
             )
 
-        self.max_api.id = auth_model.profile.contact.id
-        self.max_api.me = cast(Profile, translate_models(auth_model.profile))
-        self.max_api.phone = str(auth_model.profile.contact.phone)
+        if auth_model.profile:
+
+            self.max_api.id = auth_model.profile.contact.id
+            self.max_api.me = cast(Profile, translate_models(auth_model.profile))
+            self.max_api.phone = str(auth_model.profile.contact.phone)
         self.max_api.chats = [
             self.bind_api_instance(cast(Chat, translate_models(chat)))
             for chat in auth_model.chats
@@ -145,15 +151,16 @@ class AuthMixin(MixinProtocol):
             for contact in auth_model.contacts
             if contact is not None
         ]
-        self.max_api.messages = {
-            i: [cast(Message, translate_models(msg)) for msg in msg_list]
-            for i, msg_list in auth_model.messages.items()
-        }
-        self.max_api.users[self.max_api.me.contact.id] = self.bind_api_instance(
-            self.max_api.me.contact
-        )
+        # self.max_api.messages = {
+        #     i: [cast(Message, translate_models(msg)) for msg in msg_list]
+        #     for i, msg_list in auth_model.messages.items()
+        # }
+        if self.max_api.me is not None:
+            self.max_api.users[self.max_api.me.contact.id] = self.bind_api_instance(
+                self.max_api.me.contact
+            )
 
-        self.max_api.names = self.max_api.me.contact.names
+            self.max_api.names = self.max_api.me.contact.names
 
     async def request_code(
         self,
@@ -191,7 +198,7 @@ class AuthMixin(MixinProtocol):
         self._logger.info("requesting sms code phone_set=%s", bool(phone))
         response = await self.send_raw(
             method=StartSMSAuthMethod(
-                phone=self.phone,
+                phone=phone,
                 type=auth_type,
                 mode=mode,
             ),
@@ -607,6 +614,56 @@ class AuthMixin(MixinProtocol):
             )
         )
 
+    async def start_auth_flow(
+        self,
+        *args: Any,
+        connect_timeout: int | None = None,
+        device_type: str = "WEB",
+        user_agent_params: dict[str, Any] | None = None,
+        device_id: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        if user_agent_params is None:
+            user_agent_params = {}
+
+        if user_agent_params is None:
+            user_agent_params = {
+                "device_type": device_type,
+            }
+            if device_id is not None:
+                user_agent_params["device_id"] = device_id
+
+        user_agent_model = self.DEVICE_TYPE_TO_USERAGENT_MODEL[device_type]
+        user_agent = user_agent_model.get_random_user_agent(**user_agent_params)
+        self.user_agent = user_agent
+
+        from ..LifecycleManager import LifecycleManager
+        from ..Mapper import Mapper
+
+        self._lifecycle_manager = LifecycleManager(
+            mapper=cast(Mapper, self), connect_timeout=connect_timeout
+        )
+
+        self.protocol.set_generation_getter(self._lifecycle_manager.get_generation)
+        self.protocol.set_exceptions_callback(
+            self._lifecycle_manager.notify_about_exception
+        )
+
+        self._lifecycle_manager.start(
+            only_send_user_agent=True,
+        )
+        await self._protocol_connected.wait()
+
+    async def end_auth_flow(self) -> None:
+        lifecycle_manager = self._lifecycle_manager
+
+        if lifecycle_manager is not None:
+            await lifecycle_manager.stop()
+        self._lifecycle_manager = None
+        self.user_agent = None
+        self.protocol.set_generation_getter(None)
+        self.protocol.set_exceptions_callback(None)
+
     async def login(
         self,
         url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None = None,
@@ -775,6 +832,22 @@ class AuthMixin(MixinProtocol):
         user = SuccessLoginResponse(**response.payload)
         return user
 
+    async def _send_only_user_agent(
+        self,
+        user_agent: BaseUserAgentMappingModel,
+    ) -> None:
+        try:
+            await self._send_user_agent(
+                user_agent=user_agent,
+            )
+        except BaseMapperError as e:
+            self._logger.warning("Error while sending user agent: %s", e)
+            # self._authorized.clear()
+            raise RestartMapperError("Auth failed") from e
+        except Exception as e:
+            self._logger.warning("Unexpected error while sending user agent: %s", e)
+            raise RestartMapperError("Auth failed") from e
+
     async def _auth(
         self,
         token: str,
@@ -848,6 +921,7 @@ class AuthMixin(MixinProtocol):
                         interactive=self.keep_alive_interactive
                     ),
                     return_exception=True,
+                    wait_auth=False,
                 )
                 self._logger.debug("keepalive pong %s", pong)
         except MapperCancelledError:

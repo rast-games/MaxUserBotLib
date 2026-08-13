@@ -285,13 +285,24 @@ def reverse_translate_privacy_settings(
     none_or_not_none = lambda value: (
         reverse_translate_privacy_access(value) if value is not None else None
     )
+
+    def translate_access(
+        value: PrivacyAccess | None,
+    ) -> Literal["ALL", "CONTACTS", "_NONE_"] | None:
+        if value is None:
+            return None
+        return cast(  # type: ignore[redundant-cast]
+            Literal["ALL", "CONTACTS", "_NONE_"],
+            reverse_translate_privacy_access(value).value,
+        )
+
     return PrivacySettingsMappingModel(
-        search_by_phone=none_or_not_none(privacy_settings.search_by_phone),
-        incoming_calls=none_or_not_none(privacy_settings.incoming_calls),
-        chat_invites=none_or_not_none(privacy_settings.chat_invites),
-        phone_number_visibility=none_or_not_none(
+        search_by_phone=translate_access(privacy_settings.search_by_phone),
+        incoming_calls=translate_access(privacy_settings.incoming_calls),
+        chat_invites=translate_access(privacy_settings.chat_invites),
+        phone_number_visibility=translate_access(
             privacy_settings.phone_number_visibility
         ),
-        hide_online_status=none_or_not_none(privacy_settings.hide_online_status),
-        safe_content_only=none_or_not_none(privacy_settings.safe_content_only),
+        hide_online_status=privacy_settings.hide_online_status,
+        safe_content_only=privacy_settings.safe_content_only,
     )

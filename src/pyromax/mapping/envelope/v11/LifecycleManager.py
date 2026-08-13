@@ -133,9 +133,19 @@ class LifecycleManager:
             self._manage_lifecycle(auth_params=auth_params, **kwargs)
         )
 
+    async def stop(self) -> None:
+        await self._close()
+        task = self._manage_lifecycle_task
+        self._manage_lifecycle_task = None
+        try:
+            if task is not None and not task.done():
+                task.cancel()
+                await task
+        except asyncio.CancelledError:
+            pass
+
     async def _close(self) -> None:
-        """Close.
-        """
+        """Close."""
         try:
             await self.mapper.close()
         except Exception:
@@ -146,6 +156,7 @@ class LifecycleManager:
         manage_lifecycle_backoff: Backoff,
         auth_params: dict[str, Any] | None = None,
         url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None = None,
+        only_send_user_agent: bool = False,
         **kwargs: Any,
     ) -> None:
         """Connect.
@@ -163,7 +174,9 @@ class LifecycleManager:
             auth_params = {}
         await self.mapper.connect()
         send_user_agent = True
-        if not self.mapper.logged or not self.mapper.token:
+        if (
+            not self.mapper.logged or not self.mapper.token
+        ) and not only_send_user_agent:
             resp = await self.mapper.login(
                 url_callback=url_callback,
                 login_backoff=manage_lifecycle_backoff,
@@ -176,17 +189,23 @@ class LifecycleManager:
         token = self.mapper.token
         user_agent = self.mapper.user_agent
 
-        assert token is not None
-        assert user_agent is not None
+        if only_send_user_agent:
+            assert user_agent is not None
+            await self.mapper._send_only_user_agent(
+                user_agent=user_agent,
+            )
+        else:
+            assert token is not None
+            assert user_agent is not None
 
-        await self.mapper._auth(
-            token=token,
-            user_agent=user_agent,
-            send_user_agent=send_user_agent,
-            **auth_params,
-        )
-        self.mapper._authorized.set()
-        self._logger.debug("auth token sent")
+            await self.mapper._auth(
+                token=token,
+                user_agent=user_agent,
+                send_user_agent=send_user_agent,
+                **auth_params,
+            )
+            self.mapper._authorized.set()
+            self._logger.debug("auth token sent")
 
     async def _establish_connection(
         self,
@@ -307,7 +326,6 @@ class LifecycleManager:
         manage_lifecycle_backoff: Backoff,
         **kwargs: Any,
     ) -> None:
-
         """Authorize.
 
         :param auth_params: dict[str, Any] instance to process.
@@ -453,8 +471,7 @@ gen: {current_error_state.generation},
             return self._generation
 
     async def _drain_failures(self) -> None:
-        """Drain failures.
-        """
+        """Drain failures."""
         while True:
             try:
                 failure = self._lifecycle_queue.get_nowait()

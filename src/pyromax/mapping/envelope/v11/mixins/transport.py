@@ -128,7 +128,9 @@ class TransportMixin(MixinProtocol):
         :type check_errors: bool
         :returns: The envelope populated with the request opcode and payload.
         :rtype: Envelope
-        :raises error_obj: If the requested action cannot be completed.
+        :raises MapperApiError: If resulting payload has error(s) and check_errors is True.
+        :raises MapperTransportError: if sending was failed or if timeout is exceeded.
+        :raises MapperCancelledError: if cancelation passed.
         """
         if data is None:
             data = {}
@@ -203,6 +205,7 @@ class TransportMixin(MixinProtocol):
         check_errors: bool = False,
         max_retries: int = 3,
         timeout: int = 30,
+        wait_auth: bool = True,
     ) -> Envelope:
         """Execute a mapped method and return its response envelope.
 
@@ -230,7 +233,8 @@ class TransportMixin(MixinProtocol):
         for _ in range(max_retries):
             try:
                 await self._mapper_connected.wait()
-                await self._authorized.wait()
+                if wait_auth:
+                    await self._authorized.wait()
                 if self._lifecycle_manager is None:
                     raise RuntimeError("Lifecycle manager not initialized")
                 gen = await self._lifecycle_manager.get_generation()

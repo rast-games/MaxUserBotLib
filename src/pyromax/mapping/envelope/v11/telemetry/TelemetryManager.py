@@ -15,11 +15,11 @@ from .Navigation import (
     Screen,
 )
 from .PayloadsConstructor import (
-    TelemetryEventMappingModel,
     TelemetryPayloadBuilder,
     now_ms,
 )
 from ..methods.immutable import SendTelemetryMethod
+from ..payloads.models import TelemetryEventMappingModel
 
 if TYPE_CHECKING:
     from .....core import MaxApi
@@ -51,6 +51,8 @@ class TelemetryManager:
         self._payloads = TelemetryPayloadBuilder(self._rng)
         self._task: asyncio.Task[None] | None = None
         self._action_id = 0
+        if mapper.user_agent is None:
+            raise RuntimeError("User agent not set")
         self._session_id = mapper.user_agent.client_session_id
         self._last_nav_time = now_ms()
         self._logger = logging.getLogger("TelemetryManager")

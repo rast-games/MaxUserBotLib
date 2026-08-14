@@ -7,6 +7,7 @@ from collections.abc import Iterable, Callable, Awaitable
 from typing import Any, cast
 
 from ..bases import StreamMaxProtocol, BaseMaxProtocolMethod, Response, Request
+from ...encoding import BaseEncoding
 from ...routing.event_router import EventRouter
 from ...exceptions import (
     AlreadyCancelledError,
@@ -16,7 +17,7 @@ from ...exceptions import (
 
 from pydantic import BaseModel
 
-from ...transport.bases import StreamTransport
+from ...transport.bases import BaseTransport, StreamTransport
 from ..registry import register_protocol
 
 
@@ -71,8 +72,15 @@ class Envelope(BaseModel, Request["Envelope"], Response):
 
 
 @register_protocol("EnvelopeProtocol")
-class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
-    def __init__(self, transport: StreamTransport, ping_interval: int = 30) -> None:
+class EnvelopeProtocol(
+    StreamMaxProtocol[Envelope, Envelope, StreamTransport[BaseEncoding[Any, Any]]]
+):
+    def __init__(
+        self,
+        transport: StreamTransport[BaseEncoding[Any, Any]],
+        encoding: BaseEncoding[Any, Any],
+        ping_interval: int = 30,
+    ) -> None:
         """Initialize the envelope protocol.
 
         :param transport: Transport instance.
@@ -93,6 +101,7 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
         self._ping_interval = ping_interval
         self._generation_getter: Callable[..., Awaitable[int]] | None = None
         self._current_generation: int | None = None
+        self._encoding = encoding
 
     def set_generation_getter(
         self, generation_getter: Callable[..., Awaitable[int]] | None
@@ -115,7 +124,12 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
         self.exceptions_callback = exceptions_callback
 
     async def _async_init(
-        self, transport: StreamTransport, ping_interval: int = 30
+        self,
+        transport: StreamTransport[BaseEncoding[Any, Any]],
+        encoding: BaseEncoding[Any, Any],
+        *args: Any,
+        ping_interval: int = 30,
+        **kwargs: Any,
     ) -> None:
         """Async init.
 
@@ -135,6 +149,7 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
         await asyncio.to_thread(
             self.__init__,  # type: ignore[misc]
             transport=transport,
+            encoding=encoding,
             ping_interval=ping_interval,
         )
 
@@ -142,7 +157,7 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
         self.__logger.info("protocol connected")
 
     @property
-    def transport(self) -> StreamTransport:
+    def transport(self) -> StreamTransport[BaseEncoding[Any, Any]]:
         """Transport.
 
         :returns: The using transport.
@@ -319,7 +334,8 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
             raise SendingProtocolError("event router already cancelled")
 
         try:
-            await self.__transport.send(request.model_dump(by_alias=True))
+            encoded_frame = self._encoding.encode(request.model_dump(by_alias=True))
+            await self.__transport.send(encoded_frame)
         except self.__transport.BASE_EXCEPTION_FOR_TRANSPORT as e:
             self.__logger.error("transport sending error: %s", e, exc_info=True)
             try:
@@ -389,7 +405,8 @@ class EnvelopeProtocol(StreamMaxProtocol[Envelope, Envelope]):
         if event_router is None:
             raise RuntimeError("no event router while receive")
         while True:
-            response_json = await self.__transport.recv()
+            response_raw = await self.__transport.recv()
+            response_json = self._encoding.decode(response_raw)
             response_raw = json.loads(response_json)
 
             # from random import random

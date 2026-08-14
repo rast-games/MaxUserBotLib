@@ -12,6 +12,7 @@ from websockets.asyncio.client import ClientConnection, connect
 from .bases import StreamTransport
 from .registry import register_transport
 from ..config import DEFAULT_WEB_HEADER_USER_AGENT
+from ..encoding import BaseEncoding
 
 # Just aliases
 
@@ -20,15 +21,18 @@ WebSocketException = websockets.WebSocketException
 
 
 @register_transport("websocket")
-class WebSocketTransport(StreamTransport):
+class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any]]):
     BASE_EXCEPTION_FOR_TRANSPORT = WebSocketException
     OTHER_EXCEPTIONS_FOR_TRANSPORT = [WebSocketClosedException]
 
     def __init__(
         self,
+        encoding: BaseEncoding[Any, Any],
+        *args: Any,
         url: str = "wss://ws-api.oneme.ru/websocket",
         origin: str = "https://web.max.ru",
         user_agent_header: str = DEFAULT_WEB_HEADER_USER_AGENT,
+        **kwargs: Any,
     ) -> None:
         """Initialize the web socket transport.
 
@@ -39,19 +43,27 @@ class WebSocketTransport(StreamTransport):
         :param user_agent_header: The user agent header value.
         :type user_agent_header: str
         """
+        self._encoding = encoding
+
         self.url = url
         self.origin = Origin(origin)
         self.user_agent_header = user_agent_header
         self.ws: ClientConnection | None = None
         self.__logger = logging.getLogger("WebSocketTransport")
 
-    async def _async_init(self, url: str = "wss://ws-api.oneme.ru/websocket") -> None:
+    async def _async_init(
+        self,
+        encoding: BaseEncoding[Any, Any],
+        *args: Any,
+        url: str = "wss://ws-api.oneme.ru/websocket",
+        **kwargs: Any,
+    ) -> None:
         """Async init.
 
         :param url: Resource URL.
         :type url: str
         """
-        await asyncio.to_thread(self.__init__, url=url)  # type: ignore[misc]
+        await asyncio.to_thread(self.__init__, url=url, encoding=encoding)  # type: ignore[misc]
         self.__logger.info("Initializing WebSocket Transport")
 
         self.__logger.info("WebSocket was initialized")

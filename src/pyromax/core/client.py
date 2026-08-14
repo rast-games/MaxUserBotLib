@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from ..dispatcher.event import MaxObject
     from ..protocol import Response, BaseMaxProtocol
     from ..transport import BaseTransport
+    from ..encoding import BaseEncoding
     from ..mapping import BaseMapper
     from ..methods import BaseMaxApiMethod
     from ..models import (
@@ -45,6 +46,7 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
         password: str | None = None,
         token: str | None = None,
         transport: str = "websocket",
+        encoding: str = "NoEncoding",
         protocol: str = "EnvelopeProtocol",
         mapper: str = "EnvelopeV11",
         transport_options: dict[str, Any] | None = None,
@@ -103,15 +105,22 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
 
         logger.info("Start initialization...")
 
+        max_encoding: BaseEncoding[Any, Any] = ENCODINGS[encoding]()
+
         logger.info("Initializing transport...")
         if transport_options:
-            max_transport = await TRANSPORTS[transport](**transport_options)
+            max_transport = await TRANSPORTS[transport](
+                max_encoding, **transport_options
+            )
         else:
-            max_transport = await TRANSPORTS[transport]()
+            max_transport = await TRANSPORTS[transport](max_encoding)
         logger.info("Transport initialized.")
 
         logger.info("Initializing protocol...")
-        protocol_res: Any = await PROTOCOLS[protocol](transport=max_transport)
+        protocol_res: Any = await PROTOCOLS[protocol](
+            transport=max_transport,
+            encoding=max_encoding,
+        )
         max_protocol: BaseMaxProtocol[Any, Any] = protocol_res
         logger.info("Protocol initialized.")
 
@@ -215,7 +224,8 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
         self,
         device_type: str = "WEB",
         password: str | None = None,
-        transport: BaseTransport | None = None,
+        transport: BaseTransport[Any] | None = None,
+        encoding: BaseEncoding[Any, Any] | None = None,
         protocol: BaseMaxProtocol[Any, Any] | None = None,
         mapper: BaseMapper[Any, Any] | None = None,
         transport_options: dict[str, Any] | None = None,

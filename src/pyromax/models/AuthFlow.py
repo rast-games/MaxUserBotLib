@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     M = TypeVar("M", bound=BaseMapper[Any, Any])
     P = TypeVar("P", bound=BaseMaxProtocol[Any, Any])
-    T = TypeVar("T", bound=BaseTransport)
+    T = TypeVar("T", bound=BaseTransport[Any])
 else:
     M = TypeVar("M")
     P = TypeVar("P")

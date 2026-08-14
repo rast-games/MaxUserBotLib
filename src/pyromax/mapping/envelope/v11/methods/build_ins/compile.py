@@ -1,18 +1,18 @@
-from typing import Literal
+from typing import Literal, Any
 
 from .socket_methods import SocketLoginBuildInMappingMethod
 from .websocket_methods import WebSocketLoginBuildInMappingMethod
 from .base import BaseBuildInMappingMethod
 
-from ......transport import BaseTransport, WebSocketTransport, SocketTransportEnvelope
+from ......transport import BaseTransport, WebSocketTransport, SocketTransport
 
-LOGIN: dict[type[BaseTransport], type[BaseBuildInMappingMethod]] = {
+LOGIN: dict[type[BaseTransport[Any]], type[BaseBuildInMappingMethod]] = {
     WebSocketTransport: WebSocketLoginBuildInMappingMethod,
-    SocketTransportEnvelope: SocketLoginBuildInMappingMethod,
+    SocketTransport: SocketLoginBuildInMappingMethod,
 }
 
 __translate_name_to_dict: dict[
-    str, dict[type[BaseTransport], type[BaseBuildInMappingMethod]]
+    str, dict[type[BaseTransport[Any]], type[BaseBuildInMappingMethod]]
 ] = {
     "LOGIN": LOGIN,
 }
@@ -22,7 +22,8 @@ method_names = Literal["LOGIN"]
 
 
 def build_method(
-    method_name: method_names, transport: BaseTransport
+    method_name: method_names,
+    transport: BaseTransport[Any],
 ) -> BaseBuildInMappingMethod:
     """Build method.
 

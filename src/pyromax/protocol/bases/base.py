@@ -3,7 +3,8 @@ from __future__ import annotations
 from abc import abstractmethod
 from asyncio import Event
 from collections.abc import Awaitable, Iterable
-from typing import Any, TYPE_CHECKING, TypeVar, Generic
+from typing import Any, TYPE_CHECKING, Generic
+from typing_extensions import TypeVar
 
 from ...mixins import AsyncInitializerMixin, AsyncConstructorMeta
 from .request_response import Request, Response
@@ -11,12 +12,33 @@ from .request_response import Request, Response
 if TYPE_CHECKING:
     from .methods import BaseMaxProtocolMethod
     from ...transport import BaseTransport
+    from ...encoding import BaseEncoding
 
 T = TypeVar("T", bound=Request[Any], contravariant=True)
 R = TypeVar("R", bound=Response, covariant=True)
 
+TRANSPORT_TYPE = TypeVar("TRANSPORT_TYPE", bound=BaseTransport[Any], default=Any)
 
-class BaseMaxProtocol(AsyncInitializerMixin, Generic[T, R]):
+
+class BaseMaxProtocol(AsyncInitializerMixin, Generic[T, R, TRANSPORT_TYPE]):
+
+    @abstractmethod
+    async def _async_init(
+        self,
+        transport: TRANSPORT_TYPE,
+        encoding: BaseEncoding[Any, Any],
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any: ...
+
+    @abstractmethod
+    def __init__(
+        self,
+        transport: BaseTransport[Any],
+        encoding: BaseEncoding[Any, Any],
+        *args: Any,
+        **kwargs: Any,
+    ) -> None: ...
 
     @abstractmethod
     async def send(
@@ -44,7 +66,7 @@ class BaseMaxProtocol(AsyncInitializerMixin, Generic[T, R]):
 
     @property
     @abstractmethod
-    def transport(self) -> BaseTransport:
+    def transport(self) -> BaseTransport[Any]:
         """Transport.
 
         :returns: The resulting BaseTransport value.

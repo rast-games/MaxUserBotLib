@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .bases import BaseTransport
 
@@ -13,7 +13,7 @@ TRANSPORTS = {}
 
 def register_transport(
     transport: str,
-) -> Callable[[type[BaseTransport]], type[BaseTransport]]:
+) -> Callable[[type[BaseTransport[Any]]], type[BaseTransport[Any]]]:
     """Register transport.
 
     :param transport: name of the transport.
@@ -23,7 +23,7 @@ def register_transport(
     """
     global TRANSPORTS
 
-    def wrapper(cls: type[BaseTransport]) -> type[BaseTransport]:
+    def wrapper(cls: type[BaseTransport[Any]]) -> type[BaseTransport[Any]]:
         """Wrapper.
 
         :param cls: transport class

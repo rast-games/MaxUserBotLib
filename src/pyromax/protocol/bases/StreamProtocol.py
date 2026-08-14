@@ -2,11 +2,14 @@ from abc import abstractmethod
 from collections.abc import Callable
 from typing import Any, Generic
 
-from .base import BaseMaxProtocol, T, R
+from .base import BaseMaxProtocol, T, R, TRANSPORT_TYPE
 from ...transport import StreamTransport
+from ...encoding import BaseEncoding
 
 
-class StreamMaxProtocol(BaseMaxProtocol[T, R], Generic[T, R]):
+class StreamMaxProtocol(
+    BaseMaxProtocol[T, R, TRANSPORT_TYPE], Generic[T, R, TRANSPORT_TYPE]
+):
 
     @abstractmethod
     async def connect(self, gen: int) -> None:
@@ -19,13 +22,12 @@ class StreamMaxProtocol(BaseMaxProtocol[T, R], Generic[T, R]):
 
     @abstractmethod
     async def close(self) -> None:
-        """Close.
-        """
+        """Close."""
         pass
 
     @property
     @abstractmethod
-    def transport(self) -> StreamTransport:
+    def transport(self) -> TRANSPORT_TYPE:
         """Transport.
 
         :returns: The resulting StreamTransport value.

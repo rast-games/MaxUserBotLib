@@ -1,10 +1,10 @@
 from abc import abstractmethod
 from typing import Any
 
-from .base import BaseTransport
+from .base import BaseTransport, ENCODING_TYPE
 
 
-class StreamTransport(BaseTransport):
+class StreamTransport(BaseTransport[ENCODING_TYPE]):
     @abstractmethod
     async def send(self, request: Any) -> None:
         """Send.

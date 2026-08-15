@@ -1,14 +1,21 @@
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic
+from typing_extensions import TypeVar
 from abc import ABC, abstractmethod
 
-ENCODED_TYPE = TypeVar("ENCODED_TYPE")
-DECODED_TYPE = TypeVar("DECODED_TYPE")
+ENCODE_IN_TYPE = TypeVar("ENCODE_IN_TYPE")
+ENCODE_OUT_TYPE = TypeVar("ENCODE_OUT_TYPE")
+DECODE_IN_TYPE = TypeVar("DECODE_IN_TYPE")
+DECODE_OUT_TYPE = TypeVar("DECODE_OUT_TYPE")
 
 
-class BaseEncoding(ABC, Generic[ENCODED_TYPE, DECODED_TYPE]):
+class BaseEncoding(
+    ABC, Generic[ENCODE_IN_TYPE, ENCODE_OUT_TYPE, DECODE_IN_TYPE, DECODE_OUT_TYPE]
+):
 
     @abstractmethod
-    def encode(self, data: DECODED_TYPE, *args: Any, **kwargs: Any) -> ENCODED_TYPE:
+    def encode(
+        self, data: ENCODE_IN_TYPE, *args: Any, **kwargs: Any
+    ) -> ENCODE_OUT_TYPE:
         """
         Encode the given data to the given encoding type.
 
@@ -17,7 +24,9 @@ class BaseEncoding(ABC, Generic[ENCODED_TYPE, DECODED_TYPE]):
         """
 
     @abstractmethod
-    def decode(self, data: ENCODED_TYPE, *args: Any, **kwargs: Any) -> DECODED_TYPE:
+    def decode(
+        self, data: DECODE_IN_TYPE, *args: Any, **kwargs: Any
+    ) -> DECODE_OUT_TYPE:
         """
         Decode the given data to the given decoded type.
 
@@ -27,7 +36,30 @@ class BaseEncoding(ABC, Generic[ENCODED_TYPE, DECODED_TYPE]):
         """
 
 
-class SocketEncoding(BaseEncoding[ENCODED_TYPE, DECODED_TYPE]):
+ENCODED_TYPE = TypeVar("ENCODED_TYPE")
+DECODED_TYPE = TypeVar("DECODED_TYPE")
+
+
+class BaseSymmetricEncoding(
+    BaseEncoding[
+        DECODED_TYPE,
+        ENCODED_TYPE,
+        ENCODED_TYPE,
+        DECODED_TYPE,
+    ],
+    Generic[
+        ENCODED_TYPE,
+        DECODED_TYPE,
+    ],
+):
+    """
+    a subtype of the basic encoding, for encodings that work symmetrically, i.e. they accept one type of data for
+    encoding and return another, and for decoding the same data types are used, but in the opposite way, i.e. the data
+    type returned from encoding is accepted, and the data type that was originally encoded is returned
+    """
+
+
+class SocketEncoding(BaseSymmetricEncoding[ENCODED_TYPE, DECODED_TYPE]):
     """
     Encoding for Socket transport, it is assumed that the socket transport will expect a subtype of this class, and with
     its help understand how many bytes to read from the bus. This is done to avoid mixing abstraction levels, and the
@@ -58,15 +90,22 @@ class SocketEncoding(BaseEncoding[ENCODED_TYPE, DECODED_TYPE]):
         """
 
 
-class JsonAndBytesEncoding(SocketEncoding[bytes, str]):
-    """
-    The specialized type was originally created to match the Envelope protocol interface,
-    since it works with Json, and therefore all subtypes of this encoding must work with
-    Json and serialize data into bytes for sending through a socket.
-    """
+# class JsonAndBytesEncoding(SocketEncoding[bytes, str]):
+#     """
+#     The specialized type was originally created to match the Envelope protocol interface,
+#     since it works with Json, and therefore all subtypes of this encoding must work with
+#     Json and serialize data into bytes for sending through a socket.
+#     """
+#
+#     @abstractmethod
+#     def encode(self, data: str, *args: Any, **kwargs: Any) -> bytes: ...
+#
+#     @abstractmethod
+#     def decode(self, data: bytes, *args: Any, **kwargs: Any) -> str: ...
 
-    @abstractmethod
-    def encode(self, data: str, *args: Any, **kwargs: Any) -> bytes: ...
 
-    @abstractmethod
-    def decode(self, data: bytes, *args: Any, **kwargs: Any) -> str: ...
+class DictAndBytesEncoding(SocketEncoding[bytes, dict[Any, Any]]):
+    """
+    Replacement of JsonAndBytesEncoding since, due to architectural changes, EnvelopeProtocol is no longer tied to Json
+    and now the encoding does not need to specifically serialize data in Json.
+    """

@@ -1,11 +1,19 @@
-from .base import BaseEncoding, SocketEncoding, JsonAndBytesEncoding
+from .base import (
+    BaseEncoding,
+    BaseSymmetricEncoding,
+    DictAndBytesEncoding,
+    SocketEncoding,
+)
 from .NoEncoding import NoEncoding
-from .MsgPack import MsgPackJsonEncoding
+from .MsgPack import MsgPackDictEncoding
+from .JsonEncoding import JsonEncoding
 
 __all__ = [
     "BaseEncoding",
+    "BaseSymmetricEncoding",
+    "DictAndBytesEncoding",
     "SocketEncoding",
-    "JsonAndBytesEncoding",
+    "JsonEncoding",
     "NoEncoding",
-    "MsgPackJsonEncoding",
+    "MsgPackDictEncoding",
 ]

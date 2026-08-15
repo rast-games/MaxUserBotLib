@@ -22,6 +22,7 @@ dependencies = [
     "msgpack>=1.1.2",
     "pillow==12.1.0",
     "pydantic>=2.12.5",
+    "python-socks>=3.0.0",
     "qrcode==8.2",
     "websockets==16.0",
 ]

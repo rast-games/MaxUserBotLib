@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import json
-from typing import Any
+from typing import Any, cast
 from xmlrpc.client import Binary
 
 
@@ -13,23 +13,25 @@ from .bases import StreamTransport
 from .registry import register_transport
 from ..config import DEFAULT_WEB_HEADER_USER_AGENT
 from ..encoding import BaseEncoding
+from ..exceptions import BaseTransportError, ConnectTransportError, ConnectionTransportError, SendingTransportError
 
 # Just aliases
 
-WebSocketClosedException = websockets.ConnectionClosed
-WebSocketException = websockets.WebSocketException
+# WebSocketClosedException = websockets.ConnectionClosed
+# WebSocketException = websockets.WebSocketException
 
 
 @register_transport("websocket")
-class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any]]):
-    BASE_EXCEPTION_FOR_TRANSPORT = WebSocketException
-    OTHER_EXCEPTIONS_FOR_TRANSPORT = [WebSocketClosedException]
+class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any, Any, Any]]):
+    # BASE_EXCEPTION_FOR_TRANSPORT = WebSocketException
+    # OTHER_EXCEPTIONS_FOR_TRANSPORT = [WebSocketClosedException]
 
     def __init__(
         self,
-        encoding: BaseEncoding[Any, Any],
+        encoding: BaseEncoding[Any, Any, Any, Any],
         *args: Any,
         url: str = "wss://ws-api.oneme.ru/websocket",
+        proxy: str | None = None,
         origin: str = "https://web.max.ru",
         user_agent_header: str = DEFAULT_WEB_HEADER_USER_AGENT,
         **kwargs: Any,
@@ -46,6 +48,7 @@ class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any]]):
         self._encoding = encoding
 
         self.url = url
+        self.proxy = proxy
         self.origin = Origin(origin)
         self.user_agent_header = user_agent_header
         self.ws: ClientConnection | None = None
@@ -53,7 +56,8 @@ class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any]]):
 
     async def _async_init(
         self,
-        encoding: BaseEncoding[Any, Any],
+        encoding: BaseEncoding[Any, Any, Any, Any],
+        proxy: str | None = None,
         *args: Any,
         url: str = "wss://ws-api.oneme.ru/websocket",
         **kwargs: Any,
@@ -63,7 +67,7 @@ class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any]]):
         :param url: Resource URL.
         :type url: str
         """
-        await asyncio.to_thread(self.__init__, url=url, encoding=encoding)  # type: ignore[misc]
+        await asyncio.to_thread(self.__init__, url=url, encoding=encoding, proxy=proxy,)  # type: ignore[misc]
         self.__logger.info("Initializing WebSocket Transport")
 
         self.__logger.info("WebSocket was initialized")
@@ -75,7 +79,7 @@ class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any]]):
 
         :param kwargs: Keyword arguments forwarded to the wrapped callable.
         :type kwargs: Any
-        :raises WebSocketException: If connection handshake timed out.
+        :raises ConnectTransportError: If connection handshake timed out or handle unknown error.
         """
         if self.ws:
             self.__logger.info("WebSocket already connected to %s", self.url)
@@ -83,23 +87,35 @@ class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any]]):
             self.__logger.info("WebSocket was close")
         self.__logger.info("Connecting to %s", self.url)
         try:
-            self.ws = await connect(
-                self.url,
-                origin=self.origin,
-                user_agent_header=self.user_agent_header,
-                # ping_interval=1,
-                # ping_timeout=0.01,
-                # just a for tests
-            )
+            if self.proxy:
+                self.ws = await connect(
+                    self.url,
+                    origin=self.origin,
+                    proxy=self.proxy,
+                )
+            else:
+                self.ws = await connect(
+                    self.url,
+                    origin=self.origin,
+                    user_agent_header=self.user_agent_header,
+                    # ping_interval=1,
+                    # ping_timeout=0.01,
+                    # just a for tests
+                )
         except asyncio.TimeoutError as e:
-            self.__logger.warning("connection handshake timed out")
-            raise WebSocketException("connection handshake timed out") from e
+            self.__logger.warning("Websocket url=%s connection handshake timed out", self.url)
+            raise ConnectTransportError("Websocket connection handshake timed out") from e
+        except Exception as e:
+            self.__logger.error("Handler unknown exception while connecting to websocket url=%s: %s",self.url, e)
+            raise ConnectTransportError("Websocket connection unknown exception") from e
         self.__logger.info("WebSocket connected to %s", self.url)
 
     async def close(self) -> None:
         """Close."""
         if self.ws is not None:
-            await self.ws.close()
+            ws = self.ws
+            await ws.close()
+            await ws.wait_closed()
             self.ws = None
             self.__logger.info("Websocket closed")
         else:
@@ -111,27 +127,36 @@ class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any]]):
         :param data: Contextual data passed through the processing pipeline.
         :type data: Binary | str | bytes | dict[str, Any]
         :raises TypeError: If data must be str or bytes.
-        :raises RuntimeError: If you try to send before initialization connection.
+        :raises SendingTransportError: If you try to send before initialization connection.
         """
         if not isinstance(data, (Binary, str, bytes, dict)):
             raise TypeError("data must be str or bytes")
 
         if self.ws is None:
-            raise RuntimeError("You try to send before initialization connection")
-        await self.ws.send(json.dumps(data))
+            raise SendingTransportError("You try to send before initialization connection")
+
+        if not self.connected:
+            raise SendingTransportError("You try to send before initialization connection")
+
+        self.__logger.debug("Sending data: %s", data)
+        await self.ws.send(cast(bytes, data))
 
     async def recv(self) -> Any:
         """Recv.
 
         :returns: The value returned by backend.
         :rtype: Any
-        :raises RuntimeError: If you try to recv before initialization connection.
+        :raises ConnectionTransportError: If you try to recv before initialization connection.
         """
-        if self.ws is None:
-            raise RuntimeError("You try to recv before initialization connection")
+        if self.ws is None or not self.connected:
+            raise ConnectionTransportError("You try to recv before initialization connection")
         response = await self.ws.recv()
         return response
 
+    # @property
+    # def connected(self) -> bool:
+    #     return self.ws is not None
+
     @property
     def connected(self) -> bool:
-        return self.ws is not None
+        return bool(self.ws and self.ws.close_code is None)

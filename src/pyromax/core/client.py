@@ -46,7 +46,7 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
         password: str | None = None,
         token: str | None = None,
         transport: str = "websocket",
-        encoding: str = "NoEncoding",
+        encoding: str = "JsonEncoding",
         protocol: str = "EnvelopeProtocol",
         mapper: str = "EnvelopeV11",
         transport_options: dict[str, Any] | None = None,
@@ -105,7 +105,7 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
 
         logger.info("Start initialization...")
 
-        max_encoding: BaseEncoding[Any, Any] = ENCODINGS[encoding]()
+        max_encoding: BaseEncoding[Any, Any, Any, Any] = ENCODINGS[encoding]()
 
         logger.info("Initializing transport...")
         if transport_options:
@@ -225,7 +225,7 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
         device_type: str = "WEB",
         password: str | None = None,
         transport: BaseTransport[Any] | None = None,
-        encoding: BaseEncoding[Any, Any] | None = None,
+        encoding: BaseEncoding[Any, Any, Any, Any] | None = None,
         protocol: BaseMaxProtocol[Any, Any] | None = None,
         mapper: BaseMapper[Any, Any] | None = None,
         transport_options: dict[str, Any] | None = None,

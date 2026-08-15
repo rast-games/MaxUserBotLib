@@ -34,6 +34,7 @@ from .....exceptions import (
     BackoffError,
     MapperApiError,
     ReactionMapperError,
+    BaseTransportError,
 )
 from ..payloads.responses import (
     SendMessageResponse,
@@ -200,7 +201,7 @@ class MessageMixin(MixinProtocol):
 
         except (
             asyncio.CancelledError,
-            self.protocol.transport.BASE_EXCEPTION_FOR_TRANSPORT,
+            BaseTransportError,
         ) as e:
             self._logger.error("Error sending message: %s", e)
             return None

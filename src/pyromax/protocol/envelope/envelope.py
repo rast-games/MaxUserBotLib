@@ -13,6 +13,7 @@ from ...exceptions import (
     AlreadyCancelledError,
     SendingProtocolError,
     ConnectProtocolError,
+    BaseTransportError,
 )
 
 from pydantic import BaseModel
@@ -73,20 +74,22 @@ class Envelope(BaseModel, Request["Envelope"], Response):
 
 @register_protocol("EnvelopeProtocol")
 class EnvelopeProtocol(
-    StreamMaxProtocol[Envelope, Envelope, StreamTransport[BaseEncoding[Any, Any]]]
+    StreamMaxProtocol[
+        Envelope, Envelope, StreamTransport[BaseEncoding[Any, Any, Any, Any]]
+    ]
 ):
     def __init__(
         self,
-        transport: StreamTransport[BaseEncoding[Any, Any]],
-        encoding: BaseEncoding[Any, Any],
-        ping_interval: int = 30,
+        transport: StreamTransport[BaseEncoding[Any, Any, Any, Any]],
+        encoding: BaseEncoding[Any, Any, Any, Any],
+        # ping_interval: int = 30,
     ) -> None:
         """Initialize the envelope protocol.
 
         :param transport: Transport instance.
         :type transport: StreamTransport
-        :param ping_interval: The ping interval value.
-        :type ping_interval: int
+        # :param ping_interval: The ping interval value.
+        # :type ping_interval: int
         :raises TypeError: If transport must be StreamTransport.
         """
         if not isinstance(transport, StreamTransport):
@@ -98,7 +101,7 @@ class EnvelopeProtocol(
         self.__logger = logging.getLogger("EnvelopeProtocol")
         self.__transport = transport
         self._reader_task: asyncio.Task[Any] | None = None
-        self._ping_interval = ping_interval
+        # self._ping_interval = ping_interval
         self._generation_getter: Callable[..., Awaitable[int]] | None = None
         self._current_generation: int | None = None
         self._encoding = encoding
@@ -125,18 +128,18 @@ class EnvelopeProtocol(
 
     async def _async_init(
         self,
-        transport: StreamTransport[BaseEncoding[Any, Any]],
-        encoding: BaseEncoding[Any, Any],
+        transport: StreamTransport[BaseEncoding[Any, Any, Any, Any]],
+        encoding: BaseEncoding[Any, Any, Any, Any],
         *args: Any,
-        ping_interval: int = 30,
+        # ping_interval: int = 30,
         **kwargs: Any,
     ) -> None:
         """Async init.
 
         :param transport: Transport backend or transport instance.
         :type transport: StreamTransport
-        :param ping_interval: The ping interval value.
-        :type ping_interval: int
+        # :param ping_interval: The ping interval value.
+        # :type ping_interval: int
         :raises TypeError: If transport must be StreamTransport.
         """
         if not isinstance(transport, StreamTransport):
@@ -150,14 +153,15 @@ class EnvelopeProtocol(
             self.__init__,  # type: ignore[misc]
             transport=transport,
             encoding=encoding,
-            ping_interval=ping_interval,
+            # ping_interval=ping_interval,
         )
 
-        await self.set_event_router(EventRouter[Envelope, Envelope]())
+        # await self.set_event_router(EventRouter[Envelope, Envelope]())
+        self.event_router = EventRouter[Envelope, Envelope]()
         self.__logger.info("protocol connected")
 
     @property
-    def transport(self) -> StreamTransport[BaseEncoding[Any, Any]]:
+    def transport(self) -> StreamTransport[BaseEncoding[Any, Any, Any, Any]]:
         """Transport.
 
         :returns: The using transport.
@@ -165,25 +169,25 @@ class EnvelopeProtocol(
         """
         return self.__transport
 
-    async def get_event_router(self) -> EventRouter[Envelope, Envelope] | None:
-        """Retrieve event router.
-
-        :returns: The envelope populated with the request opcode and payload.
-        :rtype: EventRouter[Envelope, Envelope] | None
-        """
-        async with self.event_router_lock:
-            return self.event_router
-
-    async def set_event_router(
-        self, event_router: EventRouter[Envelope, Envelope] | None
-    ) -> None:
-        """Set event router.
-
-        :param event_router: EventRouter[Envelope, Envelope] instance to process.
-        :type event_router: EventRouter[Envelope, Envelope] | None
-        """
-        async with self.event_router_lock:
-            self.event_router = event_router
+    # async def get_event_router(self) -> EventRouter[Envelope, Envelope] | None:
+    #     """Retrieve event router.
+    #
+    #     :returns: The envelope populated with the request opcode and payload.
+    #     :rtype: EventRouter[Envelope, Envelope] | None
+    #     """
+    #     async with self.event_router_lock:
+    #         return self.event_router
+    #
+    # async def set_event_router(
+    #     self, event_router: EventRouter[Envelope, Envelope] | None
+    # ) -> None:
+    #     """Set event router.
+    #
+    #     :param event_router: EventRouter[Envelope, Envelope] instance to process.
+    #     :type event_router: EventRouter[Envelope, Envelope] | None
+    #     """
+    #     async with self.event_router_lock:
+    #         self.event_router = event_router
 
     async def connect(self, current_gen: int) -> None:
         """Connect the protocol transport and start its response reader.
@@ -227,12 +231,15 @@ class EnvelopeProtocol(
                 raise ConnectProtocolError("connect error") from e
 
             try:
-                router = await self.get_event_router()
+                # router = await self.get_event_router()
+                router = self.event_router
                 if router:
-                    await self.set_event_router(None)
+                    # await self.set_event_router(None)
+                    self.event_router = None
                     await router.cancel_all()
 
-                await self.set_event_router(EventRouter())
+                # await self.set_event_router(EventRouter())
+                self.event_router = EventRouter()
                 reader_task = asyncio.create_task(self.receive_reader(gen=current_gen))
 
                 def reader_done_callback_wrapper(
@@ -271,9 +278,11 @@ class EnvelopeProtocol(
                 self.__logger.warning("reader task did not stop")
             except Exception as e:
                 self.__logger.error("reader ended with exception: %s", e, exc_info=True)
-        event_router = await self.get_event_router()
+        # event_router = await self.get_event_router()
+        event_router = self.event_router
         if event_router:
-            await self.set_event_router(None)
+            # await self.set_event_router(None)
+            self.event_router = None
             await event_router.cancel_all()
 
         self.__logger.info("terminated reader task")
@@ -322,7 +331,8 @@ class EnvelopeProtocol(
                 "failed to create envelope, method: %s", method.__class__.__name__
             )
             raise SendingProtocolError("failed to create envelope") from e
-        event_router = await self.get_event_router()
+        # event_router = await self.get_event_router()
+        event_router = self.event_router
         if not event_router:
             raise RuntimeError("no event router while send")
         gen = self._current_generation
@@ -336,7 +346,7 @@ class EnvelopeProtocol(
         try:
             encoded_frame = self._encoding.encode(request.model_dump(by_alias=True))
             await self.__transport.send(encoded_frame)
-        except self.__transport.BASE_EXCEPTION_FOR_TRANSPORT as e:
+        except BaseTransportError as e:
             self.__logger.error("transport sending error: %s", e, exc_info=True)
             try:
                 if self.exceptions_callback is not None:
@@ -401,13 +411,13 @@ class EnvelopeProtocol(
         :type gen: int
         :raises RuntimeError: If no event router while receive.
         """
-        event_router = await self.get_event_router()
+        # event_router = await self.get_event_router()
+        event_router = self.event_router
         if event_router is None:
             raise RuntimeError("no event router while receive")
         while True:
-            response_raw = await self.__transport.recv()
-            response_json = self._encoding.decode(response_raw)
-            response_raw = json.loads(response_json)
+            raw_data = await self.__transport.recv()
+            response = self._encoding.decode(raw_data)
 
             # from random import random
             #
@@ -415,10 +425,10 @@ class EnvelopeProtocol(
             #
             # if rnd > 0.5:
             #     print("raise")
-            #     print(f"raise {str(response_raw)[0:100]}...")
-            #     raise self.__transport.BASE_EXCEPTION_FOR_TRANSPORT("test")
+            #     print(f"raise {str(response)[0:100]}...")
+            #     raise BaseTransportError("test")
 
-            response = self.from_response(response_raw)
+            response = self.from_response(response)
             self.__logger.debug("fetched response %s", response)
             await event_router.resolve_response(response, gen=gen)
 
@@ -431,7 +441,8 @@ class EnvelopeProtocol(
         :rtype: Iterable[Envelope]
         """
         try:
-            event_router = await self.get_event_router()
+            # event_router = await self.get_event_router()
+            event_router = self.event_router
             if event_router is None:
                 raise RuntimeError("no event router while receive")
             updates = await event_router.pop_all_updates()
@@ -451,7 +462,8 @@ class EnvelopeProtocol(
         """
         envelope_data = dict(request_data)
         if "seq" not in envelope_data:
-            event_router = await self.get_event_router()
+            # event_router = await self.get_event_router()
+            event_router = self.event_router
             if not event_router:
                 raise RuntimeError("no event router while parse request")
             envelope_data["seq"] = await event_router.correlator.next_counter()

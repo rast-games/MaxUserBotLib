@@ -219,7 +219,7 @@ class LifecycleManager:
         # rnd = random()
         # print(rnd)
         # if rnd > 0.5:
-        #     print('sleeping')
+        #     print("sleeping")
         #     await asyncio.sleep(20)
 
         """Establish connection.

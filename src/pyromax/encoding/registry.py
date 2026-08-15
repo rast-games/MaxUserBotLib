@@ -13,7 +13,9 @@ ENCODINGS = {}
 
 def register_encoding(
     encoding: str,
-) -> Callable[[type[BaseEncoding[Any, Any]]], type[BaseEncoding[Any, Any]]]:
+) -> Callable[
+    [type[BaseEncoding[Any, Any, Any, Any]]], type[BaseEncoding[Any, Any, Any, Any]]
+]:
     """Register protocol.
 
     :param encoding: name of protocol.
@@ -24,8 +26,8 @@ def register_encoding(
     global ENCODINGS
 
     def wrapper(
-        cls: type[BaseEncoding[Any, Any]],
-    ) -> type[BaseEncoding[Any, Any]]:
+        cls: type[BaseEncoding[Any, Any, Any, Any]],
+    ) -> type[BaseEncoding[Any, Any, Any, Any]]:
         """Wrapper.
 
         :returns: The resulting type[BaseMaxProtocol[Any, Any]] value.

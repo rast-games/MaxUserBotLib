@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 T = TypeVar("T", bound=Request[Any], contravariant=True)
 R = TypeVar("R", bound=Response, covariant=True)
 
-TRANSPORT_TYPE = TypeVar("TRANSPORT_TYPE", bound=BaseTransport[Any], default=Any)
+TRANSPORT_TYPE = TypeVar("TRANSPORT_TYPE", bound="BaseTransport[Any]", default=Any)
 
 
 class BaseMaxProtocol(AsyncInitializerMixin, Generic[T, R, TRANSPORT_TYPE]):
@@ -26,7 +26,7 @@ class BaseMaxProtocol(AsyncInitializerMixin, Generic[T, R, TRANSPORT_TYPE]):
     async def _async_init(
         self,
         transport: TRANSPORT_TYPE,
-        encoding: BaseEncoding[Any, Any],
+        encoding: BaseEncoding[Any, Any, Any, Any],
         *args: Any,
         **kwargs: Any,
     ) -> Any: ...
@@ -35,7 +35,7 @@ class BaseMaxProtocol(AsyncInitializerMixin, Generic[T, R, TRANSPORT_TYPE]):
     def __init__(
         self,
         transport: BaseTransport[Any],
-        encoding: BaseEncoding[Any, Any],
+        encoding: BaseEncoding[Any, Any, Any, Any],
         *args: Any,
         **kwargs: Any,
     ) -> None: ...

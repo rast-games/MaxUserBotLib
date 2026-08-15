@@ -4,13 +4,13 @@ from abc import abstractmethod
 from ...mixins import AsyncInitializerMixin, AsyncConstructorMeta
 from ...encoding import BaseEncoding
 
-ENCODING_TYPE = TypeVar("ENCODING_TYPE", bound=BaseEncoding[Any, Any])
+ENCODING_TYPE = TypeVar("ENCODING_TYPE", bound=BaseEncoding[Any, Any, Any, Any])
 
 
 class BaseTransport(AsyncInitializerMixin, Generic[ENCODING_TYPE]):
-    BASE_EXCEPTION_FOR_TRANSPORT: type[Exception]
-
-    OTHER_EXCEPTIONS_FOR_TRANSPORT: list[type[Exception]]
+    # BASE_EXCEPTION_FOR_TRANSPORT: type[Exception]
+    #
+    # OTHER_EXCEPTIONS_FOR_TRANSPORT: list[type[Exception]]
 
     @abstractmethod
     async def _async_init(

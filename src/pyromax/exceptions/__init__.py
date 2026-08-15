@@ -10,10 +10,14 @@ from .ReactionError import (
 from .AnnotationError import AnnotationError
 from .BackoffError import BackoffError
 from .FileError import FileError, DownloadFileError
-from .SocketTransportErrors import (
-    SocketTransportError,
-    SocketTransportConnectionError,
-    SocketTransportSendError,
+from .TransportError import (
+    BaseTransportError,
+    ConnectTransportError,
+    ConnectionTransportError,
+    SendingTransportError,
+    # SocketTransportError,
+    # SocketTransportConnectionError,
+    # SocketTransportSendError,
 )
 from .MapperErrors import (
     BaseMapperError,
@@ -49,9 +53,13 @@ __all__ = [
     "BackoffError",
     "FileError",
     "DownloadFileError",
-    "SocketTransportError",
-    "SocketTransportConnectionError",
-    "SocketTransportSendError",
+    "BaseTransportError",
+    "SendingTransportError",
+    "ConnectTransportError",
+    "ConnectionTransportError",
+    # "SocketTransportError",
+    # "SocketTransportConnectionError",
+    # "SocketTransportSendError",
     "BaseMapperError",
     "RestartMapperError",
     "GetQRError",

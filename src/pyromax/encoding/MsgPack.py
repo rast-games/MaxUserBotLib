@@ -6,12 +6,12 @@ from typing import Any, cast
 import lz4.block  # type: ignore[import-untyped]
 import msgpack  # type: ignore[import-untyped]
 
-from .base import JsonAndBytesEncoding
+from .base import DictAndBytesEncoding
 from .registry import register_encoding
 
 
-@register_encoding("MsgPackJsonEncoding")
-class MsgPackJsonEncoding(JsonAndBytesEncoding):
+@register_encoding("MsgPackDictEncoding")
+class MsgPackDictEncoding(DictAndBytesEncoding):
     """
     An encoding implementation suitable for use with the Envelope protocol and socket transport determines the size of
     the socket message header and provides an implementation for obtaining the message length from the header.
@@ -60,7 +60,7 @@ class MsgPackJsonEncoding(JsonAndBytesEncoding):
         _, _, _, _, _, payload_len = self._unpack_header(data)
         return payload_len
 
-    def decode(self, data: bytes, *args: Any, **kwargs: Any) -> str:
+    def decode(self, data: bytes, *args: Any, **kwargs: Any) -> dict[Any, Any]:
         header_raw = data[: self.HEADER_SIZE]
 
         ver, cmd, seq, opcode, cof, payload_length = self._unpack_header(header_raw)
@@ -100,16 +100,13 @@ class MsgPackJsonEncoding(JsonAndBytesEncoding):
         else:
             decoded_payload = {}
 
-        return json.dumps(
-            {
-                "opcode": opcode,
-                "cmd": cmd,
-                "seq": seq,
-                "ver": ver,
-                "payload": decoded_payload,
-            },
-            default=bytes.hex,
-        )
+        return {
+            "opcode": opcode,
+            "cmd": cmd,
+            "seq": seq,
+            "ver": ver,
+            "payload": decoded_payload,
+        }
 
     def _safe_decompress(
         self,

@@ -13,9 +13,12 @@ class StreamMaxProtocol(
 
     @abstractmethod
     async def connect(self, gen: int) -> None:
-        """Connect.
+        """Connect the protocol transport and start its response reader.
 
-        :param gen: The gen value.
+        :raises ConnectProtocolError: If the transport cannot be connected.
+
+
+        :param gen: The current error gen.
         :type gen: int
         """
         pass

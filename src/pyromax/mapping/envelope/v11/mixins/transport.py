@@ -18,6 +18,7 @@ from .....exceptions import (
     ConnectProtocolError,
     MapperNotImplementedMethodError,
     MapperTransportNotSupportedForMethodError,
+    RequestWasCancelledError,
 )
 from ..payloads.responses import ErrorMessageResponse
 from ..methods.build_ins import build_method, method_names
@@ -69,6 +70,8 @@ class TransportMixin(MixinProtocol):
 
     async def close(
         self,
+        pending_requests_exc: Exception | None = None,
+        update_calls_exc: Exception | None = None,
     ) -> None:
         """Close."""
         if self._telemetry is not None:
@@ -76,11 +79,13 @@ class TransportMixin(MixinProtocol):
 
         self._mapper_connected.clear()
         self._authorized.clear()
-        await self.protocol.close()
+        await self.protocol.close(
+            pending_requests_exc,
+            update_calls_exc,
+        )
         keepalive_task: asyncio.Task[Any] | None = self._keepalive_task
         self._keepalive_task = None
         if keepalive_task is not None:
-
             try:
                 keepalive_task.cancel()
                 await asyncio.wait_for(keepalive_task, timeout=5)
@@ -130,7 +135,7 @@ class TransportMixin(MixinProtocol):
         :rtype: Envelope
         :raises MapperApiError: If resulting payload has error(s) and check_errors is True.
         :raises MapperTransportError: if sending was failed or if timeout is exceeded.
-        :raises MapperCancelledError: if cancelation passed.
+        # :raises MapperCancelledError: if cancelation passed.
         """
         if data is None:
             data = {}
@@ -140,22 +145,42 @@ class TransportMixin(MixinProtocol):
                 method=method,
                 data=data,
             )
-        except AlreadyCancelledError as e:
-            raise MapperCancelledError("try a send after close") from e
+        # except AlreadyCancelledError as e:
+        #     raise MapperCancelledError("try a send after close") from e
         except SendingProtocolError as e:
-            self._logger.debug("send protocol error", exc_info=True)
+            self._logger.exception(
+                "send protocol error",
+                exc_info=True,
+                stack_info=True,
+            )
             raise MapperTransportError("send failed") from e
         try:
             response = await asyncio.wait_for(response_future, timeout=timeout)
         except asyncio.TimeoutError as e:
             raise MapperTransportError("send timeout") from e
-        except asyncio.CancelledError:
-            # if asyncio.current_task().cancelling():
-            #     raise
-            self._logger.error(
-                "response future was cancelled (Mapper.send_raw)", stack_info=True
+        except RequestWasCancelledError as e:
+            self._logger.exception(
+                "Send was cancelled, by EventRouter: %s",
+                e,
+                stack_info=True,
+                exc_info=True,
             )
-            raise MapperCancelledError("try response was cancelled while wait it")
+            raise MapperTransportError("send was cancelled") from e
+        except Exception as e:
+            self._logger.error(
+                "Handled unknown exception, while raw sending=%s",
+                e,
+                exc_info=True,
+                stack_info=True,
+            )
+        # except asyncio.CancelledError:
+        #     # if asyncio.current_task().cancelling():
+        #     #     raise
+        #     self._logger.error(
+        #         "response future was cancelled (Mapper.send_raw)",
+        #         stack_info=True,
+        #     )
+        #     raise MapperCancelledError("try response was cancelled while wait it")
         if check_errors and response.payload.get("error"):
             error = ErrorMessageResponse(**response.payload)
             error_msg = f"""
@@ -246,9 +271,9 @@ class TransportMixin(MixinProtocol):
                     timeout=timeout,
                 )
                 return response
-            except (MapperCancelledError, AlreadyFailedError) as e:
+            except MapperTransportError as e:
                 if self._lifecycle_manager is None:
-                    self._logger.warning("lifecycle manager not available, wait init")
+                    self._logger.exception("lifecycle manager not available, wait init")
                     await self._lifecycle_manager_inited.wait()
 
                 if self._lifecycle_manager is None:
@@ -262,13 +287,13 @@ class TransportMixin(MixinProtocol):
                 msg = f"Request {method.__class__.__name__} was cancelled"
                 self._logger.warning(msg, exc_info=True, stack_info=True)
                 if return_exception:
-                    raise MapperCancelledError("Cancelled request") from e
+                    raise MapperTransportError("Cancelled request") from e
 
             except MapperApiError as e:
                 if check_errors:
                     raise e
-                self._logger.warning(
-                    f"Caught exception when sending request: %s"
+                self._logger.exception(
+                    f"Caught api exception when sending request: %s"
                     f"method: {method.__class__.__name__}",
                     e,
                     exc_info=True,

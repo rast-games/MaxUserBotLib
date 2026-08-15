@@ -5,6 +5,10 @@ class BaseProtocolError(BaseMaxApiException):
     pass
 
 
+class GetUpdatesProtocolError(BaseProtocolError):
+    pass
+
+
 class SendingProtocolError(BaseProtocolError):
     pass
 
@@ -14,4 +18,8 @@ class ReceiveProtocolError(BaseProtocolError):
 
 
 class ConnectProtocolError(BaseProtocolError):
+    pass
+
+
+class CloseProtocolError(BaseProtocolError):
     pass

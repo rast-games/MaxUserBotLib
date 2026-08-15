@@ -24,7 +24,6 @@ def debug_tasks() -> str:
                     msg += f"    ❌ Exception: {exc}\n"
             except (asyncio.CancelledError, asyncio.InvalidStateError):
                 pass
-    print(msg)
     return msg
 
 
@@ -75,15 +74,12 @@ class EventFake:
         return self.event.is_set()
 
     def set(self) -> None:
-        """Set.
-        """
-        caller = get_caller_info(2)  # 2 уровня вверх
-        print(f"🔴 FAILED.SET() from {caller}")
+        """Set."""
+        caller = get_caller_info(2)
         self.event.set()
 
     def clear(self) -> None:
-        """Clear.
-        """
+        """Clear."""
         caller = get_caller_info(2)
         print(f"🟢 FAILED.CLEAR() from {caller}")
         self.event.clear()

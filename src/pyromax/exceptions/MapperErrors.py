@@ -42,6 +42,10 @@ class MapperLifecycleError(BaseMapperError):
     pass
 
 
+class MapperRestartCycleError(MapperLifecycleError):
+    pass
+
+
 class MapperNotImplementedError(BaseMapperError, NotImplementedError):
     pass
 

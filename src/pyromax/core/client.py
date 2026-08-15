@@ -28,6 +28,12 @@ if TYPE_CHECKING:
 
 from .context import *
 from .CoreMixins import FullMixin, AsyncConstructorProtocolMeta
+from ..exceptions import (
+    MapperTransportError,
+    BaseMaxApiMethodError,
+    BaseMapperError,
+    MapperApiError,
+)
 
 
 class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtocolMeta):
@@ -317,8 +323,45 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
             )
         self._logger.debug("Calling MaxApi method: %s", class_of_method.__name__)
         method = class_of_method().as_(self)
+        try:
+            return await method(*args, **kwargs)
+        except MapperTransportError as e:
+            self._logger.error(
+                "Mapper transport error while call method=%s: %s",
+                class_of_method.__name__,
+                e,
+            )
+            raise BaseMaxApiMethodError(
+                "error while call method=%s: %s",
+                class_of_method.__name__,
+                e,
+            ) from e
 
-        return await method(*args, **kwargs)
+        except MapperApiError as e:
+            self._logger.error(
+                "Mapper API error while call method=%s: %s",
+                class_of_method.__name__,
+                e,
+            )
+            raise BaseMaxApiMethodError(
+                "API error title=%s error=%s message=%s localized_message=%s",
+                e.title,
+                e.error,
+                e.message,
+                e.localized_message,
+            ) from e
+
+        except BaseMapperError as e:
+            self._logger.error(
+                "Mapper unknown error while call method=%s: %s",
+                class_of_method.__name__,
+                e,
+            )
+            raise BaseMaxApiMethodError(
+                "error while call method=%s: %s",
+                class_of_method.__name__,
+                e,
+            ) from e
 
     def listen_updates(
         self, context: Any

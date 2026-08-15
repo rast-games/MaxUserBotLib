@@ -14,6 +14,8 @@ from ....exceptions import (
     BackoffError,
     MapperCancelledError,
     MapperLifecycleError,
+    MapperConnectError,
+    MapperRestartCycleError,
 )
 
 if TYPE_CHECKING:
@@ -52,7 +54,12 @@ class LifecycleFailure:
 
 
 class LifecycleManager:
-    def __init__(self, mapper: Mapper, connect_timeout: int | None = 15):
+    def __init__(
+        self,
+        mapper: Mapper,
+        connect_timeout: int | None = 15,
+        need_login: bool = False,
+    ):
         """Initialize the lifecycle manager.
 
         :param mapper: Mapper backend or mapper instance.
@@ -63,6 +70,7 @@ class LifecycleManager:
         if connect_timeout is None:
             connect_timeout = 5
         self.mapper = mapper
+        self._need_login = need_login
         self._logger = logging.getLogger("LifecycleManagerEnvelopeMapperV11")
         self._manage_lifecycle_task: asyncio.Task[Any] | None = None
         self.connect_timeout = connect_timeout
@@ -144,10 +152,14 @@ class LifecycleManager:
         except asyncio.CancelledError:
             pass
 
-    async def _close(self) -> None:
+    async def _close(
+        self,
+        pending_requests_exc: Exception | None = None,
+        update_calls_exc: Exception | None = None,
+    ) -> None:
         """Close."""
         try:
-            await self.mapper.close()
+            await self.mapper.close(pending_requests_exc, update_calls_exc)
         except Exception:
             self._logger.exception("close failed")
 
@@ -169,10 +181,14 @@ class LifecycleManager:
         :type url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None
         :param kwargs: Keyword arguments forwarded to the wrapped callable.
         :type kwargs: Any
+        :raises MapperRestartCycleError: if connect failed and need restart.
         """
         if auth_params is None:
             auth_params = {}
-        await self.mapper.connect()
+        try:
+            await self.mapper.connect()
+        except MapperConnectError as e:
+            raise MapperRestartCycleError("Connect failed") from e
         send_user_agent = True
         if (
             not self.mapper.logged or not self.mapper.token
@@ -191,19 +207,26 @@ class LifecycleManager:
 
         if only_send_user_agent:
             assert user_agent is not None
-            await self.mapper._send_only_user_agent(
-                user_agent=user_agent,
-            )
+            try:
+                await self.mapper._send_only_user_agent(
+                    user_agent=user_agent,
+                )
+            except RestartMapperError as e:
+                self._logger.exception("Exception while try to connect=%s", e)
+                raise MapperRestartCycleError("Send user agent failed") from e
         else:
             assert token is not None
             assert user_agent is not None
-
-            await self.mapper._auth(
-                token=token,
-                user_agent=user_agent,
-                send_user_agent=send_user_agent,
-                **auth_params,
-            )
+            try:
+                await self.mapper._auth(
+                    token=token,
+                    user_agent=user_agent,
+                    send_user_agent=send_user_agent,
+                    **auth_params,
+                )
+            except RestartMapperError as e:
+                self._logger.exception("Exception while try to connect=%s", e)
+                raise MapperRestartCycleError("Auth failed") from e
             self.mapper._authorized.set()
             self._logger.debug("auth token sent")
 
@@ -212,6 +235,7 @@ class LifecycleManager:
         manage_lifecycle_backoff: Backoff,
         auth_params: dict[str, Any] | None = None,
         close_firstly: bool = True,
+        exception: Exception | None = None,
         **kwargs: Any,
     ) -> None:
         # from random import random
@@ -236,30 +260,38 @@ class LifecycleManager:
         try:
             if close_firstly:
                 self._state = _LifecycleStates.DISCONNECTING
-                await self._close()
+                await self._close(exception, exception)
                 self._state = _LifecycleStates.DISCONNECTED
             self._state = _LifecycleStates.CONNECTING
-            await self._connect(
-                manage_lifecycle_backoff=manage_lifecycle_backoff,
-                auth_params=auth_params,
-                **kwargs,
-            )
+            try:
+                await self._connect(
+                    manage_lifecycle_backoff=manage_lifecycle_backoff,
+                    auth_params=auth_params,
+                    **kwargs,
+                )
+            except RestartMapperError as e:
+                self._logger.exception("Connect failed with exception=%s", e)
+                raise MapperLifecycleError("NeedRestartMapper") from e
+            except MapperRestartCycleError:
+                raise
+
             await self._next_generation()
             self._state = _LifecycleStates.CONNECTED
             self.mapper._protocol_connected.set()
         except Exception as e:
             try:
                 self._state = _LifecycleStates.DISCONNECTING
-                await self._close()
+                await self._close(exception, exception)
             finally:
                 self._state = _LifecycleStates.DISCONNECTED
 
-            self._logger.warning("connection failed", exc_info=True)
-            raise
+            self._logger.exception("Connection failed", exc_info=True)
+            # raise MapperRestartCycleError("Unknown connection error") from e
+            raise e
         except asyncio.CancelledError:
             try:
                 self._state = _LifecycleStates.DISCONNECTING
-                await self._close()
+                await self._close(exception, exception)
             finally:
                 self._state = _LifecycleStates.DISCONNECTED
             self._logger.warning("connection cancelled")
@@ -318,12 +350,13 @@ class LifecycleManager:
                 f"Exception occurred while observing tasks: {[first_observe_coroutine, *other_coroutines]}",
                 exc_info=True,
             )
-            raise MapperLifecycleError("observe task failed") from original_error
+            raise MapperRestartCycleError("observe task failed") from original_error
 
     async def _authorize(
         self,
         auth_params: dict[str, Any] | None,
         manage_lifecycle_backoff: Backoff,
+        exception: Exception | None = None,
         **kwargs: Any,
     ) -> None:
         """Authorize.
@@ -335,37 +368,81 @@ class LifecycleManager:
         :param kwargs: Keyword arguments forwarded to the wrapped callable.
         :type kwargs: Any
         """
-        need_login = not self.mapper.token
+        need_login = self._need_login
 
         conn_coroutine: Coroutine[Any, Any, None]
         if need_login:
-            conn_coroutine = self._establish_connection(
-                auth_params=auth_params,
-                manage_lifecycle_backoff=manage_lifecycle_backoff,
-                close_firstly=True,
-                **kwargs,
-            )
-        else:
-            conn_coroutine = wait_for(
-                self._establish_connection(
+            try:
+                conn_coroutine = self._establish_connection(
                     auth_params=auth_params,
                     manage_lifecycle_backoff=manage_lifecycle_backoff,
                     close_firstly=True,
+                    exception=exception,
                     **kwargs,
-                ),
-                timeout=self.connect_timeout,
-            )
+                )
+                self._need_login = True
+            except RestartMapperError as e:
+                raise MapperLifecycleError() from e
+            # except Exception as e:
+            #     self._logger.exception(
+            #         "got an unexpected exception while authorizing=%s",
+            #         e,
+            #         exc_info=True,
+            #         stack_info=True,
+            #     )
+            #     raise MapperLifecycleError("Unexpected error") from e
+        else:
+            try:
+                conn_coroutine = wait_for(
+                    self._establish_connection(
+                        auth_params=auth_params,
+                        manage_lifecycle_backoff=manage_lifecycle_backoff,
+                        close_firstly=True,
+                        exception=exception,
+                        **kwargs,
+                    ),
+                    timeout=self.connect_timeout,
+                )
+            except TimeoutError as e:
+                self._logger.warning(
+                    "Timeout to establish connection expired.",
+                )
+                raise RestartMapperError(
+                    "Timeout to establish connection expired."
+                ) from e
+            except RestartMapperError as e:
+                raise MapperLifecycleError() from e
+            # except Exception as e:
+            #     self._logger.exception(
+            #         "got an unexpected exception while authorizing=%s",
+            #         e,
+            #         exc_info=True,
+            #         stack_info=True,
+            #     )
+            #     raise MapperLifecycleError("Unexpected error") from e
 
         self.mapper._authorized.clear()
-        await self._observe_task(
-            observer_coroutine=self._observe_auth_error(),
-            first_observe_coroutine=conn_coroutine,
-        )
+        try:
+            await self._observe_task(
+                observer_coroutine=self._observe_auth_error(),
+                first_observe_coroutine=conn_coroutine,
+            )
+        except MapperRestartCycleError as e:
+            raise
+        except Exception as e:
+            self._logger.exception(
+                "got an unexpected exception while observe task=%s",
+                e,
+                exc_info=True,
+                stack_info=True,
+            )
+            raise
 
     async def _authorize_cycle(
         self,
         auth_params: dict[str, Any] | None,
         manage_lifecycle_backoff: Backoff,
+        exception: Exception | None = None,
         **kwargs: Any,
     ) -> None:
         """Authorize cycle.
@@ -384,6 +461,7 @@ class LifecycleManager:
                     await self._authorize(
                         auth_params=auth_params,
                         manage_lifecycle_backoff=manage_lifecycle_backoff,
+                        exception=exception,
                         **kwargs,
                     )
                     manage_lifecycle_backoff.reset()
@@ -394,11 +472,15 @@ class LifecycleManager:
                     )
                     await manage_lifecycle_backoff.asleep()
                     continue
-                except Exception as e:
-                    self._logger.exception("establish connection failed")
-                    await self._close()
+                except MapperRestartCycleError as e:
+                    await self._close(exception, exception)
                     await manage_lifecycle_backoff.asleep()
                     continue
+                except Exception as e:
+                    self._logger.exception("establish connection failed")
+                    await self._close(exception, exception)
+                    # await manage_lifecycle_backoff.asleep()
+                    raise
             except BackoffError:
                 self._logger.warning(
                     "backoff timeout while waiting for connection after error"
@@ -428,18 +510,19 @@ class LifecycleManager:
                 )
             current_error_state = await self._lifecycle_queue.get()
             self._logger.warning("catch protocol failed")
-            self._logger.error(f"""
-
-error: {current_error_state.exception}
-source: {current_error_state.source},
-gen: {current_error_state.generation},
-""")
+            msg = (
+                f"error: {current_error_state.exception},"
+                f"source: {current_error_state.source},"
+                f"gen: {current_error_state.generation},"
+            )
+            self._logger.error(msg)
             if current_error_state.generation != await self.get_generation():
                 continue
 
             await self._authorize_cycle(
                 auth_params=auth_params,
                 manage_lifecycle_backoff=manage_lifecycle_backoff,
+                exception=current_error_state.exception,
                 **kwargs,
             )
 

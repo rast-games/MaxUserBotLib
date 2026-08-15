@@ -6,6 +6,7 @@ from asyncio import Event, Future
 from collections.abc import Iterable, Callable, Awaitable
 from typing import Any, cast
 
+from build.lib.pyromax.exceptions import RoutingError
 from ..bases import StreamMaxProtocol, BaseMaxProtocolMethod, Response, Request
 from ...encoding import BaseEncoding
 from ...routing.event_router import EventRouter
@@ -14,6 +15,8 @@ from ...exceptions import (
     SendingProtocolError,
     ConnectProtocolError,
     BaseTransportError,
+    GetUpdatesProtocolError,
+    BaseProtocolError,
 )
 
 from pydantic import BaseModel
@@ -200,25 +203,26 @@ class EnvelopeProtocol(
         """
         async with self._network_lock:
             self._current_generation = current_gen
-            self.__logger.info(f"generation updated: {current_gen}")
+            self.__logger.info(f"Protocol generation updated, current: {current_gen}")
 
-            reader_task = self._reader_task
-            self._reader_task = None
-            if reader_task:
-                self.__logger.info("find another reader, closing it...")
-                try:
-                    reader_task.cancel()
-                    await asyncio.wait_for(reader_task, timeout=5)
-                except asyncio.CancelledError:
-                    self.__logger.debug("reader already cancelled in connect")
-                except asyncio.TimeoutError:
-                    self.__logger.warning("reader task did not stop(in connect)")
-                except Exception as e:
-                    self.__logger.error("reader task ended with exception=%s", e)
-                    await self._close()
-                    raise ConnectProtocolError(
-                        "reader task ended with exception"
-                    ) from e
+            await self._close()
+            # reader_task = self._reader_task
+            # self._reader_task = None
+            # if reader_task:
+            #     self.__logger.info("Find another reader, closing it...")
+            #     try:
+            #         reader_task.cancel()
+            #         await asyncio.wait_for(reader_task, timeout=5)
+            #     except asyncio.CancelledError:
+            #         self.__logger.debug("reader already cancelled in another place")
+            #     except asyncio.TimeoutError:
+            #         self.__logger.warning("reader task got stop stop timeout(in connect)")
+            #     except Exception as e:
+            #         self.__logger.error("reader task ended with exception=%s", e)
+            #         await self._close()
+            #         raise ConnectProtocolError(
+            #             "reader task ended with exception"
+            #         ) from e
 
             try:
                 await asyncio.wait_for(self.__transport.connect(), timeout=30)
@@ -256,14 +260,18 @@ class EnvelopeProtocol(
 
                 reader_task.add_done_callback(reader_done_callback_wrapper)
                 self._reader_task = reader_task
-                self.__logger.info("background tasks started")
+                self.__logger.info("Background tasks started")
 
             except Exception as e:
                 self.__logger.error("start background tasks error")
                 await self._close()
                 raise ConnectProtocolError("start background tasks error") from e
 
-    async def _close(self) -> None:
+    async def _close(
+        self,
+        pending_requests_exc: Exception | None = None,
+        update_calls_exc: Exception | None = None,
+    ) -> None:
         """Close."""
         self.__logger.info("closing protocol")
         reader_task = self._reader_task
@@ -273,9 +281,9 @@ class EnvelopeProtocol(
                 reader_task.cancel()
                 await asyncio.wait_for(reader_task, timeout=5)
             except asyncio.CancelledError:
-                self.__logger.info("reader already cancelled(in close)")
+                self.__logger.debug("reader already cancelled(in close)")
             except asyncio.TimeoutError:
-                self.__logger.warning("reader task did not stop")
+                self.__logger.warning("reader task got stop stop timeout(in close)")
             except Exception as e:
                 self.__logger.error("reader ended with exception: %s", e, exc_info=True)
         # event_router = await self.get_event_router()
@@ -283,7 +291,7 @@ class EnvelopeProtocol(
         if event_router:
             # await self.set_event_router(None)
             self.event_router = None
-            await event_router.cancel_all()
+            await event_router.cancel_all(pending_requests_exc, update_calls_exc)
 
         self.__logger.info("terminated reader task")
         try:
@@ -295,10 +303,14 @@ class EnvelopeProtocol(
         except Exception:
             self.__logger.warning("transport close failed")
 
-    async def close(self) -> None:
+    async def close(
+        self,
+        pending_requests_exc: Exception | None = None,
+        update_calls_exc: Exception | None = None,
+    ) -> None:
         """Close."""
         async with self._network_lock:
-            await self._close()
+            await self._close(pending_requests_exc, update_calls_exc)
 
     async def send(
         self, method: BaseMaxProtocolMethod[Envelope], data: Any | None = None
@@ -306,8 +318,8 @@ class EnvelopeProtocol(
         """send a envelope
 
         :raises SendingProtocolError: If the operation fails.
-        :raises AlreadyCancelledError: If the operation fails.
-        :raises RuntimeError: If the operation fails.
+        # :raises AlreadyCancelledError: If the operation fails.
+        :raises SendingProtocolError: If you try to send something before protocol init(event router is None).
 
         :param method: BaseMaxProtocolMethod[Envelope] instance to process.
         :type method: BaseMaxProtocolMethod[Envelope]
@@ -334,10 +346,10 @@ class EnvelopeProtocol(
         # event_router = await self.get_event_router()
         event_router = self.event_router
         if not event_router:
-            raise RuntimeError("no event router while send")
+            raise SendingProtocolError("no event router while send")
         gen = self._current_generation
         if gen is None:
-            raise RuntimeError("protocol not connected")
+            raise SendingProtocolError("protocol not connected")
         try:
             record = event_router.create_record(request, gen=gen)
         except AlreadyCancelledError:
@@ -383,11 +395,17 @@ class EnvelopeProtocol(
         try:
             exc = task.exception()
         except asyncio.CancelledError:
-            self.__logger.warning("reader task cancelled outer")
+            self.__logger.warning("Reader task cancelled outer")
             return
-        except Exception:
-            self.__logger.exception("failed to inspect reader task")
+        except Exception as e:
+            self.__logger.exception(
+                "Failed to inspect reader task, get exception operation ended with unknown exception=%s",
+                e,
+                exc_info=e,
+            )
             return
+        except BaseException:
+            raise
 
         if exc is not None:
             try:
@@ -435,7 +453,7 @@ class EnvelopeProtocol(
     async def get_updates(self) -> Iterable[Envelope]:
         """get updates from event router
 
-        :raises RuntimeError: If the operation fails.
+        :raises GetUpdatesProtocolError: If the operation fails.
 
         :returns: The envelope populated with the request opcode and payload.
         :rtype: Iterable[Envelope]
@@ -444,11 +462,15 @@ class EnvelopeProtocol(
             # event_router = await self.get_event_router()
             event_router = self.event_router
             if event_router is None:
-                raise RuntimeError("no event router while receive")
+                raise GetUpdatesProtocolError("no event router while receive")
             updates = await event_router.pop_all_updates()
-        except AlreadyCancelledError:
-            self.__logger.error("get_all_updates cancelled")
-            raise RuntimeError("get_all_updates cancelled while getting updates")
+        except (AlreadyCancelledError, RoutingError) as e:
+            self.__logger.error(
+                "get_all_updates end with exception=%s", e, exc_info=True
+            )
+            raise GetUpdatesProtocolError(
+                "get_all_updates end with exception while getting updates"
+            )
         return updates
 
     async def from_request(self, request_data: dict[str, Any]) -> Envelope:
@@ -458,14 +480,14 @@ class EnvelopeProtocol(
         :type request_data: dict[str, Any]
         :returns: The envelope populated with the request opcode and payload.
         :rtype: Envelope
-        :raises RuntimeError: If no event router while parse request.
+        :raises BaseProtocolError: If no event router while parse request.
         """
         envelope_data = dict(request_data)
         if "seq" not in envelope_data:
             # event_router = await self.get_event_router()
             event_router = self.event_router
             if not event_router:
-                raise RuntimeError("no event router while parse request")
+                raise BaseProtocolError("no event router while parse request")
             envelope_data["seq"] = await event_router.correlator.next_counter()
         envelope_data.setdefault("payload", None)
         return Envelope(**envelope_data)

@@ -197,11 +197,15 @@ class ConstructorMixin(
         user_agent_model = self.DEVICE_TYPE_TO_USERAGENT_MODEL[device_type]
         user_agent = user_agent_model.get_random_user_agent(**user_agent_params)
         self.user_agent = user_agent
+        need_login: bool = False
         if token is None:
             token = await read_token(name_of_token=self.TOKEN_NAME)
 
         if token is not None:
             await write_token(token, self.TOKEN_NAME)
+        else:
+            need_login = True
+
         self.token = token
         self.password = password
         self.phone = phone
@@ -213,7 +217,9 @@ class ConstructorMixin(
         from ..Mapper import Mapper
 
         self._lifecycle_manager = LifecycleManager(
-            mapper=cast(Mapper, self), connect_timeout=connection_timeout
+            mapper=cast(Mapper, self),
+            connect_timeout=connection_timeout,
+            need_login=need_login,
         )
 
         if self._lifecycle_manager is None:

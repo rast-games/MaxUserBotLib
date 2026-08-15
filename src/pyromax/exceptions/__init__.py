@@ -33,16 +33,20 @@ from .MapperErrors import (
     MapperNotImplementedMethodError,
     MapperTransportNotSupportedForMethodError,
     ReactionMapperError,
+    MapperRestartCycleError,
 )
-from .RoutingErrors import AlreadyCancelledError, RoutingError
+from .RoutingErrors import AlreadyCancelledError, RoutingError, RequestWasCancelledError
 from .ProtocolErrors import (
     BaseProtocolError,
     ReceiveProtocolError,
     SendingProtocolError,
     ConnectProtocolError,
+    CloseProtocolError,
+    GetUpdatesProtocolError,
 )
 from .fsm import DataNotDictLikeError
 from .ParseError import ParseMaxApiError
+from .MethodError import BaseMaxApiMethodError
 
 __all__ = [
     "BaseMaxApiException",
@@ -57,6 +61,7 @@ __all__ = [
     "SendingTransportError",
     "ConnectTransportError",
     "ConnectionTransportError",
+    "RequestWasCancelledError",
     # "SocketTransportError",
     # "SocketTransportConnectionError",
     # "SocketTransportSendError",
@@ -72,14 +77,19 @@ __all__ = [
     "AlreadyCancelledError",
     "ReactionMapperError",
     "RoutingError",
+    "RequestWasCancelledError",
     "BaseProtocolError",
     "ReceiveProtocolError",
     "SendingProtocolError",
     "ConnectProtocolError",
+    "CloseProtocolError",
+    "GetUpdatesProtocolError",
     "DataNotDictLikeError",
     "MapperNotImplementedError",
     "MapperNotImplementedMethodError",
     "MapperTransportNotSupportedForMethodError",
     "ParseMaxApiError",
     "ReactionError",
+    "BaseMaxApiMethodError",
+    "MapperRestartCycleError",
 ]

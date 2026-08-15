@@ -7,3 +7,7 @@ class RoutingError(BaseMaxApiException):
 
 class AlreadyCancelledError(RoutingError):
     """Raised when try a create record after cancelling."""
+
+
+class RequestWasCancelledError(RoutingError):
+    """Exception for default cancelling request."""

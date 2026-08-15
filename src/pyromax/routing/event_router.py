@@ -2,6 +2,7 @@ from __future__ import annotations
 import asyncio
 from asyncio import CancelledError, Event, Task, Future
 from collections.abc import Iterable
+from contextlib import suppress
 from typing import (
     Any,
     Protocol,
@@ -14,7 +15,7 @@ from typing import (
 )
 
 from ..utils import Correlator
-from ..exceptions import AlreadyCancelledError
+from ..exceptions import AlreadyCancelledError, RoutingError, RequestWasCancelledError
 
 if TYPE_CHECKING:
     from ..protocol import Request, Response
@@ -117,28 +118,44 @@ class EventRouter(Generic[request, response]):
         """
         self.__pending.pop((req, gen), None)
 
-    async def cancel_all(self) -> None:
+    async def cancel_all(
+        self,
+        pending_exc: Exception | None = None,
+        update_calls_exc: Exception | None = None,
+    ) -> None:
         """Cancel all."""
         self.__cancelled = True
         pending_values: Iterable[Future[Any]] = self.__pending.values()
-        for future_like in tuple(pending_values):
-            future_like.cancel()
-        try:
+        if pending_exc is None:
+            for future_like in tuple(pending_values):
+                future_like.set_exception(
+                    RequestWasCancelledError("Cancelled from cancel_all")
+                )
+        else:
+            for future_like in tuple(pending_values):
+                future_like.set_exception(pending_exc)
+
+        with suppress(CancelledError, Exception):
             await asyncio.gather(
                 *tuple(self.__pending.values()), return_exceptions=True
             )
-        except CancelledError:
-            pass
+
         self.__pending.clear()
 
-        for pop_updates_task in self.__pop_updates_calls:
-            pop_updates_task.cancel()
-        try:
+        if update_calls_exc is None:
+            for pop_updates_task in self.__pop_updates_calls:
+                pop_updates_task.set_exception(
+                    RequestWasCancelledError("Cancelled from cancel_all")
+                )
+        else:
+            for pop_updates_task in self.__pop_updates_calls:
+                pop_updates_task.set_exception(update_calls_exc)
+
+        with suppress(CancelledError, Exception):
             await asyncio.gather(
                 *tuple(self.__pop_updates_calls), return_exceptions=True
             )
-        except CancelledError:
-            pass
+
         self.__pop_updates_calls.clear()
 
     def this_response_is_expecting(
@@ -177,7 +194,8 @@ class EventRouter(Generic[request, response]):
     async def pop_all_updates(self) -> list[response]:
         """Get updates from event router
 
-        :raises AlreadyCancelledError: If the operation fails.
+        :raises AlreadyCancelledError: If the pop_all_updates was canceled while wait it.
+        :raises RoutingError: if the pop_all_updates was canceled while wait it, but EventRouter not marked as canceled.
 
         :returns: The resulting collection.
         :rtype: list[response]
@@ -187,7 +205,12 @@ class EventRouter(Generic[request, response]):
         try:
             return await pop_updates_task
         except asyncio.CancelledError:
-            raise AlreadyCancelledError("pop_all_updates cancelled")
+            if self.__cancelled:
+                raise AlreadyCancelledError("pop_all_updates cancelled")
+            else:
+                raise RoutingError(
+                    "pop_all_updates cancelled, but EventRouter not marked as cancelled"
+                )
         finally:
             if pop_updates_task in self.__pop_updates_calls:
                 self.__pop_updates_calls.remove(pop_updates_task)

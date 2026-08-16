@@ -121,7 +121,7 @@ class EventRouter(Generic[request, response]):
     async def cancel_all(
         self,
         pending_exc: Exception | None = None,
-        update_calls_exc: Exception | None = None,
+        # update_calls_exc: Exception | None = None,
     ) -> None:
         """Cancel all."""
         self.__cancelled = True
@@ -137,25 +137,23 @@ class EventRouter(Generic[request, response]):
                 for future_like in tuple(pending_values):
                     future_like.set_exception(pending_exc)
 
-        with suppress(CancelledError, asyncio.InvalidStateError, Exception):
+        with suppress(asyncio.CancelledError, asyncio.InvalidStateError, Exception):
             await asyncio.gather(
                 *tuple(self.__pending.values()), return_exceptions=True
             )
 
         self.__pending.clear()
 
-        if update_calls_exc is None:
-            for pop_updates_task in self.__pop_updates_calls:
-                with suppress(asyncio.InvalidStateError):
-                    pop_updates_task.set_exception(
-                        RequestWasCancelledError("Cancelled from cancel_all")
-                    )
-        else:
-            for pop_updates_task in self.__pop_updates_calls:
-                with suppress(asyncio.InvalidStateError):
-                    pop_updates_task.set_exception(update_calls_exc)
+        # if update_calls_exc is None:
+        for pop_updates_task in self.__pop_updates_calls:
+            with suppress(asyncio.CancelledError, asyncio.InvalidStateError):
+                pop_updates_task.cancel()
+        # else:
+        #     for pop_updates_task in self.__pop_updates_calls:
+        #         with suppress(asyncio.InvalidStateError):
+        #             pop_updates_task.set_exception(update_calls_exc)
 
-        with suppress(CancelledError, Exception):
+        with suppress(asyncio.CancelledError, Exception):
             await asyncio.gather(
                 *tuple(self.__pop_updates_calls), return_exceptions=True
             )

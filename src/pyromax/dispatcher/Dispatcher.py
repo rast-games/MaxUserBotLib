@@ -1,5 +1,8 @@
 from __future__ import annotations
+
+import asyncio
 import logging
+from contextlib import suppress
 from typing import cast, AsyncGenerator, Any, TYPE_CHECKING, TypeVar
 
 from .Router import Router
@@ -46,6 +49,8 @@ class Dispatcher(Router):
         events_isolation: BaseEventIsolation | None = None,
         disable_fsm: bool = False,
         name: str | None = None,
+        concurrent_task_dispatch: bool = False,
+        concurrent_task_count: int = 100,
         **kwargs: Any,
     ) -> None:
         """Initialize the dispatcher.
@@ -64,6 +69,9 @@ class Dispatcher(Router):
         :type kwargs: Any
         """
         super().__init__(name=name)
+
+        self._concurrent_task_dispatch = concurrent_task_dispatch
+        self._concurrent_task_count = concurrent_task_count
 
         self.update = UpdateMaxEventObserver(
             router=self, event_name="UPDATE", type_of_update=MaxObject
@@ -108,12 +116,47 @@ class Dispatcher(Router):
 
         self.__logger = logging.getLogger("MaxDispatcher")
 
+    def _process_update_with_semaphore(
+        self,
+        update: Update,
+        data: dict[Any, Any],
+        semaphore: asyncio.Semaphore,
+        semaphore_calls: list[asyncio.Task[None]],
+    ) -> None:
+        async def semaphore_wrapper(
+            update: Update,
+            data: dict[Any, Any],
+            semaphore: asyncio.Semaphore,
+        ) -> None:
+            async with semaphore:
+                await self._process_update(update, data)
+
+        semaphore_calls.append(
+            asyncio.create_task(semaphore_wrapper(update, data, semaphore))
+        )
+
+    async def _process_update(self, update: Update, data: dict[Any, Any]) -> None:
+        update_observer = self.update
+
+        response = await update_observer.wrap_outer_middleware(
+            update_observer.update, update, data=data
+        )
+
+        handled = response is not UNHANDLED and response is not UNKNOWN_UPDATE
+        self.__logger.debug(
+            f'update %s was{"" if handled else "n`t"} handled: %s',
+            update,
+            handled,
+        )
+
     async def start_polling(self, max_api: MaxApi) -> None:
         """Start reading updates and dispatch them to handlers.
 
         :param max_api: Initialized MaxApi instance.
         :type max_api: MaxApi
         """
+        semaphore = asyncio.Semaphore(self._concurrent_task_count)
+        semaphore_calls: list[asyncio.Task[None]] = []
 
         context = {"max_api": max_api}
 
@@ -133,20 +176,19 @@ class Dispatcher(Router):
 
                 data.update(max_api.workflow_data)
 
-                update_observer = self.update
-
                 data[DataDict] = data
-
-                response = await update_observer.wrap_outer_middleware(
-                    update_observer.update, update, data=data
-                )
-
-                handled = response is not UNHANDLED and response is not UNKNOWN_UPDATE
-
-                self.__logger.debug(
-                    f'update %s was{"" if handled else "n`t"} handled: %s',
-                    update,
-                    handled,
-                )
+                if self._concurrent_task_dispatch:
+                    self._process_update_with_semaphore(
+                        update,
+                        data,
+                        semaphore,
+                        semaphore_calls,
+                    )
+                else:
+                    await self._process_update(update, data)
         finally:
+            for task in semaphore_calls:
+                with suppress(asyncio.CancelledError):
+                    task.cancel()
+                    await task
             await self.fsm.close()

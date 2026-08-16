@@ -270,7 +270,6 @@ class EnvelopeProtocol(
     async def _close(
         self,
         pending_requests_exc: Exception | None = None,
-        update_calls_exc: Exception | None = None,
     ) -> None:
         """Close."""
         self.__logger.info("closing protocol")
@@ -291,7 +290,7 @@ class EnvelopeProtocol(
         if event_router:
             # await self.set_event_router(None)
             self.event_router = None
-            await event_router.cancel_all(pending_requests_exc, update_calls_exc)
+            await event_router.cancel_all(pending_requests_exc)
 
         self.__logger.info("terminated reader task")
         try:
@@ -306,11 +305,10 @@ class EnvelopeProtocol(
     async def close(
         self,
         pending_requests_exc: Exception | None = None,
-        update_calls_exc: Exception | None = None,
     ) -> None:
         """Close."""
         async with self._network_lock:
-            await self._close(pending_requests_exc, update_calls_exc)
+            await self._close(pending_requests_exc)
 
     async def send(
         self, method: BaseMaxProtocolMethod[Envelope], data: Any | None = None

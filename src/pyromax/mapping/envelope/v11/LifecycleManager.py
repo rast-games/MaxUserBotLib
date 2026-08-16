@@ -155,11 +155,10 @@ class LifecycleManager:
     async def _close(
         self,
         pending_requests_exc: Exception | None = None,
-        update_calls_exc: Exception | None = None,
     ) -> None:
         """Close."""
         try:
-            await self.mapper.close(pending_requests_exc, update_calls_exc)
+            await self.mapper.close(pending_requests_exc)
         except Exception:
             self._logger.exception("close failed")
 
@@ -260,7 +259,7 @@ class LifecycleManager:
         try:
             if close_firstly:
                 self._state = _LifecycleStates.DISCONNECTING
-                await self._close(exception, exception)
+                await self._close(exception)
                 self._state = _LifecycleStates.DISCONNECTED
             self._state = _LifecycleStates.CONNECTING
             try:
@@ -281,7 +280,7 @@ class LifecycleManager:
         except Exception as e:
             try:
                 self._state = _LifecycleStates.DISCONNECTING
-                await self._close(exception, exception)
+                await self._close(exception)
             finally:
                 self._state = _LifecycleStates.DISCONNECTED
 
@@ -291,7 +290,7 @@ class LifecycleManager:
         except asyncio.CancelledError:
             try:
                 self._state = _LifecycleStates.DISCONNECTING
-                await self._close(exception, exception)
+                await self._close(exception)
             finally:
                 self._state = _LifecycleStates.DISCONNECTED
             self._logger.warning("connection cancelled")
@@ -473,12 +472,12 @@ class LifecycleManager:
                     await manage_lifecycle_backoff.asleep()
                     continue
                 except MapperRestartCycleError as e:
-                    await self._close(exception, exception)
+                    await self._close(exception)
                     await manage_lifecycle_backoff.asleep()
                     continue
                 except Exception as e:
                     self._logger.exception("establish connection failed")
-                    await self._close(exception, exception)
+                    await self._close(exception)
                     # await manage_lifecycle_backoff.asleep()
                     raise
             except BackoffError:

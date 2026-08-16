@@ -71,7 +71,6 @@ class TransportMixin(MixinProtocol):
     async def close(
         self,
         pending_requests_exc: Exception | None = None,
-        update_calls_exc: Exception | None = None,
     ) -> None:
         """Close."""
         if self._telemetry is not None:
@@ -81,7 +80,6 @@ class TransportMixin(MixinProtocol):
         self._authorized.clear()
         await self.protocol.close(
             pending_requests_exc,
-            update_calls_exc,
         )
         keepalive_task: asyncio.Task[Any] | None = self._keepalive_task
         self._keepalive_task = None

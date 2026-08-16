@@ -128,7 +128,8 @@ class Handler(Observer, Generic[ResolvedUpdate]):
 
     async def _propagate_update(
         self, update: ResolvedUpdate, data: dict[Any, Any]
-    ) -> bool:
+    ) -> tuple[bool, dict[Any, Any]]:
+        data_copy = data.copy()
         """Propagate update.
 
         :param update: Incoming update to process.
@@ -139,18 +140,20 @@ class Handler(Observer, Generic[ResolvedUpdate]):
         :rtype: bool
         """
         if self.pattern is None and not self.filters:
-            return True
+            return True, data_copy
         for f in self.filters:
-            check = await f(update, data=data)
+            check = await f(update, data=data.copy())
             if isinstance(check, dict):
-                data.update(check)
+                data_copy.update(check)
             if not check:
-                return False
+                return False, data_copy
         if self.pattern is not None:
-            return bool(self.pattern(update))
-        return True
+            return bool(self.pattern(update)), data_copy
+        return True, data_copy
 
-    async def check(self, update: ResolvedUpdate, data: dict[Any, Any]) -> bool:
+    async def check(
+        self, update: ResolvedUpdate, data: dict[Any, Any]
+    ) -> tuple[bool, dict[Any, Any]]:
         """Check.
 
         :param update: Incoming update to process.
@@ -177,15 +180,15 @@ class Handler(Observer, Generic[ResolvedUpdate]):
         """
         if data is None:
             raise ValueError("data cannot be None")
-        check = await self._propagate_update(update, data)
-        if check:
-            args = inspect_and_form(
-                self.function,
-                data,
-                strict=not self._soft_propagate,
-            )
-            return await self.function(**args)
-        return UNHANDLED
+        # check = await self._propagate_update(update, data)
+        # if check:
+        args = inspect_and_form(
+            self.function,
+            data,
+            strict=not self._soft_propagate,
+        )
+        return await self.function(**args)
+        # return UNHANDLED
 
     def __repr__(self) -> str:
         """Return the developer representation of the handler.

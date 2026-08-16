@@ -170,15 +170,16 @@ class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
         if data is None:
             raise ValueError("data cannot be None")
         for handler in self.handlers:
-            if await handler.check(update, data=data):
-                data.update({Handler: handler})
+            result, data_updated = await handler.check(update, data=data)
+            if result:
+                data_updated.update({Handler: handler})
 
                 try:
                     wrapped_inner = MiddlewareManager.wrap_middlewares(
                         self._resolve_middlewares(), handler.update
                     )
 
-                    return await wrapped_inner(update, data)
+                    return await wrapped_inner(update, data_updated)
                 except SkipHandler:
                     continue
         return UNHANDLED

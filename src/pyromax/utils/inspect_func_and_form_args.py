@@ -9,7 +9,7 @@ T = TypeVar("T")
 def inspect_and_form(
     func: Callable[..., Any],
     data: dict[type[T], T],
-    raise_if_not_annotated: bool = False,
+    strict: bool = False,
 ) -> dict[str, Any]:
     """Inspect and form.
 
@@ -46,8 +46,10 @@ def inspect_and_form(
                 }
             )
         else:
-            if raise_if_not_annotated and annotation == inspect.Parameter.empty:
+            if strict and annotation == inspect.Parameter.empty:
                 raise AnnotationError(""" Need annotate all params""")
+            if strict:
+                raise AnnotationError("""Annotation object not exits in workflow""")
             args.update({name: None})
 
     return args

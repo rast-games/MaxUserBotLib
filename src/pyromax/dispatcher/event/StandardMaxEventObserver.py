@@ -64,6 +64,7 @@ class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
         callback: Callable[..., Awaitable[Any]],
         *filters: Filter | MagicFilter,
         pattern: Callable[[ResolvedUpdate], Any] | None = None,
+        soft_propagate: bool = False,
     ) -> None:
         """Register a new handler with this observer.
 
@@ -79,6 +80,7 @@ class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
                 function=callback,
                 filters=[FilterObject(filter_) for filter_ in filters],
                 pattern=pattern,
+                soft_propagate=soft_propagate,
             )
         )
 
@@ -201,8 +203,11 @@ class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
             self.include_event(event)
 
     def __call__(
-        self, *filters: Any, pattern: Callable[[ResolvedUpdate], Any] | None = None
-    ) -> Callable[[Callable[..., Any]], None]:
+        self,
+        *filters: Any,
+        pattern: Callable[[ResolvedUpdate], Any] | None = None,
+        soft_propagate: bool = False,
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a handler decorator for this observer.
 
         :param filters: The filters value.
@@ -213,12 +218,18 @@ class StandardMaxEventObserver(Observer, Generic[ResolvedUpdate]):
         :rtype: Callable[[Callable[..., Any]], None]
         """
 
-        def decorator(func: Callable[..., Any]) -> None:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             """Decorator.
 
             :param func: Callable to invoke.
             :type func: Callable[..., Any]
             """
-            self.register(func, *filters, pattern=pattern)
+            self.register(
+                func,
+                *filters,
+                pattern=pattern,
+                soft_propagate=soft_propagate,
+            )
+            return func
 
         return decorator

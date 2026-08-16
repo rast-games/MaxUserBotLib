@@ -20,8 +20,9 @@ class MessageEventObserver(StandardMaxEventObserver[Message]):
         self,
         *filters: Filter,
         pattern: Callable[[Message], bool] | None = None,
+        soft_propagate: bool = False,
         from_me: bool = False,
-    ) -> Callable[[Callable[..., Any]], None]:
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a message handler decorator.
 
         :param filters: Additional filters applied to the handler.
@@ -39,13 +40,19 @@ class MessageEventObserver(StandardMaxEventObserver[Message]):
         if not from_me:
             filters_list.append(~FromMeFilter())
 
-        def decorator(func: Callable[..., Any]) -> None:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             """Decorator.
 
             :param func: Callable to invoke.
             :type func: Callable[..., Any]
             """
-            self.register(func, *filters_list, pattern=pattern)
+            self.register(
+                func,
+                *filters_list,
+                pattern=pattern,
+                soft_propagate=soft_propagate,
+            )
+            return func
 
         return decorator
 

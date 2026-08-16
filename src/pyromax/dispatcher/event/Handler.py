@@ -31,8 +31,7 @@ class FilterObject(Generic[f]):
     magic: Optional[OriginalMagicFilter | MagicFilter] = None
 
     def __post_init__(self) -> None:
-        """Post init.
-        """
+        """Post init."""
         self.resolve = self._resolve
         self.awaitable = inspect.isawaitable(
             self.filter
@@ -110,6 +109,7 @@ class Handler(Observer, Generic[ResolvedUpdate]):
         function: Callable[..., Any],
         filters: list[FilterObject[Any]],
         pattern: Callable[[ResolvedUpdate], Any] | None = None,
+        soft_propagate: bool = False,
     ):
         """Create a handler wrapper.
 
@@ -124,6 +124,7 @@ class Handler(Observer, Generic[ResolvedUpdate]):
         self.filters = filters
         self.pattern = pattern
         self.function = function
+        self._soft_propagate = soft_propagate
 
     async def _propagate_update(
         self, update: ResolvedUpdate, data: dict[Any, Any]
@@ -178,7 +179,11 @@ class Handler(Observer, Generic[ResolvedUpdate]):
             raise ValueError("data cannot be None")
         check = await self._propagate_update(update, data)
         if check:
-            args = inspect_and_form(self.function, data)
+            args = inspect_and_form(
+                self.function,
+                data,
+                strict=not self._soft_propagate,
+            )
             return await self.function(**args)
         return UNHANDLED
 

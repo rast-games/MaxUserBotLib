@@ -157,7 +157,7 @@ class Dispatcher(Router):
         :type max_api: MaxApi
         """
         semaphore = asyncio.Semaphore(self._concurrent_task_count)
-        semaphore_calls: set[asyncio.Task[None]] = {}
+        semaphore_calls: set[asyncio.Task[None]] = set()
 
         context = {"max_api": max_api}
 

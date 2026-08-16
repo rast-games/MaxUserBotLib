@@ -142,7 +142,7 @@ class Handler(Observer, Generic[ResolvedUpdate]):
         if self.pattern is None and not self.filters:
             return True, data_copy
         for f in self.filters:
-            check = await f(update, data=data.copy())
+            check = await f(update, data=data_copy)
             if isinstance(check, dict):
                 data_copy.update(check)
             if not check:

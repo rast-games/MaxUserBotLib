@@ -138,7 +138,7 @@ async def echo(message: Message):
 
 async def main():
     # Создаем экземпляр API
-    api = await MaxApi()
+    max_api = await MaxApi()
     # Запускаем бота с диспетчером
     await dp.start_polling(max_api=max_api)
 

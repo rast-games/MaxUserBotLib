@@ -32,6 +32,8 @@ class SendMessageMethod(BaseMethod):
         request.cmd = Cmd.REQUEST
         request.ver = VERSION
 
+        notify = self.args.get("notify")
+
         main_link = self.args.get("link")
         request.payload = SendMessageRequest(
             chat_id=self.args["chat_id"],
@@ -55,7 +57,7 @@ class SendMessageMethod(BaseMethod):
                     else None
                 ),
             ),
-            notify=self.args.get("notify") or True,
+            notify=notify if notify is not None else True,
         )
 
         request.payload.message.attaches = (

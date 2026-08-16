@@ -121,7 +121,7 @@ class Dispatcher(Router):
         update: Update,
         data: dict[Any, Any],
         semaphore: asyncio.Semaphore,
-        semaphore_calls: list[asyncio.Task[None]],
+        semaphore_calls: set[asyncio.Task[None]],
     ) -> None:
         async def semaphore_wrapper(
             update: Update,
@@ -131,9 +131,10 @@ class Dispatcher(Router):
             async with semaphore:
                 await self._process_update(update, data)
 
-        semaphore_calls.append(
-            asyncio.create_task(semaphore_wrapper(update, data, semaphore))
-        )
+        task = asyncio.create_task(semaphore_wrapper(update, data, semaphore))
+        semaphore_calls.add(task)
+
+        task.add_done_callback(semaphore_calls.discard)
 
     async def _process_update(self, update: Update, data: dict[Any, Any]) -> None:
         update_observer = self.update
@@ -156,7 +157,7 @@ class Dispatcher(Router):
         :type max_api: MaxApi
         """
         semaphore = asyncio.Semaphore(self._concurrent_task_count)
-        semaphore_calls: list[asyncio.Task[None]] = []
+        semaphore_calls: set[asyncio.Task[None]] = {}
 
         context = {"max_api": max_api}
 

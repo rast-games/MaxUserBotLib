@@ -4,7 +4,7 @@ from typing import Any, cast, Callable
 from functools import partial
 
 from ....protocol import Response
-from ....exceptions import MapperApiError
+from ....exceptions import MapperApiError, GetUpdatesProtocolError
 from .payloads.responses import ErrorMessageResponse
 from .translate.ToDTO import update_translate
 from ...registry import register_mapper
@@ -39,7 +39,7 @@ class Mapper(FullMixin):
                         raise RuntimeError("Lifecycle manager not set")
                     gen = await self._lifecycle_manager.get_generation()
                     updates = await self.protocol.get_updates()
-                except RuntimeError as e:
+                except GetUpdatesProtocolError as e:
                     if self._lifecycle_manager is None:
                         self._logger.warning(
                             "lifecycle manager not available, wait init"

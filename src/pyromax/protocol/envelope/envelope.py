@@ -6,7 +6,6 @@ from asyncio import Event, Future
 from collections.abc import Iterable, Callable, Awaitable
 from typing import Any, cast
 
-from build.lib.pyromax.exceptions import RoutingError
 from ..bases import StreamMaxProtocol, BaseMaxProtocolMethod, Response, Request
 from ...encoding import BaseEncoding
 from ...routing.event_router import EventRouter
@@ -17,6 +16,7 @@ from ...exceptions import (
     BaseTransportError,
     GetUpdatesProtocolError,
     BaseProtocolError,
+    RoutingError,
 )
 
 from pydantic import BaseModel
@@ -417,10 +417,10 @@ class EnvelopeProtocol(
                     "Exception occurred while sending reader exception into exceptions callback"
                 )
 
-            self.__logger.error(
-                "Reader unhandled exception",
-                exc_info=(type(exc), exc, exc.__traceback__),
-            )
+                self.__logger.error(
+                    "Reader unhandled exception",
+                    exc_info=(type(exc), exc, exc.__traceback__),
+                )
 
     async def receive_reader(self, gen: int) -> None:
         """Receive reader.

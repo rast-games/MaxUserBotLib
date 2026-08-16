@@ -173,6 +173,7 @@ class TransportMixin(MixinProtocol):
                 exc_info=True,
                 stack_info=True,
             )
+            raise
         # except asyncio.CancelledError:
         #     # if asyncio.current_task().cancelling():
         #     #     raise

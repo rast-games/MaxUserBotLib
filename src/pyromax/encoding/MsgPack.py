@@ -1,6 +1,8 @@
 import json
 import logging
 import struct
+from enum import Enum
+from io import BytesIO
 from typing import Any, cast
 
 import lz4.block  # type: ignore[import-untyped]
@@ -8,6 +10,8 @@ import msgpack  # type: ignore[import-untyped]
 
 from .base import DictAndBytesEncoding
 from .registry import register_encoding
+
+import zstandard
 
 
 @register_encoding("MsgPackDictEncoding")
@@ -18,7 +22,11 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
     Serializes Json data into bytes and deserializes bytes into Json.
     """
 
-    _HEADER_SIZE: int = 10
+    HEADER_STRUCT = struct.Struct(">BBHHI")
+    _HEADER_SIZE: int = HEADER_STRUCT.size
+
+    def __init__(self) -> None:
+        self._logger = logging.getLogger("MsgPackDictEncoding")
 
     @property
     def HEADER_SIZE(self) -> int:
@@ -52,9 +60,13 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
 
         header_raw = data[: self.HEADER_SIZE]
 
-        ver, cmd, seq, opcode, cof, payload_len = struct.unpack(">BBHHB3s", header_raw)
-        payload_length = int.from_bytes(payload_len, "big")
-        return ver, cmd, seq, opcode, cof, payload_length
+        ver, cmd, seq, opcode, payload_len = self.HEADER_STRUCT.unpack_from(
+            header_raw, 0
+        )
+        flags = (payload_len >> 24) & 0xFF
+
+        payload_length = payload_len & 0x00FFFFFF
+        return ver, cmd, seq, opcode, flags, payload_length
 
     def unpack_header_to_get_payload_length(self, data: bytes) -> int:
         _, _, _, _, _, payload_len = self._unpack_header(data)
@@ -63,7 +75,7 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
     def decode(self, data: bytes, *args: Any, **kwargs: Any) -> dict[Any, Any]:
         header_raw = data[: self.HEADER_SIZE]
 
-        ver, cmd, seq, opcode, cof, payload_length = self._unpack_header(header_raw)
+        ver, cmd, seq, opcode, flags, payload_length = self._unpack_header(header_raw)
         if payload_length > 0:
             payload_raw = data[10:]
             if len(payload_raw) != payload_length:
@@ -72,10 +84,12 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
             payload_raw = b""
 
         payload_uncompressed: bytes
-        if cof > 0 and len(payload_raw) > 0:
+        if len(payload_raw) > 0:
             try:
                 decompressed = self._safe_decompress(
-                    payload_raw, start_uncompressed_size=payload_length
+                    payload_raw,
+                    flags=flags,
+                    start_uncompressed_size=payload_length,
                 )
                 if decompressed is None:
                     raise ValueError("Uncompressed return None")
@@ -108,9 +122,46 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
             "payload": decoded_payload,
         }
 
+    def _decompress_zstd(self, data: bytes, max_output: int = 5 * 1024 * 1024) -> bytes:
+        try:
+            with zstandard.ZstdDecompressor().stream_reader(BytesIO(data)) as reader:
+                result = reader.read(max_output + 1)
+        except zstandard.ZstdError as e:
+            raise ValueError("Zstd: failed to decompress payload") from e
+
+        if len(result) > max_output:
+            raise ValueError("Zstd: output too large")
+        return result
+
+    def _decompress_lz4(
+        self,
+        data: bytes,
+        max_output: int = 5 * 1024 * 1024,
+        start_uncompressed_size: int = 100,
+        coefficient: int = 2,
+        max_retries: int = 6,
+    ) -> bytes | None:
+        uncompressed_size = start_uncompressed_size
+        for _ in range(max_retries):
+            try:
+                uncompressed_data = lz4.block.decompress(
+                    data,
+                    uncompressed_size=uncompressed_size,
+                )
+                if len(uncompressed_data) > max_output:
+                    raise ValueError("LZ4: output too large")
+
+                return cast(bytes, uncompressed_data)
+            except lz4.block.LZ4BlockError:
+                uncompressed_size *= coefficient
+        else:
+            return None
+
     def _safe_decompress(
         self,
         data: bytes,
+        flags: int = 0,
+        max_output: int = 5 * 1024 * 1024,
         start_uncompressed_size: int = 100,
         coefficient: int = 2,
         max_retries: int = 6,
@@ -128,21 +179,73 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
         :returns: The resulting bytes | None value.
         :rtype: bytes | None
         """
-        uncompressed_size = start_uncompressed_size
-        for _ in range(max_retries):
+
+        if flags == 0xFF:
             try:
-                uncompressed_data = lz4.block.decompress(
+                payload_bytes = self._decompress_zstd(
                     data,
-                    uncompressed_size=uncompressed_size,
+                    max_output=max_output,
                 )
-                return cast(bytes, uncompressed_data)
-            except lz4.block.LZ4BlockError:
-                uncompressed_size *= coefficient
+                self._logger.debug("Payload decompressed with Zstd")
+            except ValueError:
+                self._logger.debug("Zstd payload decompression failed", exc_info=True)
+                return None
+        elif flags > 0x7F:
+            return None
+        elif flags > 0:
+            try:
+                payload_bytes = self._decompress_lz4(
+                    data,
+                    max_output=max_output,
+                    start_uncompressed_size=start_uncompressed_size,
+                    coefficient=coefficient,
+                    max_retries=max_retries,
+                )
+                self._logger.debug("Payload decompressed cof=%s", flags)
+            except ValueError:
+                self._logger.debug(
+                    "Payload decompression failed cof=%s", flags, exc_info=True
+                )
+                return None
         else:
             return None
 
+        return payload_bytes
+        # uncompressed_size = start_uncompressed_size
+        # for _ in range(max_retries):
+        #     try:
+        #         uncompressed_data = lz4.block.decompress(
+        #             data,
+        #             uncompressed_size=uncompressed_size,
+        #         )
+        #         return cast(bytes, uncompressed_data)
+        #     except lz4.block.LZ4BlockError:
+        #         uncompressed_size *= coefficient
+        # else:
+        #     return None
+
+    def _to_msgpack_value(self, value: Any) -> Any:
+        if isinstance(value, Enum):
+            return value.value
+        if isinstance(value, dict):
+            return {
+                self._to_msgpack_value(k): self._to_msgpack_value(v)
+                for k, v in value.items()
+            }
+        if isinstance(value, list):
+            return [self._to_msgpack_value(item) for item in value]
+        if isinstance(value, tuple):
+            return tuple(self._to_msgpack_value(item) for item in value)
+        return value
+
     def _create_packet(
-        self, seq: int, opcode: int, cmd: int, ver: int, payload: Any
+        self,
+        seq: int,
+        opcode: int,
+        cmd: int,
+        ver: int,
+        payload: Any,
+        flags: int = 0,
     ) -> bytes:
         """Create packet.
 
@@ -159,42 +262,58 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
         :returns: The resulting bytes value.
         :rtype: bytes
         """
-        packed_payload = msgpack.packb(payload)
-        seq_b = seq.to_bytes(1, "big")
-        cmd_b = cmd.to_bytes(2, "big")
-        opcode_b = opcode.to_bytes(2, "big")
-        ver_b = ver.to_bytes(1, "big")
-        if packed_payload is None:
-            payload_bytes = b""
-        payload_len = len(packed_payload)
-        payload_len_b = payload_len.to_bytes(4, "big")
-        return cast(
-            bytes, ver_b + cmd_b + seq_b + opcode_b + payload_len_b + packed_payload
+
+        packed_payload = msgpack.packb(
+            self._to_msgpack_value(payload), use_bin_type=True
+        )
+        packed_len = ((flags & 0xFF) << 24) | (len(packed_payload) & 0x00FFFFFF)
+
+        header = self.HEADER_STRUCT.pack(
+            ver,
+            cmd,
+            seq,
+            opcode,
+            packed_len,
         )
 
-    async def _encode(self, request: dict[str, Any]) -> None:
-        """Send.
+        return header + packed_payload
 
-        :param request: Protocol request envelope to populate or send.
-        :type request: dict[str, Any]
-        # :raises SocketTransportSendError: If request must be a dict with keys: "seq", "opcode", and "cmd".
-        # :raises SocketTransportSendError: If the requested action cannot be completed.
-        """
-        # if not isinstance(request, dict):
-        #     raise SocketTransportSendError(
-        #         'request must be a dict with keys: "seq", "opcode", and "cmd"'
-        #     )
-        seq = int(request.get("seq", 0))
-        opcode = int(request.get("opcode", 1))
-        cmd = int(request.get("cmd", 0))
-        ver = int(request.get("ver", 11))
-        del request["seq"]
-        del request["opcode"]
-        del request["cmd"]
-        if "ver" in request:
-            del request["ver"]
-        if not ver:
-            ver = 11
-        packet = self._create_packet(
-            seq, opcode, cmd, ver, payload=request.get("payload")
-        )
+        # packed_payload = msgpack.packb(payload)
+        # seq_b = seq.to_bytes(2, "big")
+        # cmd_b = cmd.to_bytes(1, "big")
+        # opcode_b = opcode.to_bytes(2, "big")
+        # ver_b = ver.to_bytes(1, "big")
+        # if packed_payload is None:
+        #     payload_bytes = b""
+        # payload_len = len(packed_payload)
+        # payload_len_b = payload_len.to_bytes(4, "big")
+        # return cast(
+        #     bytes, ver_b + cmd_b + seq_b + opcode_b + payload_len_b + packed_payload
+        # )
+
+    # async def _encode(self, request: dict[str, Any]) -> None:
+    #     """Send.
+    #
+    #     :param request: Protocol request envelope to populate or send.
+    #     :type request: dict[str, Any]
+    #     # :raises SocketTransportSendError: If request must be a dict with keys: "seq", "opcode", and "cmd".
+    #     # :raises SocketTransportSendError: If the requested action cannot be completed.
+    #     """
+    #     # if not isinstance(request, dict):
+    #     #     raise SocketTransportSendError(
+    #     #         'request must be a dict with keys: "seq", "opcode", and "cmd"'
+    #     #     )
+    #     seq = int(request.get("seq", 0))
+    #     opcode = int(request.get("opcode", 1))
+    #     cmd = int(request.get("cmd", 0))
+    #     ver = int(request.get("ver", 11))
+    #     del request["seq"]
+    #     del request["opcode"]
+    #     del request["cmd"]
+    #     if "ver" in request:
+    #         del request["ver"]
+    #     if not ver:
+    #         ver = 11
+    #     packet = self._create_packet(
+    #         seq, opcode, cmd, ver, payload=request.get("payload")
+    #     )

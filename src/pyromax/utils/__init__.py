@@ -8,6 +8,7 @@ from .backoff import Backoff, BackoffConfig
 from .html_parser import DeepestTagScanner
 from .clean_and_map import clean_and_map
 from .fingerpint import FingerprintGenerator
+from .hide_call import hide_func_call
 
 __all__ = [
     "Correlator",
@@ -26,4 +27,5 @@ __all__ = [
     "get_caller_info",
     "EventFake",
     "FingerprintGenerator",
+    "hide_func_call",
 ]

@@ -4,7 +4,7 @@ import json
 import logging
 from asyncio import Event, Future
 from collections.abc import Iterable, Callable, Awaitable
-from typing import Any, cast
+from typing import Any, cast, TYPE_CHECKING
 
 from ..bases import StreamMaxProtocol, BaseMaxProtocolMethod, Response, Request
 from ...encoding import BaseEncoding
@@ -23,6 +23,10 @@ from pydantic import BaseModel
 
 from ...transport.bases import BaseTransport, StreamTransport
 from ..registry import register_protocol
+from ...utils import hide_func_call
+
+if TYPE_CHECKING:
+    from ...config import ExtraConfig
 
 
 class Envelope(BaseModel, Request["Envelope"], Response):
@@ -85,7 +89,7 @@ class EnvelopeProtocol(
         self,
         transport: StreamTransport[BaseEncoding[Any, Any, Any, Any]],
         encoding: BaseEncoding[Any, Any, Any, Any],
-        # ping_interval: int = 30,
+        extra_config: ExtraConfig,
     ) -> None:
         """Initialize the envelope protocol.
 
@@ -133,6 +137,7 @@ class EnvelopeProtocol(
         self,
         transport: StreamTransport[BaseEncoding[Any, Any, Any, Any]],
         encoding: BaseEncoding[Any, Any, Any, Any],
+        extra_config: ExtraConfig,
         *args: Any,
         # ping_interval: int = 30,
         **kwargs: Any,
@@ -152,11 +157,12 @@ class EnvelopeProtocol(
         # Reinitialize instance state after async construction.
         # We intentionally reuse __init__ to keep IDE/type-checkers
         # aware of attribute initialization.
-        await asyncio.to_thread(
-            self.__init__,  # type: ignore[misc]
+        hide_func_call(
+            type(self).__init__,
+            self,
             transport=transport,
             encoding=encoding,
-            # ping_interval=ping_interval,
+            extra_config=extra_config,
         )
 
         # await self.set_event_router(EventRouter[Envelope, Envelope]())

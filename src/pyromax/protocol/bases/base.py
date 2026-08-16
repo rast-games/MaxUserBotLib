@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from .methods import BaseMaxProtocolMethod
     from ...transport import BaseTransport
     from ...encoding import BaseEncoding
+    from ...config import ExtraConfig
 
 T = TypeVar("T", bound=Request[Any], contravariant=True)
 R = TypeVar("R", bound=Response, covariant=True)
@@ -27,6 +28,7 @@ class BaseMaxProtocol(AsyncInitializerMixin, Generic[T, R, TRANSPORT_TYPE]):
         self,
         transport: TRANSPORT_TYPE,
         encoding: BaseEncoding[Any, Any, Any, Any],
+        extra_config: ExtraConfig,
         *args: Any,
         **kwargs: Any,
     ) -> Any: ...
@@ -36,6 +38,7 @@ class BaseMaxProtocol(AsyncInitializerMixin, Generic[T, R, TRANSPORT_TYPE]):
         self,
         transport: BaseTransport[Any],
         encoding: BaseEncoding[Any, Any, Any, Any],
+        extra_config: ExtraConfig,
         *args: Any,
         **kwargs: Any,
     ) -> None: ...

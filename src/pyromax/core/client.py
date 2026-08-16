@@ -8,6 +8,7 @@ from typing import (
 from collections.abc import Callable
 from typing import Any, cast
 
+from ..config import ExtraConfig
 from ..mixins import AsyncInitializerMixin
 
 if TYPE_CHECKING:
@@ -51,19 +52,36 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
         device_type: str = "WEB",
         password: str | None = None,
         token: str | None = None,
+        phone: str | None = None,
         transport: str = "websocket",
         encoding: str = "JsonEncoding",
         protocol: str = "EnvelopeProtocol",
         mapper: str = "EnvelopeV11",
-        transport_options: dict[str, Any] | None = None,
         workflow_data: dict[Any, Any] | None = None,
-        user_agent_params: dict[str, Any] | None = None,
         auth_middleware_manager: AuthMiddlewareManager | None = None,
-        registration_config: RegistrationConfig | None = None,
-        token_suffix: str | None = None,
-        connect_timeout: int | None = None,
+        extra_config: ExtraConfig | None = None,
         **kwargs: Any,
     ) -> None:
+        if extra_config is None:
+            default_mapper_conf = type(ExtraConfig().mapper)
+            extra_config = ExtraConfig(
+                mapper=default_mapper_conf(
+                    token=token,
+                    password=password,
+                    device_type=device_type,
+                    phone=phone,
+                )
+            )
+
+        # if token is not None:
+        #     extra_config.mapper.token = token
+        #
+        # if password is not None:
+        #     extra_config.mapper.password = password
+
+        if device_type is not None:
+            extra_config.mapper.device_type = device_type
+
         """Asynchronously initialize transport, protocol, and mapper.
 
         :param device_type: Device type reported to the API.
@@ -114,25 +132,30 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
         max_encoding: BaseEncoding[Any, Any, Any, Any] = ENCODINGS[encoding]()
 
         logger.info("Initializing transport...")
-        if transport_options:
-            max_transport = await TRANSPORTS[transport](
-                max_encoding, **transport_options
-            )
-        else:
-            max_transport = await TRANSPORTS[transport](max_encoding)
+        # if transport_options:
+        #     max_transport = await TRANSPORTS[transport](
+        #         max_encoding, **transport_options
+        #     )
+        # else:
+        max_transport = await TRANSPORTS[transport](max_encoding, extra_config)
         logger.info("Transport initialized.")
 
         logger.info("Initializing protocol...")
         protocol_res: Any = await PROTOCOLS[protocol](
             transport=max_transport,
             encoding=max_encoding,
+            extra_config=extra_config,
         )
         max_protocol: BaseMaxProtocol[Any, Any] = protocol_res
         logger.info("Protocol initialized.")
 
         logger.info("Initializing mapper...")
         map_class = MAPPERS[mapper]
-        max_mapper = await map_class(self, protocol=max_protocol)
+        max_mapper = await map_class(
+            self,
+            protocol=max_protocol,
+            extra_config=extra_config,
+        )
         logger.info("Mapper initialized.")
 
         await asyncio.to_thread(
@@ -141,7 +164,7 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
             password=password,
             transport=max_transport,
             mapper=max_mapper,
-            transport_options=transport_options,
+            # transport_options=transport_options,
             token=token,
             logger=logger,
             workflow_data=workflow_data,
@@ -155,9 +178,9 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
             await self.mapper.start_auth_flow(
                 device_type=device_type,
                 password=password,
-                user_agent_params=user_agent_params,
-                registration_config=registration_config,
-                token_suffix=token_suffix,
+                # user_agent_params=user_agent_params,
+                # registration_config=registration_config,
+                # token_suffix=token_suffix,
                 **kwargs,
             )
 
@@ -213,17 +236,19 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
 
             resolved_flow = await wrapped(flow, cast(dict[Any, Any], data))
             token = resolved_flow.token
+            if token:
+                await self.mapper.end_auth_flow(token)
+            else:
+                await self.mapper.end_auth_flow(None)
 
-            await self.mapper.end_auth_flow()
-
-        await self.mapper.initialize_client(
-            token=token,
-            device_type=device_type,
-            password=password,
-            user_agent_params=user_agent_params,
-            registration_config=registration_config,
-            token_suffix=token_suffix,
-            **kwargs,
+        await self.mapper.start(
+            # token=token,
+            # device_type=device_type,
+            # password=password,
+            # user_agent_params=user_agent_params,
+            # registration_config=registration_config,
+            # token_suffix=token_suffix,
+            # **kwargs,
         )
 
     def __init__(

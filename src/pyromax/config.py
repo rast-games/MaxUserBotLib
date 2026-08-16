@@ -1,4 +1,16 @@
 # MIN_PREFERRED_BUILD = 6712
+import time
+from collections.abc import Callable, Coroutine
+import random
+from logging import Logger
+from typing import Any
+from uuid import uuid4
+from abc import ABC, abstractmethod
+
+from pydantic import ConfigDict, BaseModel, Field, model_validator
+
+from .models import RegistrationConfig
+from .utils import get_random_device_id, get_random_device_id_numeric
 
 APP_VERSIONS: tuple[tuple[str, int], ...] = (
     # ("26.25.0", 6790),
@@ -105,3 +117,180 @@ DEFAULT_WEB_HEADER_USER_AGENT = (
 # LEGACY_VERSIONS = [
 #     version for version in APP_VERSIONS if version[1] < MIN_PREFERRED_BUILD
 # ]
+
+
+# class ClientConfig(BaseModel):
+#     model_config = ConfigDict(arbitrary_types_allowed=True)
+#
+#     phone: str | None = None
+#     work_dir: str = "."
+#     session_name: str = "session.db"
+#     device: DeviceConfig
+#     token: str | None = None
+#     proxy: str | None = None
+#     registration_config: RegistrationConfig | None = None
+#
+#     host: str = "api.oneme.ru"
+#     port: int = 443
+#     use_ssl: bool = True
+#
+#     protocol_version: int = 10
+#     request_timeout: float = 30.0
+#     log_level: str = "INFO"
+#     telemetry: bool = False
+#
+#     interactive: bool = True
+#
+#     store: StoreProtocol | None = None
+#
+#     sync: SyncOverrides = Field(default_factory=SyncOverrides)
+#
+#     def ensure_config(self) -> None:
+#         if not self.phone:
+#             raise ValueError("Phone must be provided when no saved session exists.")
+
+
+class BaseConfig(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+class BaseTransportConfig(BaseConfig):
+    pass
+
+
+class SocketTransportConfig(BaseTransportConfig):
+    host: str = "api.oneme.ru"
+    port: int = 443
+    proxy: str | None = None
+    use_ssl: bool = True
+
+
+class WebSocketTransportConfig(BaseTransportConfig):
+    url: str = "wss://ws-api.oneme.ru/websocket"
+    proxy: str | None = None
+    origin: str = "https://web.max.ru"
+    user_agent_header: str = DEFAULT_WEB_HEADER_USER_AGENT
+
+
+# class TransportConfig(BaseModel):
+#     socket: SocketTransportConfig
+#     websocket: WebSocketTransportConfig
+
+
+class BaseProtocolConfig(BaseConfig):
+    pass
+
+
+class EnvelopeProtocolConfig(BaseProtocolConfig):
+    pass
+
+
+class BaseMapperConfig(BaseConfig, ABC):
+    token: str | None = None
+    password: str | None = None
+    device_type: str
+    phone: str | None = None
+
+
+class BaseEnvelopeMappingUserAgentConfigV11(BaseConfig):
+    device_type: str
+    locale: str = "ru"
+    device_id: str = Field(default_factory=lambda: get_random_device_id())
+    timezone: str = "Europe/Moscow"
+    device_locale: str = "ru"
+    os_version: str = "Windows 10 Version 22H2"
+    device_name: str = "WINDOWS10"
+    client_session_id: int = Field(default_factory=lambda: random.randint(1, 30))
+
+
+class WebEnvelopeMappingUserAgentConfigV11(BaseEnvelopeMappingUserAgentConfigV11):
+    device_type: str = "WEB"
+    device_id: str = Field(default=get_random_device_id())
+    header_user_agent: str = DEFAULT_WEB_HEADER_USER_AGENT
+    app_version: str = WEB_APP_VERSION
+    screen: str = WEB_SCREEN
+    client_session_id: int = Field(default_factory=lambda: round(time.time() * 1000))
+
+
+class DesktopEnvelopeMappingUserAgentConfigV11(BaseEnvelopeMappingUserAgentConfigV11):
+    device_type: str = "DESKTOP"
+    screen: str = "2.0x"
+    device_id: str = Field(default_factory=get_random_device_id_numeric)
+    build_number: int | None = None
+    app_version: str | None = None
+
+
+class AndroidEnvelopeMappingUserAgentConfigV11(BaseEnvelopeMappingUserAgentConfigV11):
+    device_type: str = "ANDROID"
+    os_version: str = "Android 13"
+    arch: str = "arm64-v8a"
+    device_name: str = "Samsung SM-A525F"
+    push_device_type: str = "GCM"
+    app_version: str = "26.14.1"
+    build_number: int = 6686
+    device_id: str = Field(default_factory=lambda: str(uuid4()), exclude=True)
+    mt_instance_id: str = Field(
+        default_factory=lambda: str(uuid4()),
+    )
+
+
+class EnvelopeMappingConfigV11(BaseMapperConfig):
+    token: str | None = None
+    protocol_version: int = 11
+    device_type: str = "WEB"
+    password: str | None = None
+    phone: str | None = None
+    sms_auth: bool = False
+    interactive: bool = True
+    keepalive_ping_interval: int = 30
+    url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None = None
+    connect_timeout: int | None = None
+    user_agent_config: BaseEnvelopeMappingUserAgentConfigV11 = (
+        WebEnvelopeMappingUserAgentConfigV11()
+    )
+    registration_config: RegistrationConfig | None = None
+    use_mobile_fingerprint: bool = True
+    token_suffix: str | None = None
+    use_telemetry: bool = True
+    request_timeout: float = 30.0
+    mapper_logger: Logger | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_sms_auth(self, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "sms_auth" not in data:
+                device_type = data.get("device_type", "WEB")
+                data["sms_auth"] = False if device_type == "WEB" else True
+            return data
+        else:
+            return data
+
+
+class ExtraConfig(BaseConfig):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    transport: BaseTransportConfig = WebSocketTransportConfig()
+    protocol: BaseProtocolConfig = EnvelopeProtocolConfig()
+    mapper: BaseMapperConfig = EnvelopeMappingConfigV11()
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_transport(self, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "mapper" in data and "transport" not in data:
+                mapper = data["mapper"]
+                if isinstance(mapper, dict):
+                    device_type = mapper.get("device_type", "WEB")
+                elif isinstance(mapper, BaseModel):
+                    device_type = mapper.model_dump().get("device_type", "WEB")
+                else:
+                    return data
+                data["transport"] = (
+                    WebSocketTransportConfig()
+                    if device_type == "WEB"
+                    else SocketTransportConfig()
+                )
+            return data
+        else:
+            return data

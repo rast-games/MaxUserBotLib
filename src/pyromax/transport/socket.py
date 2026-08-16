@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import random
 import struct
-from typing import Any, cast, Final
+from typing import Any, cast, Final, TYPE_CHECKING
 import ssl
 import json
 from socket import gaierror
@@ -23,6 +25,10 @@ from ..exceptions import (
     # SocketTransportSendError,
 )
 from ..encoding import SocketEncoding
+from ..utils import hide_func_call
+
+if TYPE_CHECKING:
+    from ..config import ExtraConfig
 
 
 CLOSE_TIMEOUT: Final = 10
@@ -47,12 +53,9 @@ class SocketTransport(StreamTransport[SocketEncoding[Any, Any]]):
     async def _async_init(
         self,
         encoding: SocketEncoding[Any, Any],
+        extra_config: ExtraConfig,
         *args: Any,
         # url: str = "api.oneme.ru",
-        host: str = "api.oneme.ru",
-        port: int = 443,
-        proxy: str | None = None,
-        use_ssl: bool = True,
         **kwargs: Any,
     ) -> None:
         """Async init.
@@ -66,13 +69,8 @@ class SocketTransport(StreamTransport[SocketEncoding[Any, Any]]):
         """
         self._encoding = encoding
 
-        self.host = host
-        self.port = port
-        self._proxy = proxy
-        self._use_ssl = use_ssl
-        self.__buffer = bytearray()
-        self.__logger = logging.getLogger("SocketTransport")
-        await asyncio.to_thread(self.__init__, encoding=encoding,)  # type: ignore[misc]
+
+        hide_func_call(type(self).__init__, self, encoding=encoding, extra_config=extra_config,)
         while True:
             try:
                 # self.__reader, self.__writer = await asyncio.open_connection(
@@ -94,11 +92,30 @@ class SocketTransport(StreamTransport[SocketEncoding[Any, Any]]):
     def __init__(
         self,
         encoding: SocketEncoding[Any, Any],
+        extra_config: ExtraConfig,
         *args: Any,
         **kwargs: Any,
     ) -> None:
         """Initialize the socket transport."""
+
+        from ..config import SocketTransportConfig
+
+        self.extra_config = extra_config
+        transport_config = self.extra_config.transport
+        if not isinstance(transport_config, SocketTransportConfig):
+            raise TypeError(
+                "transport config must be an instance of WebSocketTransportConfig for this transport"
+            )
+        self.transport_config = transport_config
+
+        self.host = self.transport_config.host
+        self.port = self.transport_config.port
+        self._proxy = self.transport_config.proxy
+        self._use_ssl = self.transport_config.use_ssl
+
         self._encoding = encoding
+        self.__buffer = bytearray()
+        self.__logger = logging.getLogger("SocketTransport")
         self.__reader = None
         self.__writer = None
         self._ssl_context = ssl.create_default_context()

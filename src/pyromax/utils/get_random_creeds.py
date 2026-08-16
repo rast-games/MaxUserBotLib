@@ -2,9 +2,6 @@ import random
 import string
 
 
-from ..config import APP_VERSIONS
-
-
 def get_random_string(length: int, chars: str) -> str:
     """Generate a random string of specified length using characters from the provided set.
 
@@ -61,12 +58,13 @@ def get_random_device_id_numeric() -> str:
 
 
 def get_random_app_version_and_build_number() -> tuple[str, int]:
-
     """Retrieve random app version and build number.
 
     :returns: The resulting tuple[str, int] value.
     :rtype: tuple[str, int]
     """
+    from ..config import APP_VERSIONS
+
     app_version, build_number = random.choice(APP_VERSIONS)
 
     return app_version, build_number

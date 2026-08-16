@@ -1,7 +1,8 @@
+from __future__ import annotations
 import asyncio
 import logging
 import json
-from typing import Any, cast
+from typing import Any, cast, TYPE_CHECKING
 from xmlrpc.client import Binary
 
 
@@ -11,9 +12,13 @@ from websockets.asyncio.client import ClientConnection, connect
 
 from .bases import StreamTransport
 from .registry import register_transport
-from ..config import DEFAULT_WEB_HEADER_USER_AGENT
 from ..encoding import BaseEncoding
 from ..exceptions import BaseTransportError, ConnectTransportError, ConnectionTransportError, SendingTransportError
+from ..utils import hide_func_call
+
+if TYPE_CHECKING:
+    from ..config import ExtraConfig
+
 
 # Just aliases
 
@@ -29,13 +34,13 @@ class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any, Any, Any]]):
     def __init__(
         self,
         encoding: BaseEncoding[Any, Any, Any, Any],
+        extra_config: ExtraConfig,
         *args: Any,
-        url: str = "wss://ws-api.oneme.ru/websocket",
-        proxy: str | None = None,
-        origin: str = "https://web.max.ru",
-        user_agent_header: str = DEFAULT_WEB_HEADER_USER_AGENT,
         **kwargs: Any,
     ) -> None:
+        # from ..config import DEFAULT_WEB_HEADER_USER_AGENT
+        # if user_agent_header is None:
+        #     user_agent_header = DEFAULT_WEB_HEADER_USER_AGENT
         """Initialize the web socket transport.
 
         :param url: Resource URL.
@@ -47,19 +52,28 @@ class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any, Any, Any]]):
         """
         self._encoding = encoding
 
-        self.url = url
-        self.proxy = proxy
-        self.origin = Origin(origin)
-        self.user_agent_header = user_agent_header
+        self.extra_config = extra_config
+        transport_config = self.extra_config.transport
+        from ..config import ExtraConfig, WebSocketTransportConfig
+        if not isinstance(transport_config, WebSocketTransportConfig):
+            raise TypeError(
+                "transport config must be an instance of WebSocketTransportConfig for this transport"
+            )
+        self.transport_config = transport_config
+
+        self.url = self.transport_config.url
+        self.proxy = self.transport_config.proxy
+        self.origin = Origin(self.transport_config.origin)
+        self.user_agent_header = self.transport_config.user_agent_header
+
         self.ws: ClientConnection | None = None
         self.__logger = logging.getLogger("WebSocketTransport")
 
     async def _async_init(
         self,
         encoding: BaseEncoding[Any, Any, Any, Any],
-        proxy: str | None = None,
+        extra_config: ExtraConfig,
         *args: Any,
-        url: str = "wss://ws-api.oneme.ru/websocket",
         **kwargs: Any,
     ) -> None:
         """Async init.
@@ -67,7 +81,7 @@ class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any, Any, Any]]):
         :param url: Resource URL.
         :type url: str
         """
-        await asyncio.to_thread(self.__init__, url=url, encoding=encoding, proxy=proxy,)  # type: ignore[misc]
+        hide_func_call(type(self).__init__, self, encoding=encoding, extra_config=extra_config,)
         self.__logger.info("Initializing WebSocket Transport")
 
         self.__logger.info("WebSocket was initialized")

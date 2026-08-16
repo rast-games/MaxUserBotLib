@@ -5,6 +5,7 @@ from typing import Any, Generic, TypeVar, TYPE_CHECKING
 
 from pydantic import BaseModel
 
+from ...config import ExtraConfig
 from ...protocol import Response
 from ...mixins import AsyncInitializerMixin, AsyncConstructorMeta
 
@@ -41,7 +42,12 @@ class BaseMapper(AsyncInitializerMixin, Generic[T_protocol, T_file]):
 
     @abstractmethod
     async def _async_init(
-        self, max_api: MaxApi, protocol: T_protocol, *args: Any, **kwargs: Any
+        self,
+        max_api: MaxApi,
+        protocol: T_protocol,
+        extra_config: ExtraConfig,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Async init.
 
@@ -57,7 +63,7 @@ class BaseMapper(AsyncInitializerMixin, Generic[T_protocol, T_file]):
         pass
 
     @abstractmethod
-    async def initialize_client(self, device_type: str, **kwargs: Any) -> None:
+    async def start(self, *args: Any, **kwargs: Any) -> None:
         """Initialize client.
 
         :param device_type: The device type value.
@@ -71,7 +77,9 @@ class BaseMapper(AsyncInitializerMixin, Generic[T_protocol, T_file]):
     async def start_auth_flow(self, *args: Any, **kwargs: Any) -> Any: ...
 
     @abstractmethod
-    async def end_auth_flow(self, *args: Any, **kwargs: Any) -> Any: ...
+    async def end_auth_flow(
+        self, token: str | None, *args: Any, **kwargs: Any
+    ) -> Any: ...
 
     @abstractmethod
     def listen_updates(

@@ -1,8 +1,14 @@
-from typing import Any, TypeVar, Generic
+from __future__ import annotations
+
+from typing import Any, TypeVar, Generic, TYPE_CHECKING
 from abc import abstractmethod
+
 
 from ...mixins import AsyncInitializerMixin, AsyncConstructorMeta
 from ...encoding import BaseEncoding
+
+if TYPE_CHECKING:
+    from ...config import ExtraConfig
 
 ENCODING_TYPE = TypeVar("ENCODING_TYPE", bound=BaseEncoding[Any, Any, Any, Any])
 
@@ -16,6 +22,7 @@ class BaseTransport(AsyncInitializerMixin, Generic[ENCODING_TYPE]):
     async def _async_init(
         self,
         encoding: ENCODING_TYPE,
+        extra_config: ExtraConfig,
         *args: Any,
         **kwargs: Any,
     ) -> Any: ...
@@ -24,6 +31,7 @@ class BaseTransport(AsyncInitializerMixin, Generic[ENCODING_TYPE]):
     def __init__(
         self,
         encoding: ENCODING_TYPE,
+        extra_config: ExtraConfig,
         *args: Any,
         **kwargs: Any,
     ) -> None: ...

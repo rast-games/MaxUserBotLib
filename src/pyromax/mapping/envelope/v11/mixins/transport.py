@@ -114,7 +114,7 @@ class TransportMixin(MixinProtocol):
         method: BaseMethod,
         data: dict[Any, Any] | None = None,
         check_errors: bool = False,
-        timeout: int = 30,
+        timeout: int | float = 30,
     ) -> Envelope:
         """Send request without catching exceptions
 
@@ -201,7 +201,7 @@ class TransportMixin(MixinProtocol):
         self,
         method: BaseMethod,
         data: dict[Any, Any] | None = None,
-        timeout: int = 30,
+        timeout: int | float = 30,
     ) -> Envelope:
         """Send raw with running wait.
 
@@ -228,7 +228,7 @@ class TransportMixin(MixinProtocol):
         return_exception: bool = False,
         check_errors: bool = False,
         max_retries: int = 3,
-        timeout: int = 30,
+        timeout: int | float = 30,
         wait_auth: bool = True,
     ) -> Envelope:
         """Execute a mapped method and return its response envelope.

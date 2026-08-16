@@ -654,13 +654,16 @@ class AuthMixin(MixinProtocol):
         )
         await self._protocol_connected.wait()
 
-    async def end_auth_flow(self) -> None:
+    async def end_auth_flow(self, token: str | None) -> None:
+        if token is not None:
+            self.token = token
+        self.mapper_config.token = token
         lifecycle_manager = self._lifecycle_manager
 
         if lifecycle_manager is not None:
             await lifecycle_manager.stop()
         self._lifecycle_manager = None
-        self.user_agent = None
+        # self.user_agent = None
         self.protocol.set_generation_getter(None)
         self.protocol.set_exceptions_callback(None)
 
@@ -704,7 +707,7 @@ class AuthMixin(MixinProtocol):
             self._logger.info("get token from login...")
 
             token = user.token_attrs.token
-            self.token: str | None = token
+            self.token = token
 
             if token is None:
                 raise MapperApiError("Server not return token.")

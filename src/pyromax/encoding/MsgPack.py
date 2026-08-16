@@ -92,6 +92,7 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
                     start_uncompressed_size=payload_length,
                 )
                 if decompressed is None:
+                    # decompressed = b""
                     raise ValueError("Uncompressed return None")
                 payload_uncompressed = decompressed
 
@@ -103,7 +104,7 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
         else:
             payload_uncompressed = payload_raw
 
-        if len(payload_raw) > 0:
+        if len(payload_uncompressed) > 0:
             try:
                 decoded_payload = msgpack.unpackb(
                     payload_uncompressed, strict_map_key=False
@@ -179,7 +180,7 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
         :returns: The resulting bytes | None value.
         :rtype: bytes | None
         """
-
+        payload_bytes: bytes | None
         if flags == 0xFF:
             try:
                 payload_bytes = self._decompress_zstd(
@@ -192,6 +193,8 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
                 return None
         elif flags > 0x7F:
             return None
+        elif flags == 0:
+            payload_bytes = data
         elif flags > 0:
             try:
                 payload_bytes = self._decompress_lz4(
@@ -209,7 +212,6 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
                 return None
         else:
             return None
-
         return payload_bytes
         # uncompressed_size = start_uncompressed_size
         # for _ in range(max_retries):
@@ -276,7 +278,7 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
             packed_len,
         )
 
-        return header + packed_payload
+        return bytes(header + packed_payload)
 
         # packed_payload = msgpack.packb(payload)
         # seq_b = seq.to_bytes(2, "big")

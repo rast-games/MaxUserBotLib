@@ -382,14 +382,6 @@ class LifecycleManager:
                 self._need_login = True
             except RestartMapperError as e:
                 raise MapperLifecycleError() from e
-            # except Exception as e:
-            #     self._logger.exception(
-            #         "got an unexpected exception while authorizing=%s",
-            #         e,
-            #         exc_info=True,
-            #         stack_info=True,
-            #     )
-            #     raise MapperLifecycleError("Unexpected error") from e
         else:
             try:
                 conn_coroutine = wait_for(

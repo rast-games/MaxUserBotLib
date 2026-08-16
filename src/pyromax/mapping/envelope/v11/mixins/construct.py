@@ -7,13 +7,14 @@ from collections.abc import Callable, Coroutine
 
 from typing import cast, Protocol
 
+from .....config import ExtraConfig, EnvelopeMappingConfigV11
 from .....mixins import AsyncInitializerMixin, AsyncConstructorMeta
 from .....protocol import EnvelopeProtocol
 from ..payloads.models import BaseUserAgentMappingModel
 from ..constants import DEVICE_TYPE_TO_USERAGENT_MODEL as DEVICE_TYPE_TO_USER_AGENT_MAP
 from ..LifecycleManager import LifecycleManager
 from ..telemetry import TelemetryManager
-from .....utils import FingerprintGenerator, write_token, read_token
+from .....utils import FingerprintGenerator, write_token, read_token, hide_func_call
 
 if TYPE_CHECKING:
     from .....core import MaxApi
@@ -39,7 +40,7 @@ class ConstructorMixin(
     def __init__(
         self,
         protocol: EnvelopeProtocol,
-        keepalive_ping_interval: int,
+        extra_config: ExtraConfig,
     ) -> None:
         """Initialize the constructor mixin.
 
@@ -48,35 +49,64 @@ class ConstructorMixin(
         :param keepalive_ping_interval: The keepalive ping interval value.
         :type keepalive_ping_interval: int
         """
-        self.protocol = protocol
-        self.protocol_version = 11
-        self._keepalive_ping_interval = keepalive_ping_interval
-        self._logger = logging.getLogger("MapperV11")
-        self._keepalive_task: Task[Any] | None = None
-        self.keep_alive_interactive: bool = True
-        self._update_listener_task: Task[Any] | None = None
-        self.token: str | None = None
-        self.TOKEN_NAME = (
-            "ENVELOPE_MAX_TOKEN_V11" + self.protocol.transport.__class__.__name__
-        )
+        mapper_config = extra_config.mapper
+        if not isinstance(mapper_config, EnvelopeMappingConfigV11):
+            raise TypeError(
+                "mapper config must be an instance of EnvelopeMappingConfigV11 for this mapper"
+            )
+        self.extra_config = extra_config
+        self.mapper_config: EnvelopeMappingConfigV11 = mapper_config
+
+        if self.mapper_config.device_type not in self.DEVICE_TYPE_TO_USERAGENT_MODEL:
+            raise RuntimeError(f"Unknown device type: {self.mapper_config.device_type}")
+
+        self.protocol: EnvelopeProtocol
+        self.protocol_version: int
+
         self.max_api: MaxApi | None = None
-        self._manage_lifecycle_task: Task[Any] | None = None
-        self._update_listener_lock: Lock = Lock()
-        self._authorized = asyncio.Event()
-        self.request_timeout: int = 30
-        self._telemetry: TelemetryManager | None = None
-        self.user_agent: BaseUserAgentMappingModel | None = None
+        self.token: str | None = self.mapper_config.token
+
+        self.password: str | None = self.mapper_config.password
+        self.phone: str | None = self.mapper_config.phone
+        self.sms_auth = self.mapper_config.sms_auth
+        self.request_timeout: float = self.mapper_config.request_timeout
+        self.use_telemetry: bool = self.mapper_config.use_telemetry
+        self.keep_alive_interactive: bool = self.mapper_config.interactive
+        self.connect_timeout = self.mapper_config.connect_timeout
+
+        user_agent_params = self.mapper_config.user_agent_config.model_dump()
+        user_agent_model = self.DEVICE_TYPE_TO_USERAGENT_MODEL[
+            self.mapper_config.device_type
+        ]
+        user_agent = user_agent_model.get_random_user_agent(**user_agent_params)
+        self.user_agent = user_agent
+
+        self.TOKEN_NAME: str
+
         self.fingerprint_generator = FingerprintGenerator()
         self.logged: bool = False
-        self.password: str | None = None
-        self.phone: str | None = None
         self.calls_seed: int | None = None
-        self.sms_auth = False
-        self._lifecycle_manager_inited: asyncio.Event = Event()
+
+        # self._update_listener_task: Task[Any] | None = None
+
+        self._update_listener_lock: Lock = Lock()
+        self._authorized = asyncio.Event()
+
+        self._keepalive_task: Task[Any] | None = None
+        self._keepalive_ping_interval = self.mapper_config.keepalive_ping_interval
+
         self._mapper_connected: asyncio.Event = Event()
         self._protocol_connected: asyncio.Event = Event()
 
         self._lifecycle_manager: LifecycleManager | None = None
+        self._lifecycle_manager_inited: asyncio.Event = Event()
+
+        self._telemetry: TelemetryManager | None = None
+        self._logger = self.mapper_config.mapper_logger or logging.getLogger(
+            "MapperV11"
+        )
+
+        # self.user_agent: BaseUserAgentMappingModel | None = None
 
     @property
     def DEVICE_TYPE_TO_USERAGENT_MODEL(
@@ -93,8 +123,8 @@ class ConstructorMixin(
         self,
         max_api: MaxApi,
         protocol: EnvelopeProtocol,
+        extra_config: ExtraConfig,
         *args: Any,
-        keepalive_ping_interval: int = 30,
         **kwargs: Any,
     ) -> None:
         """Async init.
@@ -114,118 +144,67 @@ class ConstructorMixin(
         """
         from .....core import MaxApi
 
-        if not isinstance(max_api, MaxApi):
-            raise TypeError("max_api must be an instance of MaxApi")
-        if not isinstance(protocol, EnvelopeProtocol):
-            raise TypeError("protocol must be an instance of EnvelopeProtocol")
-        await asyncio.to_thread(self.__init__, protocol=protocol, keepalive_ping_interval=keepalive_ping_interval)  # type: ignore[misc]
-        self.max_api = max_api
+        mapper_config = extra_config.mapper
+        if not isinstance(mapper_config, EnvelopeMappingConfigV11):
+            raise TypeError(
+                "mapper config must be an instance of EnvelopeMappingConfigV11 for this mapper"
+            )
+        conf: EnvelopeMappingConfigV11 = mapper_config
 
-    async def initialize_client(
-        self,
-        token: str | None = None,
-        device_id: str | None = None,
-        protocol_version: int = 11,
-        device_type: str = "WEB",
-        password: str | None = None,
-        phone: str | None = None,
-        sms_auth: bool = False,
-        interactive: bool = True,
-        keep_alive_interactive: bool | None = None,
-        url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None = None,
-        connection_timeout: int | None = None,
-        user_agent_params: dict[str, Any] | None = None,
-        registration_config: RegistrationConfig | None = None,
-        use_mobile_fingerprint: bool = True,
-        token_suffix: str | None = None,
-        use_telemetry: bool = True,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize client.
+        self.protocol = protocol
+        self.protocol_version = conf.protocol_version
 
-        :param token: Authentication token.
-        :type token: str | None
-        :param device_id: Identifier of the device.
-        :type device_id: str | None
-        :param protocol_version: The protocol version value.
-        :type protocol_version: int
-        :param device_type: The device type value.
-        :type device_type: str
-        :param password: Account password.
-        :type password: str | None
-        :param phone: Phone number in the format accepted by MAX.
-        :type phone: str | None
-        :param sms_auth: The sms auth value.
-        :type sms_auth: bool
-        :param interactive: The interactive value.
-        :type interactive: bool
-        :param keep_alive_interactive: The keep alive interactive value.
-        :type keep_alive_interactive: bool | None
-        :param url_callback: Callable to invoke.
-        :type url_callback: Callable[[str], Coroutine[Any, Any, Any]] | None
-        :param connection_timeout: The connection timeout value.
-        :type connection_timeout: int | None
-        :param user_agent_params: dict[str, Any] instance to process.
-        :type user_agent_params: dict[str, Any] | None
-        :param registration_config: RegistrationConfig instance to process.
-        :type registration_config: RegistrationConfig | None
-        :param use_mobile_fingerprint: Whether to use mobile fingerprint.
-        :type use_mobile_fingerprint: bool
-        :param token_suffix: The token suffix value.
-        :type token_suffix: str | None
-        :param kwargs: Keyword arguments forwarded to the wrapped callable.
-        :type kwargs: Any
-        :raises RuntimeError: If the requested action cannot be completed.
-        :raises RuntimeError: If cannot create a new lifecycle manager.
-        """
+        if conf.device_type not in self.DEVICE_TYPE_TO_USERAGENT_MODEL:
+            raise RuntimeError(f"Unknown device type: {self.mapper_config.device_type}")
+
         self.TOKEN_NAME = (
             "ENVELOPE_MAX_TOKEN_V11"
             + self.protocol.transport.__class__.__name__
-            + device_type
-            + (token_suffix or "")
+            + conf.device_type
+            + (conf.token_suffix or "")
         )
 
-        if user_agent_params is None:
-            user_agent_params = {
-                "device_type": device_type,
-            }
-            if device_id is not None:
-                user_agent_params["device_id"] = device_id
-
-        if device_type not in self.DEVICE_TYPE_TO_USERAGENT_MODEL:
-            raise RuntimeError(f"Unknown device type: {device_type}")
-        user_agent_model = self.DEVICE_TYPE_TO_USERAGENT_MODEL[device_type]
-        user_agent = user_agent_model.get_random_user_agent(**user_agent_params)
-        self.user_agent = user_agent
-        need_login: bool = False
+        token = conf.token
         if token is None:
             token = await read_token(name_of_token=self.TOKEN_NAME)
 
         if token is not None:
             await write_token(token, self.TOKEN_NAME)
-        else:
-            need_login = True
 
-        self.token = token
-        self.password = password
-        self.phone = phone
-        self.sms_auth = sms_auth
-        if keep_alive_interactive is None:
-            keep_alive_interactive = interactive
-        self.keep_alive_interactive = keep_alive_interactive
-        self.protocol_version = protocol_version
+        extra_config.mapper.token = token
+
+        if not isinstance(max_api, MaxApi):
+            raise TypeError("max_api must be an instance of MaxApi")
+        if not isinstance(protocol, EnvelopeProtocol):
+            raise TypeError("protocol must be an instance of EnvelopeProtocol")
+        hide_func_call(
+            type(self).__init__,
+            self,
+            protocol=protocol,
+            extra_config=extra_config,
+        )
+        # await asyncio.to_thread(self.__init__, protocol=protocol, keepalive_ping_interval=keepalive_ping_interval)  # type: ignore[misc]
+        self.max_api = max_api
+
+    async def start(
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        """Start client."""
+
         from ..Mapper import Mapper
 
         self._lifecycle_manager = LifecycleManager(
             mapper=cast(Mapper, self),
-            connect_timeout=connection_timeout,
-            need_login=need_login,
+            connect_timeout=self.connect_timeout,
+            need_login=self.token is None,
         )
 
         if self._lifecycle_manager is None:
             raise RuntimeError("Cannot create a new lifecycle manager")
 
-        if use_telemetry:
+        if self.use_telemetry:
             if self.max_api is None:
                 raise RuntimeError("Mapper not bounded to MaxApi instance")
             self._telemetry = TelemetryManager(
@@ -240,9 +219,9 @@ class ConstructorMixin(
         self._lifecycle_manager_inited.set()
 
         self._lifecycle_manager.start(
-            url_callback=url_callback,
-            registration_config=registration_config,
-            use_mobile_fingerprint=use_mobile_fingerprint,
+            url_callback=self.mapper_config.url_callback,
+            registration_config=self.mapper_config.registration_config,
+            use_mobile_fingerprint=self.mapper_config.use_mobile_fingerprint,
         )
 
         await self._protocol_connected.wait()

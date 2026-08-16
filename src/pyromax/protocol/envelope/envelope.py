@@ -468,7 +468,7 @@ class EnvelopeProtocol(
             )
             raise GetUpdatesProtocolError(
                 "get_all_updates end with exception while getting updates"
-            )
+            ) from e
         return updates
 
     async def from_request(self, request_data: dict[str, Any]) -> Envelope:

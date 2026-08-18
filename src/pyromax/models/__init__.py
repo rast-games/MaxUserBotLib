@@ -25,6 +25,8 @@ from .enum import ChannelPermissions
 from .enum import TwoFactorAction
 from .enum import PollFlags
 from .enum import PrivacyAccess
+from .enum import TransportRegistry, EncodingRegistry, ProtocolRegistry, MapperRegistry
+from .enum import DeviceType
 
 __all__ = [
     "BaseMaxObject",
@@ -68,4 +70,9 @@ __all__ = [
     "PollAnswer",
     "PollResult",
     "PollFlags",
+    "TransportRegistry",
+    "EncodingRegistry",
+    "ProtocolRegistry",
+    "MapperRegistry",
+    "DeviceType",
 ]

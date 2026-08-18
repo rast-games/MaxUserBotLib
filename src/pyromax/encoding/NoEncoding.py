@@ -1,7 +1,12 @@
-from typing import TypeVar, Any
+from __future__ import annotations
+import logging
+from typing import TypeVar, Any, TYPE_CHECKING
 
 from .base import BaseSymmetricEncoding
 from .registry import register_encoding
+
+if TYPE_CHECKING:
+    from ..config import ExtraConfig
 
 NO_ENCODED = TypeVar("NO_ENCODED")
 
@@ -13,6 +18,10 @@ class NoEncoding(BaseSymmetricEncoding[NO_ENCODED, NO_ENCODED]):
     In fact, it was created for the websocket transport, since the library used to work with the websocket in this
     transport itself serializes and deserializes the data, and no intervention is required.
     """
+
+    def __init__(self, extra_config: ExtraConfig) -> None:
+        super().__init__(extra_config)
+        self._logger = logging.getLogger("JsonEncoding")
 
     def encode(self, data: NO_ENCODED, *args: Any, **kwargs: Any) -> NO_ENCODED:
         return data

@@ -8,8 +8,9 @@ from typing import (
 from collections.abc import Callable
 from typing import Any, cast
 
-from ..config import ExtraConfig
+from ..config import ExtraConfig, from_config_to_registry
 from ..mixins import AsyncInitializerMixin
+from ..utils import hide_func_call
 
 if TYPE_CHECKING:
     from ..dispatcher.event import MaxObject
@@ -24,6 +25,11 @@ if TYPE_CHECKING:
         Name,
         Contact,
         RegistrationConfig,
+        TransportRegistry,
+        EncodingRegistry,
+        ProtocolRegistry,
+        MapperRegistry,
+        DeviceType,
     )
     from ..auth import AuthMiddlewareManager
 
@@ -49,39 +55,19 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
 
     async def _async_init(
         self,
-        device_type: str = "WEB",
+        device_type: DeviceType | None = None,  # default "WEB"
         password: str | None = None,
         token: str | None = None,
         phone: str | None = None,
-        transport: str = "websocket",
-        encoding: str = "JsonEncoding",
-        protocol: str = "EnvelopeProtocol",
-        mapper: str = "EnvelopeV11",
+        transport: TransportRegistry | None = None,
+        encoding: EncodingRegistry | None = None,
+        protocol: ProtocolRegistry | None = None,
+        mapper: MapperRegistry | None = None,
         workflow_data: dict[Any, Any] | None = None,
         auth_middleware_manager: AuthMiddlewareManager | None = None,
         extra_config: ExtraConfig | None = None,
         **kwargs: Any,
     ) -> None:
-        if extra_config is None:
-            default_mapper_conf = type(ExtraConfig().mapper)
-            extra_config = ExtraConfig(
-                mapper=default_mapper_conf(
-                    token=token,
-                    password=password,
-                    device_type=device_type,
-                    phone=phone,
-                )
-            )
-
-        # if token is not None:
-        #     extra_config.mapper.token = token
-        #
-        # if password is not None:
-        #     extra_config.mapper.password = password
-
-        if device_type is not None:
-            extra_config.mapper.device_type = device_type
-
         """Asynchronously initialize transport, protocol, and mapper.
 
         :param device_type: Device type reported to the API.
@@ -113,6 +99,71 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
         :type token_suffix: str | None
         :raises RuntimeError: If transport or protocol or mapper cannot be None.
         """
+
+        from ..models import (
+            DeviceType,
+            TransportRegistry,
+            EncodingRegistry,
+            ProtocolRegistry,
+            MapperRegistry,
+        )
+
+        default_mapper_conf = type(ExtraConfig().mapper)
+
+        if extra_config is None:
+            device_type = device_type or DeviceType.Web
+
+            if device_type is None:
+                # dummy for type-checker, because it see it by "str | DeviceType | None | Literal[DeviceType.Web]",
+                # not "str | DeviceType"
+                raise RuntimeError("Never")
+
+            extra_config = ExtraConfig(
+                mapper=default_mapper_conf(
+                    token=token,
+                    password=password,
+                    device_type=device_type,
+                    phone=phone,
+                )
+            )
+            extra_config = extra_config.config_rebuild(
+                transport=transport,
+                protocol=protocol,
+                encoding=encoding,
+                mapper=mapper,
+            )
+
+        else:
+            device_type = (
+                device_type or extra_config.mapper.device_type or DeviceType.Web
+            )
+
+            if device_type is None:
+                # dummy for type-checker, because it see it by "str | DeviceType | None | Literal[DeviceType.Web]",
+                # not "str | DeviceType"
+                raise RuntimeError("Never")
+
+            extra_config.mapper.device_type = device_type
+            extra_config = extra_config.config_rebuild(
+                transport=transport,
+                encoding=encoding,
+                protocol=protocol,
+                mapper=mapper,
+            )
+
+        transport = cast(
+            TransportRegistry, from_config_to_registry(type(extra_config.transport))
+        )
+        encoding = cast(
+            EncodingRegistry, from_config_to_registry(type(extra_config.encoding))
+        )
+        protocol = cast(
+            ProtocolRegistry, from_config_to_registry(type(extra_config.protocol))
+        )
+        mapper = cast(
+            MapperRegistry, from_config_to_registry(type(extra_config.mapper))
+        )
+
         if workflow_data is None:
             workflow_data = {}
 
@@ -129,19 +180,19 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
 
         logger.info("Start initialization...")
 
-        max_encoding: BaseEncoding[Any, Any, Any, Any] = ENCODINGS[encoding]()
+        max_encoding: BaseEncoding[Any, Any, Any, Any] = from_registry(
+            ENCODINGS, encoding
+        )(extra_config)
 
         logger.info("Initializing transport...")
-        # if transport_options:
-        #     max_transport = await TRANSPORTS[transport](
-        #         max_encoding, **transport_options
-        #     )
-        # else:
-        max_transport = await TRANSPORTS[transport](max_encoding, extra_config)
+
+        max_transport = await from_registry(TRANSPORTS, transport)(
+            max_encoding, extra_config
+        )
         logger.info("Transport initialized.")
 
         logger.info("Initializing protocol...")
-        protocol_res: Any = await PROTOCOLS[protocol](
+        protocol_res: Any = await from_registry(PROTOCOLS, protocol)(
             transport=max_transport,
             encoding=max_encoding,
             extra_config=extra_config,
@@ -150,7 +201,7 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
         logger.info("Protocol initialized.")
 
         logger.info("Initializing mapper...")
-        map_class = MAPPERS[mapper]
+        map_class = from_registry(MAPPERS, mapper)
         max_mapper = await map_class(
             self,
             protocol=max_protocol,
@@ -158,18 +209,19 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
         )
         logger.info("Mapper initialized.")
 
-        await asyncio.to_thread(
-            self.__init__,  # type: ignore[misc]
+        hide_func_call(
+            type(self).__init__,
+            self,
             protocol=max_protocol,
             password=password,
             transport=max_transport,
             mapper=max_mapper,
-            # transport_options=transport_options,
             token=token,
             logger=logger,
             workflow_data=workflow_data,
             device_type=device_type,
             auth_middleware_manager=auth_middleware_manager,
+            extra_config=extra_config,
         )
 
         if token is None and self.auth_middleware_manager is not None:
@@ -266,6 +318,7 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
         auth_middleware_manager: AuthMiddlewareManager | None = None,
         registration_config: RegistrationConfig | None = None,
         token_suffix: str | None = None,
+        extra_config: ExtraConfig | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize the max api.
@@ -307,6 +360,8 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
 
         if transport is None or protocol is None or mapper is None:
             raise RuntimeError("transport or protocol or mapper cannot be None")
+
+        self.extra_config = extra_config
 
         self.transport = transport
         self.transport_options = transport_options

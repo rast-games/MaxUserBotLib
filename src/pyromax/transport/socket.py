@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 CLOSE_TIMEOUT: Final = 10
 
-@register_transport("socket")
+@register_transport("Socket")
 class SocketTransport(StreamTransport[SocketEncoding[Any, Any]]):
 
     BASE_EXCEPTION_FOR_TRANSPORT = BaseTransportError

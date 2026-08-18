@@ -1,15 +1,19 @@
+from __future__ import annotations
 import json
 import logging
 import struct
 from enum import Enum
 from io import BytesIO
-from typing import Any, cast
+from typing import Any, cast, TYPE_CHECKING
 
 import lz4.block  # type: ignore[import-untyped]
 import msgpack  # type: ignore[import-untyped]
 
 from .base import DictAndBytesEncoding
 from .registry import register_encoding
+
+if TYPE_CHECKING:
+    from ..config import ExtraConfig
 
 import zstandard
 
@@ -25,7 +29,8 @@ class MsgPackDictEncoding(DictAndBytesEncoding):
     HEADER_STRUCT = struct.Struct(">BBHHI")
     _HEADER_SIZE: int = HEADER_STRUCT.size
 
-    def __init__(self) -> None:
+    def __init__(self, extra_config: ExtraConfig) -> None:
+        super().__init__(extra_config)
         self._logger = logging.getLogger("MsgPackDictEncoding")
 
     @property

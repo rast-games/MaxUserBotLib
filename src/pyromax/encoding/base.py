@@ -1,6 +1,10 @@
-from typing import Any, Generic
+from __future__ import annotations
+from typing import Any, Generic, TYPE_CHECKING
 from typing_extensions import TypeVar
 from abc import ABC, abstractmethod
+
+if TYPE_CHECKING:
+    from ..config import ExtraConfig
 
 ENCODE_IN_TYPE = TypeVar("ENCODE_IN_TYPE")
 ENCODE_OUT_TYPE = TypeVar("ENCODE_OUT_TYPE")
@@ -11,6 +15,9 @@ DECODE_OUT_TYPE = TypeVar("DECODE_OUT_TYPE")
 class BaseEncoding(
     ABC, Generic[ENCODE_IN_TYPE, ENCODE_OUT_TYPE, DECODE_IN_TYPE, DECODE_OUT_TYPE]
 ):
+
+    def __init__(self, extra_config: ExtraConfig) -> None:
+        self.extra_config = extra_config
 
     @abstractmethod
     def encode(

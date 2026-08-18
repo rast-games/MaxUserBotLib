@@ -7,7 +7,7 @@ from collections.abc import Callable, Coroutine
 
 from typing import cast, Protocol
 
-from .....config import ExtraConfig, EnvelopeMappingConfigV11
+from .....config import ExtraConfig, EnvelopeMapperConfigV11
 from .....mixins import AsyncInitializerMixin, AsyncConstructorMeta
 from .....protocol import EnvelopeProtocol
 from ..payloads.models import BaseUserAgentMappingModel
@@ -50,12 +50,12 @@ class ConstructorMixin(
         :type keepalive_ping_interval: int
         """
         mapper_config = extra_config.mapper
-        if not isinstance(mapper_config, EnvelopeMappingConfigV11):
+        if not isinstance(mapper_config, EnvelopeMapperConfigV11):
             raise TypeError(
                 "mapper config must be an instance of EnvelopeMappingConfigV11 for this mapper"
             )
         self.extra_config = extra_config
-        self.mapper_config: EnvelopeMappingConfigV11 = mapper_config
+        self.mapper_config: EnvelopeMapperConfigV11 = mapper_config
 
         if self.mapper_config.device_type not in self.DEVICE_TYPE_TO_USERAGENT_MODEL:
             raise RuntimeError(f"Unknown device type: {self.mapper_config.device_type}")
@@ -145,11 +145,11 @@ class ConstructorMixin(
         from .....core import MaxApi
 
         mapper_config = extra_config.mapper
-        if not isinstance(mapper_config, EnvelopeMappingConfigV11):
+        if not isinstance(mapper_config, EnvelopeMapperConfigV11):
             raise TypeError(
                 "mapper config must be an instance of EnvelopeMappingConfigV11 for this mapper"
             )
-        conf: EnvelopeMappingConfigV11 = mapper_config
+        conf: EnvelopeMapperConfigV11 = mapper_config
 
         self.protocol = protocol
         self.protocol_version = conf.protocol_version

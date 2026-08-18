@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from .....core import MaxApi
     from ..LifecycleManager import LifecycleManager
     from .....utils import FingerprintGenerator
-    from .....config import EnvelopeMappingConfigV11
+    from .....config import EnvelopeMapperConfigV11
     from .....models import BaseMaxObject
     from .....models.Chat import Chat
     from .....models.Contact import Contact
@@ -24,7 +24,7 @@ T_USER = TypeVar("T_USER", bound="Contact")
 
 
 class MixinProtocol(Protocol):
-    mapper_config: EnvelopeMappingConfigV11
+    mapper_config: EnvelopeMapperConfigV11
     token: str | None
     password: str | None
     phone: str | None

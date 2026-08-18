@@ -347,7 +347,7 @@ async def lyric(msg: Message):
 ```
 ---
 
-### [Полная документация](https://rast-games.github.io/pyromax/0.8/)
+### [Полная документация](https://docs.pyromax.org/)
 
 
 # 📚 Roadmap

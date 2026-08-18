@@ -1,5 +1,7 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, cast
+
+from enum import Enum
+from typing import TYPE_CHECKING, Any, cast, TypeVar
 
 
 from ..mixins import AsyncConstructorType
@@ -13,6 +15,18 @@ from ..protocol import BaseMaxProtocol
 from ..transport import BaseTransport
 from ..mapping import BaseMapper
 from ..encoding import BaseEncoding
+
+if TYPE_CHECKING:
+    from ..models.enum.Registrys import BaseRegistry
+
+REG = TypeVar("REG")
+
+
+def from_registry(registry: dict[str, REG], registry_key: BaseRegistry | str) -> REG:
+    if isinstance(registry_key, Enum):
+        registry_key = registry_key.value
+    return registry[registry_key]
+
 
 PROTOCOLS = cast(dict[str, AsyncConstructorType[BaseMaxProtocol[Any, Any]]], _PROTOCOLS)
 TRANSPORTS = cast(dict[str, AsyncConstructorType[BaseTransport[Any]]], _TRANSPORTS)

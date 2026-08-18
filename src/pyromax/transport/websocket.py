@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 # WebSocketException = websockets.WebSocketException
 
 
-@register_transport("websocket")
+@register_transport("Websocket")
 class WebSocketTransport(StreamTransport[BaseEncoding[Any, Any, Any, Any]]):
     # BASE_EXCEPTION_FOR_TRANSPORT = WebSocketException
     # OTHER_EXCEPTIONS_FOR_TRANSPORT = [WebSocketClosedException]

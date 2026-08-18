@@ -1,15 +1,26 @@
 # MIN_PREFERRED_BUILD = 6712
+import logging
 import time
 from collections.abc import Callable, Coroutine
 import random
 from logging import Logger
-from typing import Any
+from typing import Any, ClassVar, cast
 from uuid import uuid4
 from abc import ABC, abstractmethod
 
 from pydantic import ConfigDict, BaseModel, Field, model_validator
 
-from .models import RegistrationConfig
+from .encoding import MsgPackDictEncoding
+from .models import (
+    RegistrationConfig,
+    TransportRegistry,
+    EncodingRegistry,
+    ProtocolRegistry,
+    MapperRegistry,
+    DeviceType,
+)
+from .models.enum.Registrys import BaseRegistry
+
 from .utils import get_random_device_id, get_random_device_id_numeric
 
 APP_VERSIONS: tuple[tuple[str, int], ...] = (
@@ -172,6 +183,22 @@ class WebSocketTransportConfig(BaseTransportConfig):
     user_agent_header: str = DEFAULT_WEB_HEADER_USER_AGENT
 
 
+class BaseEncodingConfig(BaseConfig):
+    pass
+
+
+class JsonEncodingConfig(BaseEncodingConfig):
+    pass
+
+
+class MsgPackDictEncodingConfig(BaseEncodingConfig):
+    pass
+
+
+class NoEncodingConfig(BaseEncodingConfig):
+    pass
+
+
 # class TransportConfig(BaseModel):
 #     socket: SocketTransportConfig
 #     websocket: WebSocketTransportConfig
@@ -188,7 +215,7 @@ class EnvelopeProtocolConfig(BaseProtocolConfig):
 class BaseMapperConfig(BaseConfig, ABC):
     token: str | None = None
     password: str | None = None
-    device_type: str
+    device_type: DeviceType
     phone: str | None = None
 
 
@@ -205,7 +232,7 @@ class BaseEnvelopeMappingUserAgentConfigV11(BaseConfig):
 
 class WebEnvelopeMappingUserAgentConfigV11(BaseEnvelopeMappingUserAgentConfigV11):
     device_type: str = "WEB"
-    device_id: str = Field(default=get_random_device_id())
+    device_id: str = Field(default_factory=get_random_device_id)
     header_user_agent: str = DEFAULT_WEB_HEADER_USER_AGENT
     app_version: str = WEB_APP_VERSION
     screen: str = WEB_SCREEN
@@ -234,10 +261,10 @@ class AndroidEnvelopeMappingUserAgentConfigV11(BaseEnvelopeMappingUserAgentConfi
     )
 
 
-class EnvelopeMappingConfigV11(BaseMapperConfig):
+class EnvelopeMapperConfigV11(BaseMapperConfig):
     token: str | None = None
     protocol_version: int = 11
-    device_type: str = "WEB"
+    device_type: DeviceType = DeviceType.Web
     password: str | None = None
     phone: str | None = None
     sms_auth: bool = False
@@ -260,19 +287,148 @@ class EnvelopeMappingConfigV11(BaseMapperConfig):
     def validate_sms_auth(self, data: Any) -> Any:
         if isinstance(data, dict):
             if "sms_auth" not in data:
-                device_type = data.get("device_type", "WEB")
-                data["sms_auth"] = False if device_type == "WEB" else True
+                device_type = data.get("device_type", DeviceType.Web)
+                data["sms_auth"] = False if device_type == DeviceType.Web else True
             return data
         else:
             return data
 
 
+CONFIG_SETS: dict[
+    DeviceType | str,
+    tuple[
+        tuple[TransportRegistry, EncodingRegistry, ProtocolRegistry, MapperRegistry],
+        ...,
+    ],
+] = {
+    DeviceType.Web: (
+        (
+            TransportRegistry.WebSocketTransport,
+            EncodingRegistry.JsonEncoding,
+            ProtocolRegistry.EnvelopeProtocol,
+            MapperRegistry.EnvelopeV11Mapper,
+        ),
+    ),
+    DeviceType.Desktop: (
+        (
+            TransportRegistry.SocketTransport,
+            EncodingRegistry.MsgPackDictEncoding,
+            ProtocolRegistry.EnvelopeProtocol,
+            MapperRegistry.EnvelopeV11Mapper,
+        ),
+    ),
+    DeviceType.Android: (
+        (
+            TransportRegistry.SocketTransport,
+            EncodingRegistry.MsgPackDictEncoding,
+            ProtocolRegistry.EnvelopeProtocol,
+            MapperRegistry.EnvelopeV11Mapper,
+        ),
+    ),
+}
+
+default_transport_config = WebSocketTransportConfig
+default_encoding_config = JsonEncodingConfig
+default_protocol_config = EnvelopeProtocolConfig
+default_mapper_config = EnvelopeMapperConfigV11
+
+
+class Default:
+    pass
+
+
+class DefaultTransportConfig(default_transport_config, Default):
+    pass
+
+
+class DefaultEncodingConfig(default_encoding_config, Default):
+    pass
+
+
+class DefaultProtocolConfig(default_protocol_config, Default):
+    pass
+
+
+class DefaultMapperConfig(default_mapper_config, Default):
+    pass
+
+
+def from_config_to_registry(conf: type[BaseConfig]) -> BaseRegistry | None:
+    if issubclass(conf, Default):
+        defaults_map: dict[type[Default], type[BaseConfig]] = {
+            DefaultTransportConfig: default_transport_config,
+            DefaultEncodingConfig: default_encoding_config,
+            DefaultProtocolConfig: default_protocol_config,
+            DefaultMapperConfig: default_mapper_config,
+        }
+        conf = defaults_map[conf]
+
+    config_family = conf.__bases__[0]
+
+    FROM_CONFIG_TO_REGISTRY: dict[type, dict[type[BaseConfig], BaseRegistry]] = {
+        BaseTransportConfig: {
+            SocketTransportConfig: TransportRegistry.SocketTransport,
+            WebSocketTransportConfig: TransportRegistry.WebSocketTransport,
+        },
+        BaseEncodingConfig: {
+            JsonEncodingConfig: EncodingRegistry.JsonEncoding,
+            NoEncodingConfig: EncodingRegistry.NoEncoding,
+            MsgPackDictEncodingConfig: EncodingRegistry.MsgPackDictEncoding,
+        },
+        BaseProtocolConfig: {
+            EnvelopeProtocolConfig: ProtocolRegistry.EnvelopeProtocol,
+        },
+        BaseMapperConfig: {
+            EnvelopeMapperConfigV11: MapperRegistry.EnvelopeV11Mapper,
+        },
+    }
+    return FROM_CONFIG_TO_REGISTRY.get(config_family, {}).get(conf)
+
+
+def from_registry_to_config(
+    registry_family: type[BaseRegistry], reg: BaseRegistry | type[BaseConfig] | None
+) -> type[BaseConfig] | None:
+    if isinstance(reg, type) and issubclass(reg, BaseConfig):
+        reg_resolved = from_config_to_registry(reg)
+    else:
+        reg_resolved = reg
+
+    # registry_family = reg.__class__
+
+    CONFIGS_PER_REGISTRY_ITEM: dict[
+        type[BaseRegistry], dict[BaseRegistry | None, type[BaseConfig]]
+    ] = {
+        TransportRegistry: {
+            TransportRegistry.WebSocketTransport: WebSocketTransportConfig,
+            TransportRegistry.SocketTransport: SocketTransportConfig,
+        },
+        ProtocolRegistry: {
+            ProtocolRegistry.EnvelopeProtocol: EnvelopeProtocolConfig,
+        },
+        EncodingRegistry: {
+            EncodingRegistry.JsonEncoding: JsonEncodingConfig,
+            EncodingRegistry.MsgPackDictEncoding: MsgPackDictEncodingConfig,
+            EncodingRegistry.NoEncoding: NoEncodingConfig,
+        },
+        MapperRegistry: {MapperRegistry.EnvelopeV11Mapper: EnvelopeMapperConfigV11},
+    }
+    if registry_family not in CONFIGS_PER_REGISTRY_ITEM:
+        logging.warning("registry family '%s' is not supported", registry_family)
+
+    return CONFIGS_PER_REGISTRY_ITEM.get(registry_family, {}).get(reg_resolved)
+
+
 class ExtraConfig(BaseConfig):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    transport: BaseTransportConfig = WebSocketTransportConfig()
-    protocol: BaseProtocolConfig = EnvelopeProtocolConfig()
-    mapper: BaseMapperConfig = EnvelopeMappingConfigV11()
+    transport: BaseTransportConfig = DefaultTransportConfig()
+    encoding: BaseEncodingConfig = (
+        DefaultEncodingConfig()
+    )  # not used by now, for future
+    protocol: BaseProtocolConfig = DefaultProtocolConfig()
+    mapper: BaseMapperConfig = DefaultMapperConfig()
+
+    _logger: ClassVar[Logger] = logging.getLogger("ExtraConfig")
 
     @model_validator(mode="before")
     @classmethod
@@ -281,16 +437,113 @@ class ExtraConfig(BaseConfig):
             if "mapper" in data and "transport" not in data:
                 mapper = data["mapper"]
                 if isinstance(mapper, dict):
-                    device_type = mapper.get("device_type", "WEB")
+                    device_type = mapper.get("device_type", DeviceType.Web)
                 elif isinstance(mapper, BaseModel):
-                    device_type = mapper.model_dump().get("device_type", "WEB")
+                    device_type = mapper.model_dump().get("device_type", DeviceType.Web)
                 else:
                     return data
                 data["transport"] = (
                     WebSocketTransportConfig()
-                    if device_type == "WEB"
+                    if device_type == DeviceType.Web
                     else SocketTransportConfig()
                 )
             return data
         else:
             return data
+
+    def config_rebuild(
+        self,
+        transport: TransportRegistry | None,
+        encoding: EncodingRegistry | None,
+        protocol: ProtocolRegistry | None,
+        mapper: MapperRegistry | None,
+    ) -> "ExtraConfig":
+        # extra_config_copy = self.model_copy()
+
+        # from .transport.registry import TRANSPORTS
+        # from .encoding.registry import ENCODINGS
+        # from .protocol.registry import PROTOCOLS
+        # from .mapping.registry import MAPPERS
+
+        device_type = self.mapper.device_type
+
+        config_presets = CONFIG_SETS.get(device_type) or (
+            (
+                from_config_to_registry(default_transport_config),
+                from_config_to_registry(default_encoding_config),
+                from_config_to_registry(default_protocol_config),
+                from_config_to_registry(default_mapper_config),
+            ),
+        )
+        config_mask = config_presets[0]
+
+        transport_config = (
+            from_registry_to_config(TransportRegistry, transport)
+            or (
+                type(self.transport)
+                if not issubclass(type(self.transport), Default)
+                else None
+            )
+            or from_registry_to_config(TransportRegistry, config_mask[0])
+            or default_transport_config
+        )
+        encoding_config = (
+            from_registry_to_config(EncodingRegistry, encoding)
+            or (
+                type(self.encoding)
+                if not issubclass(type(self.encoding), Default)
+                else None
+            )
+            or from_registry_to_config(EncodingRegistry, config_mask[1])
+            or default_encoding_config
+        )
+        protocol_config = (
+            from_registry_to_config(ProtocolRegistry, protocol)
+            or (
+                type(self.protocol)
+                if not issubclass(type(self.protocol), Default)
+                else None
+            )
+            or from_registry_to_config(ProtocolRegistry, config_mask[2])
+            or default_protocol_config
+        )
+        mapper_config = (
+            from_registry_to_config(MapperRegistry, mapper)
+            or (
+                type(self.mapper)
+                if not issubclass(type(self.mapper), Default)
+                else None
+            )
+            or from_registry_to_config(MapperRegistry, config_mask[3])
+            or default_mapper_config
+        )
+
+        user_preset = (
+            from_config_to_registry(transport_config),
+            from_config_to_registry(encoding_config),
+            from_config_to_registry(protocol_config),
+            from_config_to_registry(mapper_config),
+        )
+        if user_preset not in config_presets:
+            self._logger.warning(
+                "Your chosen settings not found in presets, a big chance for errors."
+            )
+
+        config_updated = ExtraConfig(
+            transport=cast(
+                BaseTransportConfig,
+                transport_config.model_validate(self.transport.model_dump()),
+            ),
+            encoding=cast(
+                BaseEncodingConfig,
+                encoding_config.model_validate(self.encoding.model_dump()),
+            ),
+            protocol=cast(
+                BaseProtocolConfig,
+                protocol_config.model_validate(self.protocol.model_dump()),
+            ),
+            mapper=cast(
+                BaseMapperConfig, mapper_config.model_validate(self.mapper.model_dump())
+            ),
+        )
+        return config_updated

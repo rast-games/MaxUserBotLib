@@ -5,7 +5,7 @@ from typing import Any, Generic, TypeVar, TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...config import ExtraConfig
+
 from ...protocol import Response
 from ...mixins import AsyncInitializerMixin, AsyncConstructorMeta
 
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from ...core import MaxApi
     from ...protocol import BaseMaxProtocol
     from ...methods import BaseMaxApiMethod
+    from ...config import ExtraConfig
 
 
 T_protocol = TypeVar("T_protocol", bound="BaseMaxProtocol[Any, Any]")

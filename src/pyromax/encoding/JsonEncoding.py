@@ -1,8 +1,13 @@
-from typing import Any, cast
+from __future__ import annotations
+import logging
+from typing import Any, cast, TYPE_CHECKING
 import json
 
 from .base import BaseEncoding
 from .registry import register_encoding
+
+if TYPE_CHECKING:
+    from ..config import ExtraConfig
 
 
 @register_encoding("JsonEncoding")
@@ -15,6 +20,10 @@ class JsonEncoding(
     However, after refactoring and logic separation, websocket transport no longer automatically convert data to Json.
     This encoding solves this problem.
     """
+
+    def __init__(self, extra_config: ExtraConfig) -> None:
+        super().__init__(extra_config)
+        self._logger = logging.getLogger("JsonEncoding")
 
     def encode(self, data: dict[Any, Any], *args: Any, **kwargs: Any) -> str:
         return json.dumps(data)

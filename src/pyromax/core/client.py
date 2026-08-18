@@ -144,6 +144,16 @@ class MaxApi(AsyncInitializerMixin, FullMixin, metaclass=AsyncConstructorProtoco
                 raise RuntimeError("Never")
 
             extra_config.mapper.device_type = device_type
+
+            if token is not None:
+                extra_config.mapper.token = token
+
+            if password is not None:
+                extra_config.mapper.password = password
+
+            if phone is not None:
+                extra_config.mapper.phone = phone
+
             extra_config = extra_config.config_rebuild(
                 transport=transport,
                 encoding=encoding,
